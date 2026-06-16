@@ -1,0 +1,45 @@
+1: import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+2: import { Sparkles, RefreshCcw, CheckCircle2, Keyboard, Star, Gift, Trophy, Settings, X, Upload, Music, Volume2, Book, User, Plus, Edit2, Cloud, CloudOff, Key, Trash2, Tag, Search } from 'lucide-react';
+3: import confetti from 'canvas-confetti';
+4: import localforage from 'localforage';
+5: import { saveCloudData, loadCloudData, saveDeviceTransfer, loadDeviceTransfer, saveFullBackup, loadFullBackup, saveCloudPlayer, loadAllCloudPlayers, listenToAllCloudPlayers, deleteCloudPlayer, addWordRequest, getWordRequests, deleteWordRequest, addAdoptedWord, getAdoptedWords, deleteAdoptedWord } from './firebase';
+6: 
+7: // 簡単なサウンドエフェクト (Web Audio API)
+8: let audioCtx = null;
+9: const initAudio = () => {
+10:   if (!audioCtx) {
+11:     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+12:   }
+13:   if (audioCtx.state === 'suspended') audioCtx.resume();
+14: };
+15: 
+16: const playTone = (freq, type, duration, vol=0.1) => {
+17:   if (!audioCtx) return;
+18:   try {
+19:     const osc = audioCtx.createOscillator();
+20:     const gain = audioCtx.createGain();
+21:     osc.type = type;
+22:     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+23:     gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+24:     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+25:     osc.connect(gain);
+26:     gain.connect(audioCtx.destination);
+27:     osc.start();
+28:     osc.stop(audioCtx.currentTime + duration);
+29:   } catch (e) {
+30:     console.error("Audio error", e);
+31:   }
+32: };
+33: 
+34: const playTypeSound = (vol=0.5) => { initAudio(); playTone(800, 'sine', 0.05, 0.1 * vol); };
+35: const playErrorSound = (vol=0.5) => { initAudio(); playTone(150, 'sawtooth', 0.2, 0.1 * vol); };
+36: const playWordClearSound = (vol=0.5) => {
+37:   initAudio();
+38:   playTone(523.25, 'sine', 0.1, 0.2 * vol);
+39:   setTimeout(() => playTone(659.25, 'sine', 0.2, 0.2 * vol), 100);
+40:   setTimeout(() => playTone(783.99, 'sine', 0.3, 0.2 * vol), 200);
+41: };
+42: const playAllClearSound = (vol=0.5) => {
+43:   initAudio();
+44:   playTone(523.25, 'triangle', 0.2, 0.3 * vol);
+45:   setTimeout(() => playTone(659.25, 'triangle', 0.2, 0.3 * vol), 200);
