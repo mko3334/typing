@@ -1,0 +1,162 @@
+1: # タスクリスト
+2: 
+3: - [x] 1. ワードリクエストの絵文字登録機能廃止
+4:   - [x] `App.jsx` のワードリクエスト送信モーダルから「絵文字」入力欄を削除
+5:   - [x] `handleSendRequest` から絵文字送信処理を削除
+6:   - [x] `handleAdoptWord` および採用決定モーダルから絵文字表示・処理を削除
+7: - [x] 2. その場セーブ & 右下「セーブ中」アイコン表示の実装
+8:   - [x] `App.jsx` に状態変数 `isSaving` を追加
+9:   - [x] `updateAndSavePlayerData` をデバウンス（1秒待つ）なしの即時セーブ方式に変更
+10:   - [x] `autoSaveToCloud` の開始時に `setIsSaving(true)`、完了時（`finally`）に `setIsSaving(false)` を制御する処理を追加
+11:   - [x] 画面右下に fixed で「セーブ中...」と表示されるUIを配置
+12: - [x] 3. 他端末アクティブプレイヤーのグレーアウト検出の実装
+13:   - [x] ログイン中（`currentPlayerId` が存在する場合）、15秒ごとにクラウドの `isPlaying` と `lastActiveTime` を更新する `useEffect`（ハートビート）を実装
+14:   - [x] プレイヤーログアウト時（タイトルに戻るとき、アンマウント時）に即座に `isPlaying: false`, `lastActiveTime: null` にセーブする処理を追加
+15:   - [x] プレイヤー選択画面の開閉時に `listenToAllCloudPlayers`（`onSnapshot`）を開始・解除し、プレイヤーデータをリアルタイム監視する `useEffect` を実装
+16:   - [x] プレイヤーカード表示部に「他端末で使用中（グレーアウト・あそびちゅうバッジ・警告アラートによる選択制限）」の判定・描画処理を追加
+17: - [x] 4. 「リクエストの確認」から「管理者モード」への名称変更
+18:   - [x] プレイヤー管理モーダルのタブボタンの表記を「⚙️ 管理者モード」に変更
+19: - [x] 5. 「データ削除」ボタンの廃止と「アーカイブ」機能への移行
+20:   - [x] 一般のプレイヤー選択画面から「データ削除（ゴミ箱）」ボタン（`isDeleteMode`）を完全に削除
+21:   - [x] `App.jsx` の `filteredPlayers` フィルタリング条件、およびクラウド同期処理に `!p.isArchived` の除外処理を追加
+22:   - [x] `updateAndSavePlayerData` に `isArchived` の更新処理と、ローカルプレイヤー一覧への保存処理を追加
+23:   - [x] 管理者モード（`requests` タブ）の平均プレイ時間テーブルに「📁 アーカイブ」ボタンを追加し、確認ダイアログ付きでプレイヤーデータをアーカイブする処理を実装
+24: - [x] 6. プレイ履歴の保存と詳細表示機能の追加
+25:   - [x] セッション終了時に直近10回のプレイ実績（プレイ日時と時間）を `recentPlays` 配列に記録する処理を実装
+26:   - [x] `loadSettings` および `updateAndSavePlayerData` からステートへの `recentPlays` マッピング処理を追加
+27:   - [x] 管理者モード（`requests` タブ）のテーブルに「📊 詳細」ボタンを設置し、詳細ダイアログから総プレイ時間・回数・直近10回のプレイ履歴テーブルを表示できるように実装
+28: - [x] 7. 新エリア「マイモール」の店舗配置カスタマイズ機能の実装
+29:   - [x] AI画像生成による「お店の並んでいない空っぽの3階建てモール（`/shopping_mall_empty_bg.png`）」の作成
+30:   - [x] AI画像生成による「ピザ屋」「寿司屋」「バーガーショップ」「洋服屋」の個別店舗イラストの作成
+31:   - [x] ホーム画面の右上に「新エリアへ」の遷移ボタンを設置
+32:   - [x] 空きモール画像上に6箇所（1階〜3階の左右）の配置スロットをレンダリングし、クリックしてお店を自由に配置・交換・あき地化できる店舗カスタマイズ画面を実装
+33:   - [x] モールの配置データをプレイヤーのセーブデータ（Firestore）と連動し、即時オートセーブと連動して永続化
+34: - [x] 8. ビルドおよび動作確認、デプロイ
+35:   - [x] `npm run build` によるビルドチェック
+36:   - [x] 本番ホスティングへのデプロイ
+37:   - [x] `walkthrough.md` の作成・更新
+38: 
+39:         <main className="w-full max-w-3xl flex-1 flex flex-col items-center justify-center min-h-0 animate-fade-in">
+40:           <div className="glass-card p-6 sm:p-10 text-center w-full max-w-md flex flex-col items-center gap-6">
+41:             <h1 className="text-3xl sm:text-4xl font-black text-sky-600 flex flex-col items-center gap-3 drop-shadow-sm mb-2">
+42:               <div className="bg-white p-3 rounded-2xl shadow-md border-b-4 border-sky-100">
+43:                 <Keyboard className="w-12 h-12 text-sky-500" />
+44:               </div>
+45:               はじめてのタイピング
+46:             </h1>
+47: 
+48:             <div className="flex flex-col w-full gap-4 bg-white/50 p-4 rounded-2xl border border-white/60">
+49:               <div className="flex flex-col gap-2">
+50:                 <p className="text-xs sm:text-sm font-bold text-gray-500">あそびかた</p>
+51:                 <button onClick={handleGameModeChange} className={\`flex justify-center items-center px-4 py-3 rounded-xl font-bold text-base sm:text-lg shadow-sm transition-all hover:scale-105 active:scale-95 \${gameMode === 'points' ? 'bg-orange-100 text-orange-700 border-2 border-orange-300' : 'bg-white text-gray-600 border-2 border-gray-200'}\`}>
+52:                   {gameMode === 'points' ? '🪙 ポイントためてガチャ' : '🎁 自動で1回ガチャ'}
+53:                 </button>
+54:               </div>
+55: 
+56:               <div className="flex flex-col gap-2">
+57:                 <p className="text-xs sm:text-sm font-bold text-gray-500">むずかしさ</p>
+58:                 <button onClick={handleDifficultyChange} className={\`flex justify-center items-center px-4 py-3 rounded-xl font-bold text-base sm:text-lg shadow-sm transition-all hover:scale-105 active:scale-95 \${difficulty === 'hard' ? 'bg-red-100 text-red-700 border-2 border-red-300' : difficulty === 'normal' ? 'bg-green-100 text-green-700 border-2 border-green-300' : 'bg-blue-100 text-blue-700 border-2 border-blue-300'}\`}>
+59:                   {difficulty === 'hard' ? '🔥 ハード' : difficulty === 'normal' ? '⭐ ノーマル' : '🔰 イージー'}
+60:                 </button>
+61:               </div>
+62:             </div>
+63: 
+64:             <button onClick={() => { handleRestart(); setAppScreen('playing'); }} className="w-full premium-button bg-sky-500 hover:bg-sky-600 text-white text-2xl py-4 mt-2 shadow-xl flex justify-center items-center gap-2">スタート！</button>
+65:           </div>
+66:         </main>
+67:       ) : (
+68:         <main className="w-full max-w-3xl flex-1 flex flex-col items-center justify-center min-h-0">`
+69: );
+70: 
+71: // Close the appScreen condition block
+72: code = code.replace(
+73:   /<\/main>\s*\{\/\* 右側：コレクションサイドバー/,
+74:   `</main>\n      )}\n\n      {/* 右側：コレクションサイドバー`
+75: );
+76: 
+77: // Add "Back to Title" links in clear screens
+78: code = code.replace(
+79:   /<button\s*onClick=\{handleRestart\}\s*className="premium-button bg-sky-500 hover:bg-sky-600 text-white text-xl px-6 py-3 flex items-center gap-3 mt-4"\s*>\s*<RefreshCcw className="w-6 h-6" \/>\s*もういちどあそぶ\s*<\/button>/g,
+80:   `<div className="flex flex-col gap-3 mt-4 w-full"><button onClick={handleRestart} className="premium-button bg-sky-500 hover:bg-sky-600 text-white text-xl px-6 py-3 flex justify-center items-center gap-3"><RefreshCcw className="w-6 h-6" /> もういちどあそぶ</button><button onClick={handleBackToTitle} className="text-gray-500 hover:text-gray-700 font-bold underline">タイトルにもどる</button></div>`
+81: );
+82: 
+83: code = code.replace(
+84:   /<button onClick=\{handleRestart\} className="mt-4 text-gray-400 hover:text-gray-600 font-bold underline text-sm">\s*やっぱりタイピングにもどる\s*<\/button>/g,
+85:   `<button onClick={handleBackToTitle} className="mt-4 text-gray-400 hover:text-gray-600 font-bold underline text-sm">タイトルにもどる</button>`
+86: );
+87: 
+88: code = code.replace(
+89:   /<div className="flex gap-4">\s*<button onClick=\{\(\) => setGachaState\('shop'\)\} className="premium-button bg-gray-400 hover:bg-gray-500 text-white text-base sm:text-lg px-4 sm:px-6 py-2 flex items-center gap-2">\s*<Gift className="w-5 h-5" \/> ショップ\s*<\/button>\s*<button onClick=\{handleRestart\} className="premium-button bg-sky-500 hover:bg-sky-600 text-white text-base sm:text-lg px-4 sm:px-6 py-2 flex items-center gap-2">\s*<RefreshCcw className="w-5 h-5" \/> タイピング\s*<\/button>\s*<\/div>/g,
+90:   `<div className="flex flex-col sm:flex-row gap-3"><button onClick={() => setGachaState('shop')} className="premium-button bg-gray-400 hover:bg-gray-500 text-white text-base sm:text-lg px-4 sm:px-6 py-2 flex justify-center items-center gap-2 flex-1"><Gift className="w-5 h-5" /> ショップ</button><button onClick={handleRestart} className="premium-button bg-sky-500 hover:bg-sky-600 text-white text-base sm:text-lg px-4 sm:px-6 py-2 flex justify-center items-center gap-2 flex-1"><RefreshCcw className="w-5 h-5" /> タイピング</button></div><button onClick={handleBackToTitle} className="text-gray-400 hover:text-gray-600 font-bold underline text-sm mt-2">タイトルにもどる</button>`
+91: );
+92: 
+93: code = code.replace(
+94:   /<div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-sm mx-auto">\s*<button onClick=\{handleRestart\} className="premium-button bg-sky-500 hover:bg-sky-600 text-white text-lg px-6 py-3 flex items-center justify-center gap-2 flex-1">\s*<RefreshCcw className="w-5 h-5" \/>\s*つづける\s*<\/button>\s*<button onClick=\{\(\) => setGachaState\('shop'\)\} className="premium-button bg-gradient-to-r from-pink-500 to-orange-400 text-white text-lg px-6 py-3 flex items-center justify-center gap-2 flex-1 animate-pulse-fast">\s*<Gift className="w-5 h-5" \/>\s*ショップ\s*<\/button>\s*<\/div>/g,
+95:   `<div className="flex flex-col gap-3 justify-center w-full max-w-sm mx-auto"><div className="flex flex-col sm:flex-row gap-3"><button onClick={handleRestart} className="premium-button bg-sky-500 hover:bg-sky-600 text-white text-lg px-6 py-3 flex items-center justify-center gap-2 flex-1"><RefreshCcw className="w-5 h-5" /> つづける</button><button onClick={() => setGachaState('shop')} className="premium-button bg-gradient-to-r from-pink-500 to-orange-400 text-white text-lg px-6 py-3 flex items-center justify-center gap-2 flex-1 animate-pulse-fast"><Gift className="w-5 h-5" /> ショップ</button></div><button onClick={handleBackToTitle} className="text-gray-400 hover:text-gray-600 font-bold underline text-sm mt-2">タイトルにもどる</button></div>`
+96: );
+97: 
+98: // Conditional dummy sidebar
+99: code = code.replace(
+100:   /<div className="w-20 sm:w-28 md:w-48 shrink hidden sm:block"><\/div>/,
+101:   `{appScreen === 'playing' && <div className="w-20 sm:w-28 md:w-48 shrink hidden sm:block"></div>}`
+102: );
+103: 
+104: // Conditional actual sidebar
+105: code = code.replace(
+106:   /<aside className="w-20 sm:w-28 md:w-48 h-full bg-white\/60 backdrop-blur-md border-l border-white\/50 shadow-lg p-2 sm:p-4 flex flex-col shrink-0 overflow-y-auto z-10">/,
+107:   `{appScreen === 'playing' && <aside className="w-20 sm:w-28 md:w-48 h-full bg-white/60 backdrop-blur-md border-l border-white/50 shadow-lg p-2 sm:p-4 flex flex-col shrink-0 overflow-y-auto z-10">`
+108: );
+109: 
+110: code = code.replace(
+111:   /<\/aside>\s*<\/div>/,
+112:   `</aside>}\n    </div>`
+113: );
+114: 
+115: fs.writeFileSync('src/App.jsx', code);
+116: console.log("Transformation completed.");
+117: 
+118: -              )}
+119: -
+120: +                        setSelectedTag('');
+121: +                      }}
+122: +                      className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
+123: +                        !selectedTag
+124: +                          ? 'bg-indigo-500 text-white border-indigo-500'
+125: +                          : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+126: +                      }`}
+127: +                    >
+128: +                      すべて
+129: +                    </button>
+130: +                    {allTags.map((tag) => (
+131: +                      <button
+132: +                        key={tag}
+133: +                        onClick={() => {
+134: +                          playGlobalDecideSound();
+135: +                          setSelectedTag(selectedTag === tag ? '' : tag);
+136: +                        }}
+137: +                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
+138: +                          selectedTag === tag
+139: +                            ? 'bg-indigo-500 text-white border-indigo-500'
+140: +                            : 'bg-indigo-55 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+141: +                        }`}
+142: +                      >
+143: +                        {tag}
+144: +                      </button>
+145: +                    ))}
+146: +                  </div>
+147: +                )}
+148: +              </div>
+149: +
+150: +              {/* PC用の閉じるボタン */}
+151: +              <button onClick={() => { playGlobalCancelSound(); setIsPlayerModalOpen(false); }} className="hidden lg:block p-1.5 hover:bg-gray-100 rounded-full transition-colors ml-2">
+152: +                <X className="w-5 h-5 text-gray-500" />
+153: +              </button>
+154: +            </div>
+155: +
+156: +            <div className="flex-1 min-h-0 flex flex-col relative pb-14">
+157:                {/* セーブデータ一覧グリッド（画面いっぱい） */}
+158:                <div className="flex-1 min-h-0 flex flex-col">
+159:                  <div className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 pr-1 pb-4">
+160: [diff_block_end]
+161: 
+162: Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
