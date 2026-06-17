@@ -461,8 +461,6 @@ export const DIFFICULTY_OPTIONS = [
     label: 'ノーマル',
     sub: 'ふつう',
     gradient: 'from-lime-400 to-green-500 border-green-600',
-    badge: '激レア以上確定チケット！？',
-    badgeColor: 'pink',
     points: 200,
   },
   {
@@ -471,8 +469,6 @@ export const DIFFICULTY_OPTIONS = [
     label: 'ハード',
     sub: 'むずかしい',
     gradient: 'from-orange-400 to-rose-500 border-rose-600',
-    badge: '数字・記号・話し言葉！',
-    badgeColor: 'yellow',
     points: 500,
   },
   {

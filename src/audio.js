@@ -1,16 +1,20 @@
-/** @typedef {'bgm'|'type'|'error'|'wordClear'|'allClear'|'gacha'|'points'|'legend'|'correct'|'clear'} SeType */
+/** @typedef {'bgm'|'type'|'error'|'wordClear'|'allClear'|'gacha'|'points'|'legend'|'correct'|'clear'|'countdown'|'go'} SeType */
+
+const COMMON = '/sounds/共通音';
 
 export const DEFAULT_SOUNDS = {
   bgm: '/sounds/BGM.mp3',
-  type: '/sounds/入力.mp3',
-  error: '/sounds/ミス.mp3',
-  wordClear: '/sounds/ワード正解.mp3',
-  allClear: '/sounds/５問クリア時.mp3',
-  gacha: '/sounds/ガチャ開封時.mp3',
-  points: '/sounds/ポイント獲得時.mp3',
-  legend: '/sounds/確定演出.mp3',
+  type: `${COMMON}/入力.mp3`,
+  error: `${COMMON}/ミス.mp3`,
+  wordClear: `${COMMON}/ワード正解.mp3`,
+  allClear: `${COMMON}/５問クリア時.mp3`,
+  gacha: `${COMMON}/ガチャ開封時.mp3`,
+  points: `${COMMON}/ポイント獲得時.mp3`,
+  legend: `${COMMON}/確定演出.mp3`,
+  countdown: `${COMMON}/カウントダウン.mp3`,
+  go: `${COMMON}/GO!!.mp3`,
   correct: '/sounds/decide_cancel/decide.mp3',
-  clear: '/sounds/ワード正解.mp3',
+  clear: `${COMMON}/ワード正解.mp3`,
 };
 
 export const DECIDE_SOUND = '/sounds/decide_cancel/decide.mp3';
@@ -34,7 +38,7 @@ export const BGM_LIST = [
 /** タイピング入力音（セーブデータの currentSe で選択） */
 /** @type {{ id: string, name: string, url: string }[]} */
 export const SE_LIST = [
-  { id: 'default', name: 'デフォルト（入力） ⌨️', url: '/sounds/入力.mp3' },
+  { id: 'default', name: 'デフォルト（入力） ⌨️', url: `${COMMON}/入力.mp3` },
   { id: 'ou', name: 'オウ！ 🗣️', url: '/sounds/SE/ou.mp3' },
   { id: 'shakeen', name: 'シャキーン ⚔️', url: '/sounds/SE/shakeen.mp3' },
   { id: 'shock', name: 'ショック 😱', url: '/sounds/SE/shock.mp3' },

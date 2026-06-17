@@ -29,6 +29,8 @@ function enrichPlayer(id, data) {
     legendTickets: data.legendTickets || 0,
     bgmTickets: data.bgmTickets || 0,
     seTickets: data.seTickets || 0,
+    playCount: data.playCount || 0,
+    specialWordTriggered: !!data.specialWordTriggered,
     newItems: data.newItems || [],
     tags: data.tags || [],
     isArchived: data.isArchived || false,
@@ -144,6 +146,8 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
       legendTickets: 0,
       bgmTickets: 0,
       seTickets: 0,
+      playCount: 0,
+      specialWordTriggered: false,
       isCloudSync: true,
     };
     await saveCloudPlayer(id, newData);

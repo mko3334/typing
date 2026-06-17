@@ -38,26 +38,14 @@ export default function DifficultySelector({
 
         <div className="flex flex-col gap-3">
           {DIFFICULTY_OPTIONS.map((opt) => (
-            <div key={opt.id} className="relative">
-              {opt.badge && (
-                <div
-                  className={`absolute -top-2 right-2 z-10 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black shadow-md whitespace-nowrap ${
-                    opt.badgeColor === 'pink'
-                      ? 'bg-pink-400 text-white'
-                      : 'bg-yellow-300 text-yellow-900 border border-yellow-400'
-                  }`}
-                >
-                  {opt.badge}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => handleSelect(opt.id)}
-                className={`w-full py-3.5 sm:py-4 rounded-2xl font-black text-white text-base sm:text-lg shadow-lg border-b-4 active:scale-[0.98] active:border-b-0 active:translate-y-1 transition-all bg-gradient-to-r ${opt.gradient}`}
-              >
-                {opt.emoji} {opt.label}（{opt.sub}）
-              </button>
-            </div>
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => handleSelect(opt.id)}
+              className={`w-full py-3.5 sm:py-4 rounded-2xl font-black text-white text-base sm:text-lg shadow-lg border-b-4 active:scale-[0.98] active:border-b-0 active:translate-y-1 transition-all bg-gradient-to-r ${opt.gradient}`}
+            >
+              {opt.emoji} {opt.label}（{opt.sub}）
+            </button>
           ))}
         </div>
 
