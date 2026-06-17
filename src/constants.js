@@ -1,31 +1,83 @@
 export const BACKGROUNDS = [
-  { id: 'default', name: 'いつものへや', url: '/bg.png' },
-  { id: 'space', name: 'うちゅう', url: '/space_bg.png' },
-  { id: 'forest', name: 'もりのなか', url: '/forest_bg.png' },
-  { id: 'ocean', name: 'うみのそこ', url: '/underwater_bg.png' },
-  { id: 'castle', name: 'おしろ', url: '/castle_bg.png' },
-  { id: 'dino', name: 'きょうりゅう', url: '/dino_bg.png' },
-  { id: 'candy', name: 'おかしのくに', url: '/candy_bg.png' }
+  { id: 'default', name: 'デフォルトのへや', url: '/bg.png' },
+  { id: 'space', name: '宇宙のたび 🚀', url: '/space_bg.png' },
+  { id: 'forest', name: '魔法の森 🌲', url: '/forest_bg.png' },
+  { id: 'candy', name: 'お菓子の国 🍬', url: '/candy_bg.png' },
+  { id: 'underwater', name: 'うみのなか 🐠', url: '/underwater_bg.png' },
+  { id: 'ocean', name: 'うみのなか 🐠', url: '/underwater_bg.png' },
+  { id: 'castle', name: 'てんくうのおしろ 🏰', url: '/castle_bg.png' },
+  { id: 'dino', name: 'きょうりゅうパーク 🌋', url: '/dino_bg.png' },
 ];
 
 export const TITLES = [
-  { id: 'beginner', name: 'しょしんしゃ', color: 'text-gray-600', bg: 'bg-gray-100' },
-  { id: 'speedstar', name: 'スピードスター', color: 'text-yellow-600', bg: 'bg-yellow-100' },
-  { id: 'master', name: 'タイピングマスター', color: 'text-purple-600', bg: 'bg-purple-100' },
-  { id: 'legend', name: 'でんせつのゆうしゃ', color: 'text-red-600', bg: 'bg-red-100' }
+  { id: 'rookie', name: '🔰 タイピングルーキー', desc: 'はじめから もっている しょうごう', emoji: '👦', color: 'text-sky-600', bg: 'bg-sky-100' },
+  { id: 'no_miss', name: '🎯 ミスなし名人', desc: 'ノーマルいじょうで ミス0で クリアする', emoji: '🎯', color: 'text-yellow-600', bg: 'bg-yellow-100' },
+  { id: 'hard_clear', name: '🔥 ハードチャレンジャー', desc: 'むずかしい（ハード）を クリアする', emoji: '🔥', color: 'text-red-600', bg: 'bg-red-100' },
+  { id: 'collection_15', name: '✨ ガチャマスター', desc: 'ずかんを 15しゅるいいじょう あつめる', emoji: '✨', color: 'text-pink-600', bg: 'bg-pink-100' },
+  { id: 'points_1000', name: '🪙 ポイントリッチ', desc: '1000ポイントいじょう ためる', emoji: '🪙', color: 'text-amber-600', bg: 'bg-amber-100' },
+  { id: 'legend_hunter', name: '🦄 レジェンドハンター', desc: 'レジェンドレアの アイテムを あてる', emoji: '🦄', color: 'text-purple-600', bg: 'bg-purple-100' },
+  { id: 'collection_complete', name: '👑 ずかんコンプリート', desc: 'ごほうびを すべてあつめる', emoji: '👑', color: 'text-orange-600', bg: 'bg-orange-100' },
 ];
 
 export const GACHA_ITEMS = [
-  { id: 'bg_space', type: 'background', bgId: 'space', name: 'うちゅうの背景', rarity: 'rare' },
-  { id: 'bg_forest', type: 'background', bgId: 'forest', name: 'もりの背景', rarity: 'normal' },
-  { id: 'bg_ocean', type: 'background', bgId: 'ocean', name: 'うみの背景', rarity: 'rare' },
-  { id: 'bg_castle', type: 'background', bgId: 'castle', name: 'おしろの背景', rarity: 'epic' },
-  { id: 'bg_dino', type: 'background', bgId: 'dino', name: 'きょうりゅうの背景', rarity: 'epic' },
-  { id: 'bg_candy', type: 'background', bgId: 'candy', name: 'おかしの背景', rarity: 'epic' },
-  { id: 'title_speedstar', type: 'title', titleId: 'speedstar', name: '称号：スピードスター', rarity: 'rare' },
-  { id: 'title_master', type: 'title', titleId: 'master', name: '称号：タイピングマスター', rarity: 'epic' },
-  { id: 'title_legend', type: 'title', titleId: 'legend', name: '称号：でんせつのゆうしゃ', rarity: 'legendary' }
+  { name: 'でんせつのドラゴン', emoji: '🐉', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'コスモスペースシップ', emoji: '🛸', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'マスターソード', emoji: '🗡️', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'まほうのグリモア', emoji: '📖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'アルティメットロボ', emoji: '🤖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'でんせつのけん', emoji: '⚔️', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'でんせつのたて', emoji: '🛡️', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'ドラゴンのたまご', emoji: '🥚', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'まほうのランプ', emoji: '🪔', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'ゴールドトロフィー', emoji: '🏆', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'しんかいのくじら', emoji: '🐋', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'ほのおのとり', emoji: '🔥', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'ロボット', emoji: '🤖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'おうかん', emoji: '👑', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ほうせき', emoji: '💎', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'きょうりゅう', emoji: '🦕', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ゆにこーん', emoji: '🦄', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'てんしのつばさ', emoji: '😇', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'にじいろのかぎ', emoji: '🗝️', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'まほうのぼうし', emoji: '🎩', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ゴールドコイン', emoji: '🪙', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ろけっと', emoji: '🚀', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'すーぱーかー', emoji: '🏎️', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'まほうのステッキ', emoji: '🪄', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'おおきなケーキ', emoji: '🎂', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'でかいアイス', emoji: '🍦', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'にんじゃかたな', emoji: '🗡️', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'たからのちず', emoji: '🗺️', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'でんきゅう', emoji: '💡', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'やきゅうボール', emoji: '⚾', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'ゴーカート', emoji: '🏎️', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'おもちゃのロボ', emoji: '🤖', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'とくだいバーガー', emoji: '🍔', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'まっかなリンゴ', emoji: '🍎', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'あまいバナナ', emoji: '🍌', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'サッカーボール', emoji: '⚽', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'バスケットボール', emoji: '🏀', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'テディベア', emoji: '🧸', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'たいこ', emoji: '🥁', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'ぶろっく', emoji: '🧱', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'かぜぐるま', emoji: '🌀', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'こいのぼり', emoji: '🎏', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'けん玉', emoji: '🪀', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'おりがみ', emoji: '📄', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'わたがし', emoji: '🍭', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+  { name: 'きのこ', emoji: '🍄', rarity: 'ノーマル', color: '#3b82f6', foil: false },
 ];
+
+export const getRarityWeight = (rarity) => {
+  if (rarity === '✨レジェンド✨') return 5;
+  if (rarity === '🌟超激レア🌟') return 4;
+  if (rarity === '✨激レア✨' || rarity === '🔥激レア🔥') return 3;
+  if (rarity === '⭐レア⭐' || rarity === 'レア') return 2;
+  return 1;
+};
+
+export const resolveBackground = (bgId) =>
+  BACKGROUNDS.find((b) => b.id === (bgId || 'default')) || BACKGROUNDS[0];
 
 export const ROMAJI_TABLE = {
   'あ': ['a'], 'い': ['i'], 'う': ['u'], 'え': ['e'], 'お': ['o'],
@@ -377,3 +429,58 @@ export const FINGER_MAP = {
   shift: { hand: 'left', finger: 'pinky', label: 'ひだり手・こゆび' },
   ' ': { hand: 'both', finger: 'thumb', label: 'おやゆび' },
 };
+
+export const KEYBOARD_ROWS = [
+  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
+  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+  ['Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/'],
+];
+
+export const DEFAULT_ASSIST_SETTINGS = {
+  keyboardHighlight: true,
+  letterCase: 'lower',
+  showRomajiHint: true,
+  showFingerGuide: true,
+};
+
+export const WORDS_PER_ROUND = 5;
+
+export const DIFFICULTY_OPTIONS = [
+  {
+    id: 'easy',
+    emoji: '🔰',
+    label: 'イージー',
+    sub: 'かんたん',
+    gradient: 'from-cyan-400 to-sky-500 border-cyan-600',
+    points: 100,
+  },
+  {
+    id: 'normal',
+    emoji: '⭐',
+    label: 'ノーマル',
+    sub: 'ふつう',
+    gradient: 'from-lime-400 to-green-500 border-green-600',
+    badge: '激レア以上確定チケット！？',
+    badgeColor: 'pink',
+    points: 200,
+  },
+  {
+    id: 'hard',
+    emoji: '🔥',
+    label: 'ハード',
+    sub: 'むずかしい',
+    gradient: 'from-orange-400 to-rose-500 border-rose-600',
+    badge: '数字・記号・話し言葉！',
+    badgeColor: 'yellow',
+    points: 500,
+  },
+  {
+    id: 'very_hard',
+    emoji: '👿',
+    label: 'ベリーハード',
+    sub: 'げきむず',
+    gradient: 'from-violet-500 to-purple-600 border-purple-700',
+    points: 1000,
+  },
+];
