@@ -38,14 +38,33 @@ function markSpecialWord(words) {
  * @param {number} playCount
  * @param {boolean} specialWordTriggered
  */
+function normalizePlayMeta(playCount, specialWordTriggered) {
+  const count = Number(playCount);
+  return {
+    playCount: Number.isFinite(count) && count >= 0 ? count : 0,
+    specialWordTriggered: specialWordTriggered === true,
+  };
+}
+
 export function pickGameWords(
   difficulty,
   forceSpecial = false,
   playCount = 0,
   specialWordTriggered = false,
   count = WORDS_PER_ROUND,
+  extraWords = [],
 ) {
-  const pool = WORDS[difficulty] || WORDS.normal;
+  const meta = normalizePlayMeta(playCount, specialWordTriggered);
+  playCount = meta.playCount;
+  specialWordTriggered = meta.specialWordTriggered;
+
+  const basePool = WORDS[difficulty] || WORDS.normal;
+  const adoptedForDifficulty = extraWords.filter((w) => w.difficulty === difficulty || !w.difficulty);
+  const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji }) => ({
+    kana,
+    romaji: Array.isArray(romaji) ? romaji : [romaji],
+    emoji: emoji || '✨',
+  }))];
   const words = shuffle([...pool]).slice(0, Math.min(count, pool.length));
 
   if (forceSpecial) {
@@ -65,6 +84,7 @@ export function pickGameWords(
 
   if (
     difficulty !== 'alphabet_quiz' &&
+    words.length >= 2 &&
     (shouldSpecial || (newPlayCount > 5 && Math.random() < 0.2))
   ) {
     markSpecialWord(words);

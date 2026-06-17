@@ -1,0 +1,756 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Key } from 'lucide-react';
+import localforage from 'localforage';
+import {
+  addAdoptedWord,
+  cancelGiftFromCloudPlayer,
+  deleteWordRequest,
+  getWordRequests,
+  sendGiftToCloudPlayer,
+  setPlayerArchived,
+} from '../firebase';
+import { ADMIN_PASSWORD, suggestDifficultyKey } from '../utils/admin';
+import { formatDurationMs, getAveragePlayMs } from '../utils/playTime';
+
+function parseGiftAmount(value) {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) return 0;
+  const n = parseInt(trimmed, 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function handleGiftNumberChange(setter) {
+  return (e) => {
+    const v = e.target.value;
+    if (v === '') {
+      setter('');
+      return;
+    }
+    if (/^\d+$/.test(v)) {
+      setter(v);
+    }
+  };
+}
+
+function AdminGiftModal({ player, onClose, onSent, playDecideSound }) {
+  const [giftPoints, setGiftPoints] = useState('');
+  const [giftSpecialTickets, setGiftSpecialTickets] = useState('');
+  const [giftLegendTickets, setGiftLegendTickets] = useState('');
+  const [giftBgmTickets, setGiftBgmTickets] = useState('');
+  const [giftSeTickets, setGiftSeTickets] = useState('');
+  const [giftMessage, setGiftMessage] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!player) return;
+    playDecideSound?.();
+    setSending(true);
+    try {
+      const giftData = {
+        points: parseGiftAmount(giftPoints),
+        specialTickets: parseGiftAmount(giftSpecialTickets),
+        bgmTickets: parseGiftAmount(giftBgmTickets),
+        seTickets: parseGiftAmount(giftSeTickets),
+        legendTickets: parseGiftAmount(giftLegendTickets),
+        message: giftMessage.trim(),
+      };
+      const hasContent =
+        giftData.points > 0 ||
+        giftData.specialTickets > 0 ||
+        giftData.bgmTickets > 0 ||
+        giftData.seTickets > 0 ||
+        giftData.legendTickets > 0 ||
+        giftData.message;
+      if (!hasContent) {
+        alert('ポイント・チケット・メッセージのどれかを入力してね！');
+        return;
+      }
+      const success = await sendGiftToCloudPlayer(player.id, giftData);
+      if (success) {
+        alert(`🎁 ${player.name} さんにプレゼントをおくりました！`);
+        onSent?.();
+        onClose();
+      } else {
+        alert('プレゼントの送信に失敗しました。');
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+      <div className="glass-card bg-white/95 w-full max-w-md p-6 shadow-2xl rounded-3xl border-4 border-pink-400 text-center animate-pop-out max-h-[90vh] overflow-y-auto">
+        <span className="text-5xl block mb-2 animate-bounce">🎁</span>
+        <h3 className="text-lg sm:text-xl font-black text-gray-800 mb-1">「{player.name}」さんへプレゼント</h3>
+        <p className="text-xs text-gray-500 font-bold mb-4">ポイントやチケット、メッセージをおくることができます</p>
+
+        <div className="space-y-3.5 text-left">
+          <div>
+            <label className="text-xs font-black text-pink-600 block mb-1">🪙 ポイント</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={giftPoints}
+              onChange={handleGiftNumberChange(setGiftPoints)}
+              placeholder="数を入力"
+              className="w-full p-2.5 rounded-xl border-2 border-pink-100 focus:border-pink-500 focus:outline-none bg-white text-sm font-bold text-gray-700"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-black text-pink-600 block mb-0.5">🎨 はいけい</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={giftSpecialTickets}
+                onChange={handleGiftNumberChange(setGiftSpecialTickets)}
+                placeholder="数を入力"
+                className="w-full p-2 rounded-lg border border-pink-100 focus:border-pink-500 focus:outline-none bg-white text-xs font-bold"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-pink-600 block mb-0.5">🌟 超激レア以上</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={giftLegendTickets}
+                onChange={handleGiftNumberChange(setGiftLegendTickets)}
+                placeholder="数を入力"
+                className="w-full p-2 rounded-lg border border-pink-100 focus:border-pink-500 focus:outline-none bg-white text-xs font-bold"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-pink-600 block mb-0.5">🎵 おんがく</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={giftBgmTickets}
+                onChange={handleGiftNumberChange(setGiftBgmTickets)}
+                placeholder="数を入力"
+                className="w-full p-2 rounded-lg border border-pink-100 focus:border-pink-500 focus:outline-none bg-white text-xs font-bold"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-pink-600 block mb-0.5">🔊 こうかおん</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={giftSeTickets}
+                onChange={handleGiftNumberChange(setGiftSeTickets)}
+                placeholder="数を入力"
+                className="w-full p-2 rounded-lg border border-pink-100 focus:border-pink-500 focus:outline-none bg-white text-xs font-bold"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-black text-pink-600 block mb-1">💬 メッセージ</label>
+            <textarea
+              value={giftMessage}
+              onChange={(e) => setGiftMessage(e.target.value)}
+              placeholder="がんばってね！ など"
+              rows={3}
+              maxLength={150}
+              className="w-full p-2.5 rounded-xl border-2 border-pink-100 focus:border-pink-500 focus:outline-none bg-white text-xs font-bold text-gray-700 resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-black text-sm rounded-2xl transition-all"
+          >
+            やめる
+          </button>
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={sending}
+            className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 disabled:opacity-60 text-white font-black text-sm rounded-2xl shadow-lg transition-all"
+          >
+            {sending ? '送信中...' : '🎁 おくる！'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminAdoptModal({ request, difficulty, onDifficultyChange, onConfirm, onCancel, playDecideSound }) {
+  if (!request) return null;
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+      <div className="glass-card bg-white/95 w-full max-w-md p-6 shadow-2xl rounded-3xl border-4 border-green-400 text-center animate-pop-out">
+        <span className="text-5xl block mb-3 animate-bounce">🎉</span>
+        <h3 className="text-lg font-black text-gray-800 mb-2">リクエストを 採用する</h3>
+        <div className="bg-green-50 border border-green-100 p-4 rounded-2xl mb-4 text-left space-y-2">
+          <div>
+            <span className="text-[10px] text-green-600 font-black block">かな</span>
+            <span className="text-base font-black text-gray-800">{request.kana}</span>
+          </div>
+          <div>
+            <span className="text-[10px] text-green-600 font-black block">ローマ字</span>
+            <span className="text-xs font-mono text-gray-600">
+              {Array.isArray(request.romaji) ? request.romaji.join(' / ') : request.romaji}
+            </span>
+          </div>
+          <div>
+            <span className="text-[10px] text-green-600 font-black block">リクエストした人</span>
+            <span className="text-sm font-bold text-gray-700">{request.playerName || 'ゲスト'}</span>
+          </div>
+        </div>
+        <div className="text-left mb-4">
+          <label className="text-xs font-black text-green-700 block mb-1">難易度</label>
+          <select
+            value={difficulty}
+            onChange={(e) => onDifficultyChange(e.target.value)}
+            className="w-full p-2.5 rounded-xl border-2 border-green-100 focus:border-green-400 focus:outline-none bg-white text-sm font-bold"
+          >
+            <option value="easy">イージー</option>
+            <option value="normal">ノーマル</option>
+            <option value="hard">ハード</option>
+            <option value="very_hard">ベリーハード</option>
+          </select>
+        </div>
+        {request.playerId && (
+          <p className="text-xs font-bold text-orange-600 mb-4 bg-orange-50 p-2 rounded-xl">
+            採用すると「{request.playerName}」さんに 1000ポイント のプレゼント通知が とどきます
+          </p>
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-black text-sm rounded-2xl"
+          >
+            やめる
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              playDecideSound?.();
+              onConfirm();
+            }}
+            className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-sm rounded-2xl shadow-lg"
+          >
+            ✅ 採用する
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerDetailModal({ player, onClose, onArchive, onGift }) {
+  if (!player) return null;
+  const avgMs = getAveragePlayMs(player.totalPlayMs, player.sessionCount);
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-sky-300">
+        <h3 className="text-lg font-black text-sky-700 mb-4 text-center">📊 {player.name}</h3>
+        <div className="space-y-3 text-sm font-bold text-gray-700">
+          <div className="flex justify-between bg-sky-50 p-3 rounded-xl">
+            <span>合計プレイ時間</span>
+            <span className="text-sky-600">{formatDurationMs(player.totalPlayMs)}</span>
+          </div>
+          <div className="flex justify-between bg-sky-50 p-3 rounded-xl">
+            <span>平均プレイ時間</span>
+            <span className="text-sky-600">{avgMs ? formatDurationMs(avgMs) : '記録なし'}</span>
+          </div>
+          <div className="flex justify-between bg-sky-50 p-3 rounded-xl">
+            <span>あそんだ回数</span>
+            <span className="text-sky-600">{player.sessionCount || 0} 回</span>
+          </div>
+          <div className="flex justify-between bg-sky-50 p-3 rounded-xl">
+            <span>ポイント</span>
+            <span className="text-yellow-600">🪙 {player.points || 0}</span>
+          </div>
+        </div>
+        <div className="flex gap-2 mt-5">
+          <button
+            type="button"
+            onClick={() => onGift?.(player)}
+            className="flex-1 py-2.5 bg-pink-500 hover:bg-pink-600 text-white font-black text-xs rounded-2xl"
+          >
+            🎁 プレゼント
+          </button>
+          <button
+            type="button"
+            onClick={() => onArchive?.(player)}
+            className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-2xl"
+          >
+            📁 アーカイブ
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full mt-2 py-3 bg-sky-500 hover:bg-sky-600 text-white font-black rounded-2xl"
+        >
+          とじる
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminPanel({ players, onReloadPlayers, onBack, playDecideSound }) {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [wordRequests, setWordRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [giftTarget, setGiftTarget] = useState(null);
+  const [detailPlayer, setDetailPlayer] = useState(null);
+  const [adoptingRequest, setAdoptingRequest] = useState(null);
+  const [adoptDifficulty, setAdoptDifficulty] = useState('easy');
+  const [adopting, setAdopting] = useState(false);
+
+  const activePlayers = useMemo(() => players.filter((p) => !p.isArchived), [players]);
+  const archivedPlayers = useMemo(() => players.filter((p) => p.isArchived), [players]);
+
+  const loadRequests = useCallback(async () => {
+    setLoadingRequests(true);
+    try {
+      const list = await getWordRequests();
+      setWordRequests(list);
+    } finally {
+      setLoadingRequests(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authenticated) {
+      loadRequests();
+    }
+  }, [authenticated, loadRequests]);
+
+  const pendingGiftEntries = useMemo(() => {
+    const entries = [];
+    players.forEach((p) => {
+      (p.pendingGifts || []).forEach((gift) => {
+        entries.push({ player: p, gift });
+      });
+    });
+    entries.sort((a, b) => new Date(b.gift.createdAt || 0) - new Date(a.gift.createdAt || 0));
+    return entries;
+  }, [players]);
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setAuthenticated(true);
+      setPasswordInput('');
+      playDecideSound?.();
+    } else {
+      alert('パスワードがちがうよ！');
+      setPasswordInput('');
+    }
+  };
+
+  const handleDeleteRequest = async (id) => {
+    if (!confirm('このリクエストを削除してもよろしいですか？')) return;
+    const success = await deleteWordRequest(id);
+    if (success) {
+      loadRequests();
+    } else {
+      alert('削除に失敗しました。');
+    }
+  };
+
+  const handleAdopt = async () => {
+    if (!adoptingRequest || adopting) return;
+    setAdopting(true);
+    try {
+      const adoptedData = {
+        kana: adoptingRequest.kana,
+        romaji: adoptingRequest.romaji,
+        emoji: adoptingRequest.emoji || '',
+        difficulty: adoptDifficulty,
+        playerName: adoptingRequest.playerName || 'ゲスト',
+        playerId: adoptingRequest.playerId || null,
+      };
+      const successAdopt = await addAdoptedWord(adoptedData);
+      if (!successAdopt) {
+        alert('採用に失敗しました。接続を確認してください。');
+        return;
+      }
+      await deleteWordRequest(adoptingRequest.id);
+      if (adoptingRequest.playerId) {
+        await sendGiftToCloudPlayer(adoptingRequest.playerId, {
+          points: 1000,
+          message: `🎉「${adoptingRequest.kana}」のリクエストが採用されたよ！\n1000ポイント プレゼント！`,
+        });
+      }
+      await loadRequests();
+      onReloadPlayers?.();
+      alert(`「${adoptingRequest.kana}」を採用しました！`);
+      setAdoptingRequest(null);
+    } finally {
+      setAdopting(false);
+    }
+  };
+
+  const handleCancelGift = async (playerId, giftId) => {
+    if (!confirm('このプレゼントを取り消しますか？')) return;
+    const success = await cancelGiftFromCloudPlayer(playerId, giftId);
+    if (success) {
+      onReloadPlayers?.();
+    } else {
+      alert('取り消しに失敗しました。');
+    }
+  };
+
+  const syncLocalArchiveFlag = async (playerId, isArchived) => {
+    const local = await localforage.getItem('player_data_' + playerId);
+    if (local) {
+      await localforage.setItem('player_data_' + playerId, { ...local, isArchived });
+    }
+  };
+
+  const handleArchive = async (player) => {
+    if (!player?.id) return;
+    if (
+      !confirm(
+        `プレイヤー「${player.name}」をアーカイブしますか？\n\n一覧から非表示になります（データは残ります）。`,
+      )
+    ) {
+      return;
+    }
+    playDecideSound?.();
+    const success = await setPlayerArchived(player.id, true);
+    if (success) {
+      await syncLocalArchiveFlag(player.id, true);
+      setDetailPlayer(null);
+      alert('アーカイブしました！');
+      onReloadPlayers?.();
+    } else {
+      alert('アーカイブに失敗しました。接続を確認してね。');
+    }
+  };
+
+  const handleUnarchive = async (player) => {
+    if (!player?.id) return;
+    if (!confirm(`プレイヤー「${player.name}」を復元しますか？`)) return;
+    playDecideSound?.();
+    const success = await setPlayerArchived(player.id, false);
+    if (success) {
+      await syncLocalArchiveFlag(player.id, false);
+      alert('復元しました！');
+      onReloadPlayers?.();
+    } else {
+      alert('復元に失敗しました。');
+    }
+  };
+
+  if (!authenticated) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white/80 backdrop-blur-md rounded-3xl border-4 border-orange-300 shadow-xl max-w-md mx-auto my-8 text-center animate-pop-out">
+        <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-orange-200">
+          <Key className="w-8 h-8 text-orange-500" />
+        </div>
+        <h3 className="text-xl font-black text-orange-600 mb-2">かんりしゃメニュー</h3>
+        <p className="text-xs font-bold text-gray-500 mb-6">
+          ここから先は、管理者用の画面です。
+          <br />
+          あいことばを入力してください。
+        </p>
+        <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-3 w-full max-w-[240px] mx-auto">
+          <input
+            type="password"
+            placeholder="○○○○"
+            maxLength={4}
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
+            className="w-full text-center text-2xl tracking-[0.5em] font-black p-3 rounded-xl border-4 border-orange-200 focus:border-orange-500 focus:outline-none bg-white text-gray-700"
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={passwordInput.length < 4}
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-black text-sm py-3 rounded-xl shadow-md active:scale-95 transition-all"
+          >
+            すすむ
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-black text-sm py-2.5 rounded-xl transition-all"
+          >
+            もどる
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 lg:gap-6 pb-2">
+        <div className="flex-[3] min-h-0 flex flex-col">
+          <h4 className="text-sm font-black text-orange-600 mb-2 flex items-center gap-1.5 shrink-0">
+            <span>📮</span> リクエストされた言葉（全 {wordRequests.length} 件）
+            {loadingRequests && <span className="text-[10px] text-gray-400">読込中...</span>}
+          </h4>
+          <div className="flex-1 overflow-auto border-2 border-orange-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 max-h-[40vh] lg:max-h-[55vh]">
+            {wordRequests.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-sm font-bold text-gray-400 py-16 gap-2">
+                <span className="text-4xl">📮</span>
+                リクエストされた単語はまだありません。
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-orange-50/50 border-b border-orange-100 sticky top-0 z-10">
+                    <th className="p-2 font-black text-orange-700">日時</th>
+                    <th className="p-2 font-black text-orange-700">かな</th>
+                    <th className="p-2 font-black text-orange-700">ローマ字</th>
+                    <th className="p-2 font-black text-orange-700">なまえ</th>
+                    <th className="p-2 font-black text-orange-700 text-center">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-orange-50 bg-white/40">
+                  {wordRequests.map((req) => (
+                    <tr key={req.id} className="hover:bg-orange-50/30 transition-colors">
+                      <td className="p-2 text-gray-500 font-bold whitespace-nowrap">
+                        {req.createdAt ? new Date(req.createdAt).toLocaleString('ja-JP') : '-'}
+                      </td>
+                      <td className="p-2 font-black text-gray-800">{req.kana}</td>
+                      <td className="p-2 font-mono text-gray-600">
+                        {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
+                      </td>
+                      <td className="p-2 font-bold text-gray-600">{req.playerName || 'ゲスト'}</td>
+                      <td className="p-2 text-center whitespace-nowrap">
+                        <div className="flex gap-1 justify-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playDecideSound?.();
+                              setAdoptingRequest(req);
+                              setAdoptDifficulty(suggestDifficultyKey(req.kana));
+                            }}
+                            className="px-2 py-1 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                          >
+                            ✅ 採用
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRequest(req.id)}
+                            className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-[2] min-h-0 flex flex-col lg:max-w-md gap-4">
+          <div className="flex-1 min-h-0 flex flex-col">
+            <h4 className="text-sm font-black text-sky-600 mb-1.5 shrink-0">
+              <span>👤</span> セーブデータ管理（{activePlayers.length}件）
+            </h4>
+            <div className="flex-1 overflow-auto border-2 border-sky-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 max-h-[28vh] lg:max-h-[30vh]">
+              {activePlayers.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs font-bold text-gray-400 py-8">
+                  表示中のセーブデータはありません
+                </div>
+              ) : (
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-sky-50/50 border-b border-sky-100 sticky top-0 z-10">
+                    <th className="p-2 font-black text-sky-700">なまえ</th>
+                    <th className="p-2 font-black text-sky-700">合計</th>
+                    <th className="p-2 font-black text-sky-700">平均</th>
+                    <th className="p-2 font-black text-sky-700 text-center">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-sky-50 bg-white/40">
+                  {activePlayers.map((p) => {
+                    const avgMs = getAveragePlayMs(p.totalPlayMs, p.sessionCount);
+                    return (
+                      <tr key={p.id} className="hover:bg-sky-50/30 transition-colors">
+                        <td className="p-2 font-black text-gray-800 whitespace-nowrap">{p.name}</td>
+                        <td className="p-2 font-bold text-sky-600 whitespace-nowrap">
+                          {p.sessionCount > 0 ? formatDurationMs(p.totalPlayMs) : '-'}
+                        </td>
+                        <td className="p-2 font-bold text-sky-600 whitespace-nowrap">
+                          {avgMs ? formatDurationMs(avgMs) : '-'}
+                        </td>
+                        <td className="p-2 text-center whitespace-nowrap">
+                          <div className="flex gap-0.5 justify-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                playDecideSound?.();
+                                setDetailPlayer(p);
+                              }}
+                              className="px-1.5 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 rounded-lg font-black text-[9px]"
+                              title="詳細"
+                            >
+                              📊
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                playDecideSound?.();
+                                setGiftTarget(p);
+                              }}
+                              className="px-1.5 py-0.5 bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-lg font-black text-[9px]"
+                              title="プレゼント"
+                            >
+                              🎁
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleArchive(p)}
+                              className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg font-black text-[8px] sm:text-[9px] whitespace-nowrap"
+                              title="アーカイブ"
+                            >
+                              📁
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              )}
+            </div>
+          </div>
+
+          {archivedPlayers.length > 0 && (
+            <div className="shrink-0 flex flex-col">
+              <h4 className="text-xs font-black text-amber-700 mb-1 shrink-0">
+                <span>📁</span> アーカイブ済み（{archivedPlayers.length}件）
+              </h4>
+              <div className="max-h-[12vh] overflow-auto border-2 border-amber-100 rounded-xl bg-amber-50/50 p-1.5 space-y-1">
+                {archivedPlayers.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between gap-2 bg-white/80 rounded-lg px-2 py-1 border border-amber-100"
+                  >
+                    <span className="text-[10px] font-black text-gray-700 truncate">{p.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleUnarchive(p)}
+                      className="shrink-0 px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg font-black text-[8px]"
+                    >
+                      復元
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 min-h-0 flex flex-col">
+            <h4 className="text-sm font-black text-pink-600 mb-1.5 shrink-0">
+              <span>🎁</span> 未受け取りプレゼント
+            </h4>
+            <div className="flex-1 overflow-auto border-2 border-pink-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-2 max-h-[22vh] lg:max-h-[24vh] text-[10px]">
+              {pendingGiftEntries.length === 0 ? (
+                <div className="h-full flex items-center justify-center font-bold text-gray-400 py-6">
+                  未受け取りのプレゼントはありません。
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {pendingGiftEntries.map(({ player, gift }) => {
+                    const contents = [];
+                    if (gift.points) contents.push(`🪙${gift.points}`);
+                    if (gift.specialTickets) contents.push(`🎨×${gift.specialTickets}`);
+                    if (gift.legendTickets) contents.push(`🌟×${gift.legendTickets}`);
+                    if (gift.bgmTickets) contents.push(`🎵×${gift.bgmTickets}`);
+                    if (gift.seTickets) contents.push(`🔊×${gift.seTickets}`);
+                    return (
+                      <div
+                        key={gift.id}
+                        className="bg-white/90 p-2 rounded-xl border border-pink-100 shadow-sm flex flex-col gap-1"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <span className="font-black text-gray-800 text-xs">{player.name} さんあて</span>
+                            <span className="text-gray-400 ml-1 text-[9px] font-bold">
+                              {gift.createdAt
+                                ? new Date(gift.createdAt).toLocaleString('ja-JP', {
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : ''}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCancelGift(player.id, gift.id)}
+                            className="px-1.5 py-0.5 bg-red-50 hover:bg-red-100 text-red-500 rounded border border-red-200 font-bold text-[9px] shrink-0"
+                          >
+                            とりけし
+                          </button>
+                        </div>
+                        {contents.length > 0 && (
+                          <div className="font-bold text-indigo-600">{contents.join(' / ')}</div>
+                        )}
+                        {gift.message && (
+                          <div className="bg-gray-50 text-gray-500 p-1.5 rounded-lg font-bold border border-gray-100">
+                            💬 {gift.message}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {giftTarget && (
+        <AdminGiftModal
+          player={giftTarget}
+          onClose={() => setGiftTarget(null)}
+          onSent={onReloadPlayers}
+          playDecideSound={playDecideSound}
+        />
+      )}
+      {detailPlayer && (
+        <PlayerDetailModal
+          player={detailPlayer}
+          onClose={() => setDetailPlayer(null)}
+          onArchive={(p) => {
+            setDetailPlayer(null);
+            handleArchive(p);
+          }}
+          onGift={(p) => {
+            setDetailPlayer(null);
+            setGiftTarget(p);
+          }}
+        />
+      )}
+      {adoptingRequest && (
+        <AdminAdoptModal
+          request={adoptingRequest}
+          difficulty={adoptDifficulty}
+          onDifficultyChange={setAdoptDifficulty}
+          onConfirm={handleAdopt}
+          onCancel={() => setAdoptingRequest(null)}
+          playDecideSound={playDecideSound}
+        />
+      )}
+    </>
+  );
+}

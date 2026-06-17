@@ -1,16 +1,16 @@
 import React from 'react';
 import { Trophy } from 'lucide-react';
-import { GACHA_ITEMS, getRarityWeight } from '../constants';
+import { GACHA_ITEMS, compareItemsByRarity } from '../constants';
 
 export default function CollectionSidebar({ player }) {
   const collection = player?.collection || {};
   const newItems = player?.newItems || [];
 
   const obtainedItems = GACHA_ITEMS.filter((item) => (collection[item.name] || 0) > 0).sort(
-    (a, b) => getRarityWeight(b.rarity) - getRarityWeight(a.rarity),
+    compareItemsByRarity,
   );
-
-  const totalCount = Object.values(collection).reduce((sum, n) => sum + n, 0);
+  const ownedKinds = obtainedItems.length;
+  const totalKinds = GACHA_ITEMS.length;
 
   return (
     <aside className="hidden lg:flex w-44 xl:w-52 bg-white/95 backdrop-blur-md border-l-4 border-yellow-300 flex-col shrink-0 shadow-2xl z-30 overflow-hidden">
@@ -18,7 +18,9 @@ export default function CollectionSidebar({ player }) {
         <h2 className="text-sm xl:text-base font-black text-gray-800 flex items-center gap-1.5">
           <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
           <span>ごほうび</span>
-          <span className="text-sky-500 text-xs xl:text-sm ml-auto">{totalCount}コ</span>
+          <span className="text-sky-500 text-[10px] xl:text-xs ml-auto font-black">
+            {ownedKinds}/{totalKinds}
+          </span>
         </h2>
       </div>
 

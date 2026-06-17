@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { BGM_LIST, SE_LIST } from '../audio';
 
@@ -11,16 +11,23 @@ export default function MusicShopModal({
   playDecideSound,
   playCancelSound,
   previewSe,
+  initialBgmId,
+  initialSeId,
 }) {
   const [tempBgm, setTempBgm] = useState('default');
   const [tempSe, setTempSe] = useState('default');
 
   useEffect(() => {
     if (isOpen && player) {
-      setTempBgm(player.currentBgm || 'default');
-      setTempSe(player.currentSe || 'default');
+      const nextBgm = initialBgmId || player.currentBgm || 'default';
+      const nextSe = initialSeId || player.currentSe || 'default';
+      setTempBgm(nextBgm);
+      setTempSe(nextSe);
+      if (initialBgmId) {
+        previewBgm?.(nextBgm);
+      }
     }
-  }, [isOpen, player]);
+  }, [isOpen, player, initialBgmId, initialSeId, previewBgm]);
 
   if (!isOpen || !player) return null;
 

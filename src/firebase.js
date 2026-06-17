@@ -100,7 +100,6 @@ export const loadFullBackup = async (masterCode) => {
   }
 };
 
-// --- プレイヤー単位のグローバルクラウド保存 ---
 export const saveCloudPlayer = async (playerId, playerData) => {
   if (!playerId) return false;
   try {
@@ -131,6 +130,27 @@ export const saveCloudPlayer = async (playerId, playerData) => {
 
     return true;
   } catch (error) {
+    return false;
+  }
+};
+
+export const setPlayerArchived = async (playerId, isArchived) => {
+  if (!playerId) return false;
+  try {
+    const docRef = doc(db, 'global_players', playerId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return false;
+    await setDoc(
+      docRef,
+      {
+        isArchived: isArchived === true,
+        lastUpdatedAt: new Date().toISOString(),
+      },
+      { merge: true },
+    );
+    return true;
+  } catch (error) {
+    console.error('Error setting player archived:', error);
     return false;
   }
 };
@@ -348,6 +368,32 @@ export const sendGiftToCloudPlayer = async (playerId, giftData) => {
     return false;
   } catch (error) {
     console.error("Error sending gift to cloud player:", error);
+    return false;
+  }
+};
+
+export const cancelGiftFromCloudPlayer = async (playerId, giftId) => {
+  if (!playerId || !giftId) return false;
+  try {
+    const docRef = doc(db, 'global_players', playerId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return false;
+    const cloudData = docSnap.data();
+    const pendingGifts = Array.isArray(cloudData.pendingGifts)
+      ? cloudData.pendingGifts.filter((g) => g.id !== giftId)
+      : [];
+    await setDoc(
+      docRef,
+      {
+        ...cloudData,
+        pendingGifts,
+        lastUpdatedAt: new Date().toISOString(),
+      },
+      { merge: true },
+    );
+    return true;
+  } catch (error) {
+    console.error('Error canceling gift:', error);
     return false;
   }
 };

@@ -6,12 +6,20 @@ import {
   resolveBackground,
 } from '../constants';
 import { pickGameWords } from '../utils/typingWords';
+import { getAdoptedWords } from '../firebase';
 import GameSidebar from './GameSidebar';
 import CollectionSidebar from './CollectionSidebar';
 import AssistSettingsModal from './AssistSettingsModal';
 import TicketRewardModal from './TicketRewardModal';
+import ConfirmModal from './ConfirmModal';
 
 const COUNTDOWN_STEPS = ['3', '2', '1', 'GO!!'];
+const CHAOS_WINDOW_MS = 1500;
+const CHAOS_MIN_KEYS = 5;
+const CHAOS_MIN_ERRORS = 3;
+const CHAOS_ERROR_RATIO = 0.65;
+const CHAOS_WARNING_COOLDOWN_MS = 2500;
+const CHAOS_WARNING_DURATION_MS = 2500;
 
 function calcClearPoints(difficulty, missCount, assistSettings) {
   let pts = 100;
@@ -177,21 +185,29 @@ export default function TypingScreen({
   onAssistChange,
   onPlayerUpdate,
   onBack,
-  onLogout,
+  onSaveAndTitle,
   onOpenProfile,
   onOpenMusic,
   onOpenShop,
+  onOpenZukan,
   playSE,
 }) {
   const playMetaRef = useRef({
-    playCount: player?.playCount || 0,
-    specialWordTriggered: !!player?.specialWordTriggered,
+    playCount: Number(player?.playCount) >= 0 ? Number(player?.playCount) : 0,
+    specialWordTriggered: player?.specialWordTriggered === true,
   });
+  const adoptedWordsRef = useRef([]);
   const onPlayerUpdateRef = useRef(onPlayerUpdate);
 
   useEffect(() => {
     onPlayerUpdateRef.current = onPlayerUpdate;
   }, [onPlayerUpdate]);
+
+  useEffect(() => {
+    getAdoptedWords().then((words) => {
+      adoptedWordsRef.current = words || [];
+    });
+  }, []);
 
   const [gameWords, setGameWords] = useState([]);
   const [wordIndex, setWordIndex] = useState(0);
@@ -211,6 +227,11 @@ export default function TypingScreen({
   });
   const [ticketReward, setTicketReward] = useState(null);
   const [countdownStep, setCountdownStep] = useState(0);
+  const [leaveConfirm, setLeaveConfirm] = useState(null);
+  const [typingWarning, setTypingWarning] = useState(false);
+  const keyPressWindowRef = useRef([]);
+  const lastTypingWarningAtRef = useRef(0);
+  const typingWarningTimerRef = useRef(null);
 
   const isCountdown = countdownStep < COUNTDOWN_STEPS.length;
   const countdownLabel = isCountdown ? COUNTDOWN_STEPS[countdownStep] : null;
@@ -248,6 +269,8 @@ export default function TypingScreen({
       false,
       playMetaRef.current.playCount,
       playMetaRef.current.specialWordTriggered,
+      undefined,
+      adoptedWordsRef.current,
     );
     playMetaRef.current = { playCount: newPlayCount, specialWordTriggered: newTriggered };
     setGameWords(words);
@@ -286,10 +309,81 @@ export default function TypingScreen({
   }, [difficulty, restartRound]);
 
   useEffect(() => {
-    if (currentWord?.isSpecial && !isAllClear && !isTransitioning) {
-      playSE?.('legend');
-    }
-  }, [currentWord, isAllClear, isTransitioning, playSE]);
+    if (!currentWord?.isSpecial || isCountdown || isAllClear || isTransitioning) return undefined;
+
+    // 1問目はカウントダウン（GO!!）の直後と被らないよう少し待つ
+    const delay = wordIndex === 0 ? 450 : 0;
+    const timer = setTimeout(() => playSE?.('legend'), delay);
+    return () => clearTimeout(timer);
+  }, [currentWord, wordIndex, isCountdown, isAllClear, isTransitioning, playSE]);
+
+  useEffect(
+    () => () => {
+      if (typingWarningTimerRef.current) clearTimeout(typingWarningTimerRef.current);
+    },
+    [],
+  );
+
+  const showTypingWarning = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTypingWarningAtRef.current < CHAOS_WARNING_COOLDOWN_MS) return;
+    lastTypingWarningAtRef.current = now;
+    setTypingWarning(true);
+    if (typingWarningTimerRef.current) clearTimeout(typingWarningTimerRef.current);
+    typingWarningTimerRef.current = setTimeout(() => {
+      setTypingWarning(false);
+      typingWarningTimerRef.current = null;
+    }, CHAOS_WARNING_DURATION_MS);
+  }, []);
+
+  const registerKeyPress = useCallback(
+    (isCorrect) => {
+      const now = Date.now();
+      keyPressWindowRef.current.push({ t: now, ok: isCorrect });
+      keyPressWindowRef.current = keyPressWindowRef.current.filter(
+        (entry) => now - entry.t < CHAOS_WINDOW_MS,
+      );
+
+      const windowEntries = keyPressWindowRef.current;
+      if (windowEntries.length < CHAOS_MIN_KEYS) return;
+
+      const errorCount = windowEntries.filter((entry) => !entry.ok).length;
+      if (
+        errorCount >= CHAOS_MIN_ERRORS ||
+        errorCount / windowEntries.length >= CHAOS_ERROR_RATIO
+      ) {
+        showTypingWarning();
+      }
+    },
+    [showTypingWarning],
+  );
+
+  const requestLeaveHome = useCallback(() => {
+    setLeaveConfirm({
+      title: '🏠 ひろばにもどる？',
+      message:
+        'いまの タイピングは 保存されないよ。\n本当に ひろばに もどっていい？',
+      confirmLabel: 'ひろばにもどる',
+      onConfirm: onBack,
+    });
+  }, [onBack]);
+
+  const requestLeaveTitle = useCallback(() => {
+    setLeaveConfirm({
+      title: '🚪 タイトルにセーブして戻る？',
+      message:
+        'いまの あそびかたを クラウドに セーブして\nタイトルに もどりますか？',
+      confirmLabel: 'セーブする',
+      onConfirm: () => {
+        onSaveAndTitle?.({
+          points: localPoints,
+          ...localTickets,
+          playCount: playMetaRef.current.playCount,
+          specialWordTriggered: playMetaRef.current.specialWordTriggered,
+        });
+      },
+    });
+  }, [onSaveAndTitle, localPoints, localTickets]);
 
   const finishClear = useCallback(
     (pts) => {
@@ -305,13 +399,25 @@ export default function TypingScreen({
 
   const handleKeyDown = useCallback(
     (e) => {
-      if (e.repeat || isTransitioning || isAllClear || isAssistOpen || isCountdown || ticketReward) return;
+      if (
+        e.repeat ||
+        isTransitioning ||
+        isAllClear ||
+        isAssistOpen ||
+        isCountdown ||
+        ticketReward ||
+        leaveConfirm ||
+        typingWarning
+      ) {
+        return;
+      }
       if (e.key === 'Shift' || e.ctrlKey || e.metaKey || e.altKey) return;
       if (!/^[a-zA-Z0-9\-!?,.]$/.test(e.key)) return;
 
       const inputChar = e.key.toLowerCase();
 
       if (nextValidChars.includes(inputChar)) {
+        registerKeyPress(true);
         const newTyped = typedChars + inputChar;
         setTypedChars(newTyped);
         playSE?.('type');
@@ -355,15 +461,17 @@ export default function TypingScreen({
             playSE?.('legend');
           } else {
             playSE?.(isLastWord ? 'allClear' : 'wordClear');
+            setTimeout(proceedToNext, 800);
           }
-
-          setTimeout(proceedToNext, 800);
         }
-      } else if (difficulty !== 'easy') {
-        setMissCount((prev) => prev + 1);
-        setIsShaking(true);
-        playSE?.('error');
-        setTimeout(() => setIsShaking(false), 300);
+      } else {
+        registerKeyPress(false);
+        if (difficulty !== 'easy') {
+          setMissCount((prev) => prev + 1);
+          setIsShaking(true);
+          playSE?.('error');
+          setTimeout(() => setIsShaking(false), 300);
+        }
       }
     },
     [
@@ -378,11 +486,14 @@ export default function TypingScreen({
       isAssistOpen,
       isCountdown,
       ticketReward,
+      leaveConfirm,
+      typingWarning,
       difficulty,
       missCount,
       assistSettings,
       localTickets,
       finishClear,
+      registerKeyPress,
       playSE,
     ],
   );
@@ -423,11 +534,19 @@ export default function TypingScreen({
       >
         <GameSidebar
           player={sidebarPlayer}
-          onSaveAndTitle={onLogout}
+          onSaveAndTitle={() =>
+            onSaveAndTitle?.({
+              points: localPoints,
+              ...localTickets,
+              playCount: playMetaRef.current.playCount,
+              specialWordTriggered: playMetaRef.current.specialWordTriggered,
+            })
+          }
           onGoHome={onBack}
           onShop={onOpenShop}
           onProfile={onOpenProfile}
           onMusic={onOpenMusic}
+          onZukan={onOpenZukan}
         />
         <main className="flex-1 flex flex-col items-center justify-center p-4">
           <div className="bg-white/95 border-4 border-yellow-300 rounded-3xl p-8 sm:p-10 text-center max-w-md shadow-2xl animate-fade-in">
@@ -468,11 +587,12 @@ export default function TypingScreen({
     >
       <GameSidebar
         player={sidebarPlayer}
-        onSaveAndTitle={onLogout}
-        onGoHome={onBack}
+        onSaveAndTitle={requestLeaveTitle}
+        onGoHome={requestLeaveHome}
         onShop={onOpenShop}
         onProfile={onOpenProfile}
         onMusic={onOpenMusic}
+        onZukan={onOpenZukan}
         onAssist={() => setIsAssistOpen(true)}
         assistActive={
           assistSettings.keyboardHighlight ||
@@ -601,6 +721,31 @@ export default function TypingScreen({
       <TicketRewardModal
         ticketReward={ticketReward}
         onClose={() => setTicketReward(null)}
+      />
+
+      <ConfirmModal
+        isOpen={!!leaveConfirm}
+        title={leaveConfirm?.title}
+        message={leaveConfirm?.message}
+        confirmLabel={leaveConfirm?.confirmLabel}
+        onCancel={() => setLeaveConfirm(null)}
+        onConfirm={() => {
+          const action = leaveConfirm?.onConfirm;
+          setLeaveConfirm(null);
+          action?.();
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={typingWarning}
+        title="⌨️ ちょっと まって！"
+        message={
+          'キーボードを メチャクチャ に おしていないかな？\nゆっくり、 つぎの もじを 正しく うって みよう！'
+        }
+        confirmLabel="わかった！"
+        cancelLabel={null}
+        onCancel={() => setTypingWarning(false)}
+        onConfirm={() => setTypingWarning(false)}
       />
 
       {countdownOverlay}

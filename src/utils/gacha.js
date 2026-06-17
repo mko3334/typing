@@ -1,4 +1,4 @@
-import { BACKGROUNDS, GACHA_ITEMS, getRarityWeight } from '../constants';
+import { BACKGROUNDS, GACHA_ITEMS } from '../constants';
 import { BGM_LIST, SE_LIST } from '../audio';
 
 const REWARD_PULL_COSTS = {
@@ -7,27 +7,56 @@ const REWARD_PULL_COSTS = {
   15: 1000,
 };
 
-function pickWeighted(items) {
-  if (!items.length) return null;
-  const total = items.reduce((sum, item) => sum + getRarityWeight(item.rarity), 0);
+/** ごほうびガacha：レアリティ別の出率（アイテム数に左右されない） */
+const REWARD_TIER_WEIGHTS = {
+  '✨レジェンド✨': 1,
+  '🌟超激レア🌟': 4,
+  '🔥激レア🔥': 4,
+  '✨激レア✨': 8,
+  '⭐レア⭐': 27,
+  レア: 27,
+  ノーマル: 60,
+};
+
+/** 超激レア以上ガacha：超激レア vs レジェンド（レジェンドは低め） */
+const PREMIUM_GACHA_TIER_WEIGHTS = {
+  '🌟超激レア🌟': 82,
+  '🔥激レア🔥': 82,
+  '✨レジェンド✨': 18,
+};
+
+const PREMIUM_GACHA_RARITIES = new Set(['🌟超激レア🌟', '🔥激レア🔥', '✨レジェンド✨']);
+
+function pickByTierWeights(pool, tierWeights) {
+  if (!pool.length) return null;
+
+  const tiers = Object.entries(tierWeights).filter(([tier]) => pool.some((item) => item.rarity === tier));
+  if (!tiers.length) return pool[Math.floor(Math.random() * pool.length)];
+
+  const total = tiers.reduce((sum, [, weight]) => sum + weight, 0);
   let roll = Math.random() * total;
-  for (const item of items) {
-    roll -= getRarityWeight(item.rarity);
-    if (roll <= 0) return item;
+
+  for (const [tier, weight] of tiers) {
+    roll -= weight;
+    if (roll <= 0) {
+      const tierItems = pool.filter((item) => item.rarity === tier);
+      return tierItems[Math.floor(Math.random() * tierItems.length)];
+    }
   }
-  return items[items.length - 1];
+
+  const fallbackTier = tiers[tiers.length - 1][0];
+  const fallbackItems = pool.filter((item) => item.rarity === fallbackTier);
+  return fallbackItems[Math.floor(Math.random() * fallbackItems.length)];
 }
 
 export function pullRewardItems(count = 1) {
-  const pool = GACHA_ITEMS.filter((item) => item.rarity !== '✨レジェンド✨');
-  return Array.from({ length: count }, () => pickWeighted(pool)).filter(Boolean);
+  const pool = GACHA_ITEMS;
+  return Array.from({ length: count }, () => pickByTierWeights(pool, REWARD_TIER_WEIGHTS)).filter(Boolean);
 }
 
 export function pullLegendItem() {
-  const pool = GACHA_ITEMS.filter(
-    (item) => item.rarity === '✨激レア✨' || item.rarity === '✨レジェンド✨',
-  );
-  return pickWeighted(pool);
+  const pool = GACHA_ITEMS.filter((item) => PREMIUM_GACHA_RARITIES.has(item.rarity));
+  return pickByTierWeights(pool, PREMIUM_GACHA_TIER_WEIGHTS);
 }
 
 export function pullBackground(backgrounds = ['default']) {
@@ -55,17 +84,65 @@ export function getRewardPullCost(count) {
   return REWARD_PULL_COSTS[count] ?? null;
 }
 
-export function getHotColorForRarity(rarity) {
-  if (rarity === '✨レジェンド✨') {
-    return { hex: '#a855f7', rarity, name: 'purple' };
+const HOT_TIER_ORDER = { yellow: 1, red: 2, purple: 3 };
+
+export function getHotTierForRarity(rarity) {
+  if (rarity === '✨レジェンド✨') return 'purple';
+  if (rarity === '🌟超激レア🌟' || rarity === '🔥激レア🔥') return 'red';
+  if (rarity === '✨激レア✨') return 'yellow';
+  return null;
+}
+
+export function getHighestHotTierFromItems(items = []) {
+  let best = null;
+  for (const item of items) {
+    const tier = getHotTierForRarity(item?.rarity);
+    if (!tier) continue;
+    if (!best || HOT_TIER_ORDER[tier] > HOT_TIER_ORDER[best]) best = tier;
   }
-  if (rarity === '✨激レア✨') {
-    return { hex: '#eab308', rarity, name: 'yellow' };
+  return best;
+}
+
+export function getHotColorForRarity(rarity) {
+  const tier = getHotTierForRarity(rarity);
+  if (tier === 'purple') {
+    return { hex: '#a855f7', rarity, name: 'purple', tier };
+  }
+  if (tier === 'red') {
+    return { hex: '#ef4444', rarity, name: 'red', tier };
+  }
+  if (tier === 'yellow') {
+    return { hex: '#eab308', rarity, name: 'yellow', tier };
   }
   if (rarity === 'レア') {
-    return { hex: '#22c55e', rarity, name: 'green' };
+    return { hex: '#22c55e', rarity, name: 'green', tier: null };
   }
-  return { hex: '#3b82f6', rarity, name: 'blue' };
+  return { hex: '#3b82f6', rarity, name: 'blue', tier: null };
+}
+
+export function getHotTierStyles(tier) {
+  if (tier === 'purple') {
+    return {
+      text: '#9333ea',
+      border: '#a855f7',
+      flash: 'animate-thunder-flash-purple',
+      strike: 'animate-thunder-strike-purple',
+    };
+  }
+  if (tier === 'red') {
+    return {
+      text: '#dc2626',
+      border: '#ef4444',
+      flash: 'animate-thunder-flash-red',
+      strike: 'animate-thunder-strike-red',
+    };
+  }
+  return {
+    text: '#ca8a04',
+    border: '#eab308',
+    flash: 'animate-thunder-flash-yellow',
+    strike: 'animate-thunder-strike-yellow',
+  };
 }
 
 export function applyCollectionPulls(collection, items) {

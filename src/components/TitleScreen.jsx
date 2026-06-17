@@ -3,40 +3,8 @@ import { User, Plus, Search, X, Tag } from 'lucide-react';
 import { loadAllCloudPlayers, saveCloudPlayer } from '../firebase';
 import localforage from 'localforage';
 import PlayerCard from './PlayerCard';
-
-function enrichPlayer(id, data) {
-  const collection = data.collection || {};
-  const ownedCount = Object.keys(collection).filter((k) => collection[k] > 0).length;
-  return {
-    id,
-    name: data.name,
-    points: data.points || 0,
-    collection,
-    collectionCount: ownedCount,
-    currentTitle: data.currentTitle || 'rookie',
-    currentIcon: data.currentIcon || null,
-    currentBackground: data.currentBackground || 'default',
-    currentBgm: data.currentBgm || 'default',
-    currentSe: data.currentSe || 'default',
-    unlockedBgms: Array.isArray(data.unlockedBgms) ? data.unlockedBgms : ['default'],
-    unlockedSes: Array.isArray(data.unlockedSes) ? data.unlockedSes : ['default'],
-    achievements: Array.isArray(data.achievements) ? data.achievements : ['rookie'],
-    backgrounds: Array.isArray(data.backgrounds) ? data.backgrounds : ['default'],
-    currentTitle: data.currentTitle || 'rookie',
-    currentIcon: data.currentIcon ?? null,
-    assistSettings: data.assistSettings || null,
-    specialTickets: data.specialTickets || 0,
-    legendTickets: data.legendTickets || 0,
-    bgmTickets: data.bgmTickets || 0,
-    seTickets: data.seTickets || 0,
-    playCount: data.playCount || 0,
-    specialWordTriggered: !!data.specialWordTriggered,
-    newItems: data.newItems || [],
-    tags: data.tags || [],
-    isArchived: data.isArchived || false,
-    lastUpdatedAt: data.lastUpdatedAt || null,
-  };
-}
+import AdminPanel from './AdminPanel';
+import { enrichPlayer } from '../utils/player';
 
 function dedupePlayersByName(players) {
   const byName = new Map();
@@ -54,6 +22,33 @@ function dedupePlayersByName(players) {
   }
   return [...byName.values()];
 }
+
+function getPlayerRecentTime(player) {
+  const stamp = player.lastPlayedAt || player.lastUpdatedAt;
+  return stamp ? new Date(stamp).getTime() : 0;
+}
+
+export function sortPlayers(players, sortMode) {
+  const copy = [...players];
+  switch (sortMode) {
+    case 'name-desc':
+      return copy.sort((a, b) => b.name.localeCompare(a.name, 'ja'));
+    case 'recent-desc':
+      return copy.sort((a, b) => getPlayerRecentTime(b) - getPlayerRecentTime(a));
+    case 'recent-asc':
+      return copy.sort((a, b) => getPlayerRecentTime(a) - getPlayerRecentTime(b));
+    case 'name-asc':
+    default:
+      return copy.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  }
+}
+
+export const PLAYER_SORT_OPTIONS = [
+  { value: 'name-asc', label: 'あいうえお順（昇順）' },
+  { value: 'name-desc', label: 'あいうえお順（降順）' },
+  { value: 'recent-desc', label: '最近プレイ（新しい順）' },
+  { value: 'recent-asc', label: '最近プレイ（古い順）' },
+];
 
 function playDecideSoundExternal(playDecideSound) {
   if (playDecideSound) {
@@ -78,10 +73,23 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
   const [selectedTag, setSelectedTag] = useState('');
   const [showNewPlayer, setShowNewPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [sortMode, setSortMode] = useState('name-asc');
 
   useEffect(() => {
     loadPlayers();
   }, []);
+
+  useEffect(() => {
+    if (showPlayerModal) {
+      loadPlayers();
+    }
+  }, [showPlayerModal]);
+
+  useEffect(() => {
+    if (showPlayerModal && modalTab === 'admin') {
+      loadPlayers();
+    }
+  }, [showPlayerModal, modalTab]);
 
   const loadPlayers = async () => {
     setLoading(true);
@@ -91,12 +99,11 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
 
       if (cloudPlayersMap) {
         Object.entries(cloudPlayersMap).forEach(([docId, data]) => {
-          if (!data?.name || data.isArchived) return;
+          if (!data?.name) return;
           list.push(enrichPlayer(docId, data));
         });
       }
 
-      list.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
       setPlayers(dedupePlayersByName(list));
     } catch (e) {
       console.error(e);
@@ -112,14 +119,16 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
   }, [players]);
 
   const filteredPlayers = useMemo(() => {
-    return players.filter((p) => {
+    const filtered = players.filter((p) => {
+      if (p.isArchived) return false;
       const matchTag = !selectedTag || (p.tags && p.tags.includes(selectedTag));
       const matchName =
         !searchNameInput ||
         (p.name || '').toLowerCase().includes(searchNameInput.toLowerCase());
       return matchTag && matchName;
     });
-  }, [players, selectedTag, searchNameInput]);
+    return sortPlayers(filtered, sortMode);
+  }, [players, selectedTag, searchNameInput, sortMode]);
 
   const handleStart = () => {
     playDecideSoundExternal(playDecideSound);
@@ -164,44 +173,56 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
 
   return (
     <>
-      <main className="w-full min-h-screen flex flex-col items-center justify-center py-6 px-4 animate-fade-in">
-        <h1 className="w-full max-w-[340px] sm:max-w-[460px] md:max-w-[500px] mb-8 transition-all hover:scale-105 active:scale-95 duration-300 flex flex-col items-center select-none animate-pop-out">
-          <img
-            src="/logo.png"
-            alt="ガチャっとタイピング！"
-            className="w-full h-auto rounded-2xl"
-            style={{
-              filter:
-                'drop-shadow(3px 0 0 white) drop-shadow(-3px 0 0 white) drop-shadow(0 3px 0 white) drop-shadow(0 -3px 0 white) drop-shadow(2px 2px 0 white) drop-shadow(-2px 2px 0 white) drop-shadow(2px -2px 0 white) drop-shadow(-2px -2px 0 white) drop-shadow(0 8px 16px rgba(0,0,0,0.2))',
-            }}
-          />
-        </h1>
+      <main className="relative w-full h-[100dvh] min-h-0 flex flex-col items-center px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] overflow-hidden animate-fade-in">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/title_bg.png)' }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-sky-100/30 via-transparent to-indigo-100/40 pointer-events-none"
+          aria-hidden
+        />
 
-        <div className="bg-white border-[6px] border-white rounded-3xl shadow-[0_12px_32px_rgba(0,0,0,0.15)] p-5 sm:p-6 text-center w-full max-w-xs flex flex-col items-center gap-4">
-          <button
-            type="button"
-            onClick={handleStart}
-            className="w-full premium-button bg-sky-500 hover:bg-sky-600 text-white text-xl py-3.5 shadow-lg flex justify-center items-center gap-1.5 active:scale-95 transition-transform font-black"
-          >
-            スタート！
-          </button>
+        <div className="relative z-10 flex flex-col items-center w-full max-w-[min(500px,94vw)] flex-1 min-h-0 justify-center gap-2 sm:gap-3 landscape:gap-1.5">
+          <h1 className="w-full min-h-0 max-h-[calc(100dvh-7.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] landscape:max-h-[calc(100dvh-5.75rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex items-center justify-center shrink transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 select-none animate-pop-out">
+            <img
+              src="/logo.png"
+              alt="ガチャっとタイピング！"
+              className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl"
+              style={{
+                filter:
+                  'drop-shadow(3px 0 0 white) drop-shadow(-3px 0 0 white) drop-shadow(0 3px 0 white) drop-shadow(0 -3px 0 white) drop-shadow(2px 2px 0 white) drop-shadow(-2px 2px 0 white) drop-shadow(2px -2px 0 white) drop-shadow(-2px -2px 0 white) drop-shadow(0 8px 16px rgba(0,0,0,0.2))',
+              }}
+            />
+          </h1>
+
+          <div className="shrink-0 w-full max-w-xs bg-white/95 backdrop-blur-sm border-[5px] sm:border-[6px] border-white rounded-3xl shadow-[0_12px_32px_rgba(0,0,0,0.18)] p-3.5 sm:p-5 text-center">
+            <button
+              type="button"
+              onClick={handleStart}
+              className="w-full premium-button bg-sky-500 hover:bg-sky-600 text-white text-lg sm:text-xl py-3 sm:py-3.5 shadow-lg flex justify-center items-center gap-1.5 active:scale-95 transition-transform font-black"
+            >
+              スタート！
+            </button>
+          </div>
         </div>
       </main>
 
       {showPlayerModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-          <div className="glass-card bg-white/95 w-full max-w-6xl p-4 sm:p-6 max-h-[92vh] flex flex-col shadow-2xl rounded-3xl relative overflow-hidden">
+          <div className="glass-card bg-white/95 w-full max-w-6xl p-3 sm:p-4 max-h-[95vh] flex flex-col shadow-2xl rounded-3xl relative overflow-hidden">
             {/* ヘッダー */}
-            <div className="flex flex-col gap-3 mb-4 shrink-0">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-xl flex-wrap">
+            <div className="flex flex-col gap-2 mb-2 shrink-0">
+              <div className="flex justify-between items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-xl shrink-0">
                   <button
                     type="button"
                     onClick={() => {
                       playDecideSoundExternal(playDecideSound);
                       setModalTab('players');
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
                       modalTab === 'players'
                         ? 'bg-indigo-500 text-white shadow-md border-b-2 border-indigo-700'
                         : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
@@ -215,13 +236,13 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
                       playDecideSoundExternal(playDecideSound);
                       setModalTab('admin');
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
                       modalTab === 'admin'
                         ? 'bg-orange-500 text-white shadow-md border-b-2 border-orange-700'
                         : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
                     }`}
                   >
-                    ⚙️ 管理者モード
+                    ⚙️ 管理者
                   </button>
                 </div>
                 <button
@@ -234,70 +255,103 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
               </div>
 
               {modalTab === 'players' && (
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <div className="relative flex items-center w-full sm:max-w-xs shrink-0">
-                    <span className="absolute left-3 text-gray-400">
-                      <Search className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide py-0.5">
+                  <div className="relative flex items-center w-[132px] sm:w-[152px] shrink-0">
+                    <span className="absolute left-2.5 text-gray-400">
+                      <Search className="w-3.5 h-3.5" />
                     </span>
                     <input
                       type="text"
                       placeholder="おなまえ検索..."
                       value={searchNameInput}
                       onChange={(e) => setSearchNameInput(e.target.value)}
-                      className="w-full pl-9 pr-8 py-1.5 bg-gray-50 border-2 border-indigo-100 focus:border-indigo-400 focus:bg-white rounded-xl text-xs font-bold text-gray-700 outline-none transition-all shadow-sm"
+                      className="w-full pl-8 pr-7 py-1.5 bg-gray-50 border-2 border-indigo-100 focus:border-indigo-400 focus:bg-white rounded-xl text-[11px] font-bold text-gray-700 outline-none transition-all shadow-sm"
                     />
                     {searchNameInput && (
                       <button
                         type="button"
                         onClick={() => setSearchNameInput('')}
-                        className="absolute right-2.5 p-0.5 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
+                        className="absolute right-2 p-0.5 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
                       >
-                        <X className="w-3.5 h-3.5 text-gray-400" />
+                        <X className="w-3 h-3 text-gray-400" />
                       </button>
                     )}
                   </div>
 
-                  {allTags.length > 0 && (
-                    <div className="flex items-center gap-1 overflow-x-auto max-w-full py-0.5 px-1 scroll-smooth shrink-0 scrollbar-hide">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playDecideSoundExternal(playDecideSound);
+                        setSelectedTag('');
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
+                        !selectedTag
+                          ? 'bg-indigo-500 text-white border-indigo-500'
+                          : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+                      }`}
+                    >
+                      すべて
+                    </button>
+                    {allTags.map((tag) => (
                       <button
+                        key={tag}
                         type="button"
                         onClick={() => {
                           playDecideSoundExternal(playDecideSound);
-                          setSelectedTag('');
+                          setSelectedTag(selectedTag === tag ? '' : tag);
                         }}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
-                          !selectedTag
+                        className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
+                          selectedTag === tag
                             ? 'bg-indigo-500 text-white border-indigo-500'
-                            : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
                         }`}
                       >
-                        すべて
+                        {tag}
                       </button>
-                      {allTags.map((tag) => (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => {
-                            playDecideSoundExternal(playDecideSound);
-                            setSelectedTag(selectedTag === tag ? '' : tag);
-                          }}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
-                            selectedTag === tag
-                              ? 'bg-indigo-500 text-white border-indigo-500'
-                              : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                    ))}
+                  </div>
+
+                  <select
+                    id="player-sort"
+                    value={sortMode}
+                    onChange={(e) => {
+                      playDecideSoundExternal(playDecideSound);
+                      setSortMode(e.target.value);
+                    }}
+                    className="shrink-0 w-[118px] sm:w-[138px] py-1.5 px-2 bg-gray-50 border-2 border-indigo-100 focus:border-indigo-400 focus:bg-white rounded-xl text-[10px] font-bold text-gray-700 outline-none transition-all shadow-sm cursor-pointer"
+                    aria-label="並び替え"
+                  >
+                    {PLAYER_SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={() => playDecideSoundExternal(playDecideSound)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black text-[10px] sm:text-xs rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer shrink-0 whitespace-nowrap"
+                  >
+                    <Tag className="w-3.5 h-3.5" /> タグ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playDecideSoundExternal(playDecideSound);
+                      setShowNewPlayer(true);
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-500 hover:bg-sky-600 text-white font-black text-[10px] sm:text-xs rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer shrink-0 whitespace-nowrap"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> 新規作成
+                  </button>
                 </div>
               )}
             </div>
 
             {/* コンテンツ */}
-            <div className="flex-1 min-h-0 flex flex-col relative pb-14">
+            <div className="flex-1 min-h-0 flex flex-col">
               {modalTab === 'players' ? (
                 loading ? (
                   <div className="flex-1 flex items-center justify-center text-gray-500 font-bold">
@@ -316,35 +370,17 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
                   </div>
                 )
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-500">
-                  <span className="text-4xl mb-3">⚙️</span>
-                  <p className="font-black text-gray-600 mb-1">管理者モード</p>
-                  <p className="text-xs font-bold">この機能は復元作業中です</p>
-                </div>
+                <AdminPanel
+                  players={players}
+                  onReloadPlayers={loadPlayers}
+                  onBack={() => {
+                    playDecideSoundExternal(playDecideSound);
+                    setModalTab('players');
+                  }}
+                  playDecideSound={() => playDecideSoundExternal(playDecideSound)}
+                />
               )}
             </div>
-
-            {modalTab === 'players' && (
-              <div className="absolute bottom-0 left-0 z-20 flex gap-2 shrink-0 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-gray-100 shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => playDecideSound()}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black text-sm rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer"
-                >
-                  <Tag className="w-4 h-4" /> タグ
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    playDecideSoundExternal(playDecideSound);
-                    setShowNewPlayer(true);
-                  }}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-black text-sm rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> 新規作成
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}

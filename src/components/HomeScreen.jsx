@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { resolveBackground } from '../constants';
+import {
+  calcSubEventReward,
+  getSubEventById,
+  spawnRandomSubEvents,
+  ticketUpdatesFromReward,
+} from '../utils/subEvents';
 import GameSidebar from './GameSidebar';
 import DifficultySelector from './DifficultySelector';
 import AssistSettingsModal from './AssistSettingsModal';
+import WordRequestModal from './WordRequestModal';
+import SubEventModal from './SubEventModal';
+import SubEventRewardModal from './SubEventRewardModal';
 
 function MallPin({ top, left, label, onClick, variant = 'pill', delay = '0s', large = false }) {
   const pillClass =
@@ -54,22 +63,119 @@ function MallPin({ top, left, label, onClick, variant = 'pill', delay = '0s', la
   );
 }
 
+function SubEventPin({ top, left, emoji, image, title, delay, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-20 group hover:scale-110 active:scale-95 transition-transform duration-200 animate-bounce"
+      style={{ top, left, animationDelay: delay }}
+    >
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-yellow-400 overflow-hidden shadow-lg bg-white relative">
+        {image ? (
+          <img src={image} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center text-3xl sm:text-4xl">
+            {emoji}
+          </div>
+        )}
+      </div>
+    </button>
+  );
+}
+
 export default function HomeScreen({
   player,
   assistSettings,
   onAssistChange,
   onStartTyping,
-  onLogout,
+  onSaveAndTitle,
   onOpenProfile,
   onOpenMusic,
   onOpenShop,
+  onOpenZukan,
+  onPlayerUpdate,
   playDecideSound,
   playCancelSound,
+  playSE,
 }) {
   const [toast, setToast] = useState('');
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
   const [isAssistOpen, setIsAssistOpen] = useState(false);
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [activeSubEvents, setActiveSubEvents] = useState([]);
+  const [activeSubEvent, setActiveSubEvent] = useState(null);
+  const [subEventReward, setSubEventReward] = useState(null);
   const activeBg = resolveBackground(player?.currentBackground);
+
+  useEffect(() => {
+    if (!player?.id) return;
+
+    const solved = new Set(player.solvedSubEventIds || []);
+    const stored = (player.plazaSubEvents || []).filter((entry) => !solved.has(entry.eventId));
+
+    if (stored.length > 0) {
+      setActiveSubEvents(stored);
+      if (stored.length !== (player.plazaSubEvents || []).length) {
+        onPlayerUpdate?.({ plazaSubEvents: stored });
+      }
+      return;
+    }
+
+    const spawned = spawnRandomSubEvents(player.solvedSubEventIds || []);
+    setActiveSubEvents(spawned);
+    if (spawned.length > 0) {
+      onPlayerUpdate?.({ plazaSubEvents: spawned });
+    }
+  }, [player?.id]);
+
+  const openSubEvent = (spawned) => {
+    const event = getSubEventById(spawned.eventId);
+    if (!event) return;
+    playDecideSound?.();
+    setActiveSubEvent(event);
+  };
+
+  const closeSubEvent = () => {
+    setActiveSubEvent(null);
+  };
+
+  const handleSubEventComplete = useCallback(
+    (event) => {
+      const rewardRoll = calcSubEventReward();
+      const solvedIds = [...new Set([...(player.solvedSubEventIds || []), event.id])];
+      let remaining = activeSubEvents.filter((entry) => entry.eventId !== event.id);
+
+      if (remaining.length === 0) {
+        remaining = spawnRandomSubEvents(solvedIds);
+      }
+
+      const ticketDelta = ticketUpdatesFromReward(rewardRoll.ticket);
+
+      const updates = {
+        points: (player.points || 0) + rewardRoll.points,
+        solvedSubEventIds: solvedIds,
+        plazaSubEvents: remaining,
+        ...Object.fromEntries(
+          Object.entries(ticketDelta).map(([key, count]) => [key, (player[key] || 0) + count]),
+        ),
+      };
+
+      onPlayerUpdate?.(updates);
+      setActiveSubEvents(remaining);
+      setActiveSubEvent(null);
+      setSubEventReward({
+        title: event.title,
+        titleDisplay: event.titleDisplay || event.title,
+        emoji: event.emoji,
+        image: event.image,
+        points: rewardRoll.points,
+        ticket: rewardRoll.ticket,
+      });
+      playSE?.('clear');
+    },
+    [activeSubEvents, onPlayerUpdate, playSE, player],
+  );
 
   const showComingSoon = (name) => {
     playDecideSound?.();
@@ -94,11 +200,11 @@ export default function HomeScreen({
     >
       <GameSidebar
         player={player}
-        onSaveAndTitle={onLogout}
+        onSaveAndTitle={onSaveAndTitle}
         onGoHome={() => playDecideSound?.()}
         onShop={onOpenShop}
         onProfile={onOpenProfile}
-        onZukan={() => showComingSoon('ずかん')}
+        onZukan={onOpenZukan}
         onMusic={onOpenMusic}
         onAssist={() => {
           playDecideSound?.();
@@ -173,8 +279,28 @@ export default function HomeScreen({
             label="📮 リクエスト"
             variant="orange"
             delay="0.8s"
-            onClick={() => showComingSoon('リクエスト')}
+            onClick={() => {
+              playDecideSound?.();
+              setIsRequestOpen(true);
+            }}
           />
+
+          {activeSubEvents.map((spawned) => {
+            const event = getSubEventById(spawned.eventId);
+            if (!event) return null;
+            return (
+              <SubEventPin
+                key={spawned.eventId}
+                top={spawned.top}
+                left={spawned.left}
+                emoji={event.emoji}
+                image={event.image}
+                title={event.title}
+                delay={spawned.delay || '0s'}
+                onClick={() => openSubEvent(spawned)}
+              />
+            );
+          })}
         </div>
       </main>
 
@@ -191,6 +317,30 @@ export default function HomeScreen({
         settings={assistSettings}
         onChange={onAssistChange}
         onClose={() => setIsAssistOpen(false)}
+      />
+
+      <WordRequestModal
+        isOpen={isRequestOpen}
+        player={player}
+        onClose={() => setIsRequestOpen(false)}
+        playDecideSound={playDecideSound}
+      />
+
+      {activeSubEvent && (
+        <SubEventModal
+          event={activeSubEvent}
+          assistSettings={assistSettings}
+          onClose={closeSubEvent}
+          onComplete={handleSubEventComplete}
+          playSE={playSE}
+          playCancelSound={playCancelSound}
+        />
+      )}
+
+      <SubEventRewardModal
+        reward={subEventReward}
+        onClose={() => setSubEventReward(null)}
+        playDecideSound={playDecideSound}
       />
 
       {toast && (

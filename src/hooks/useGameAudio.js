@@ -7,7 +7,6 @@ import {
   playSE,
   playDecideSound,
   playCancelSound,
-  stopBgm,
 } from '../audio';
 
 export default function useGameAudio(player, appScreen) {
@@ -47,22 +46,19 @@ export default function useGameAudio(player, appScreen) {
 
   const currentBgm = player?.currentBgm || 'default';
   const currentSe = player?.currentSe || 'default';
+  const activeBgmId = appScreen === 'title' ? 'default' : currentBgm;
 
   useEffect(() => {
-    if (appScreen === 'title') {
-      stopBgm(bgmRef);
-      return;
+    if (appScreen === 'title' || appScreen === 'home' || appScreen === 'typing' || appScreen === 'shop') {
+      playBgm(activeBgmId, { customAudio, volume, bgmRef });
     }
-    if (appScreen === 'home' || appScreen === 'typing' || appScreen === 'shop') {
-      playBgm(currentBgm, { customAudio, volume, bgmRef });
-    }
-  }, [appScreen, currentBgm, customAudio, volume]);
+  }, [appScreen, activeBgmId, customAudio, volume]);
 
   useEffect(() => {
     const unlock = () => {
       initAudio();
-      if (appScreen !== 'title' && bgmRef.current?.paused) {
-        bgmRef.current.play().catch(() => {});
+      if (bgmRef.current?.paused) {
+        playBgm(activeBgmId, { customAudio, volume, bgmRef });
       }
       window.removeEventListener('click', unlock);
       window.removeEventListener('keydown', unlock);
@@ -73,7 +69,7 @@ export default function useGameAudio(player, appScreen) {
       window.removeEventListener('click', unlock);
       window.removeEventListener('keydown', unlock);
     };
-  }, [appScreen]);
+  }, [appScreen, activeBgmId, customAudio, volume]);
 
   const audioOptions = { customAudio, volume, currentSe, bgmRef };
 
@@ -94,7 +90,8 @@ export default function useGameAudio(player, appScreen) {
 
   const resumeOnSelect = useCallback(() => {
     initAudio();
-  }, []);
+    playBgm(currentBgm, { customAudio, volume, bgmRef });
+  }, [currentBgm, customAudio, volume]);
 
   const previewBgm = useCallback(
     (bgmId) => {

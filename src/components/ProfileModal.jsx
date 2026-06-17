@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { User, X, CheckCircle2 } from 'lucide-react';
 import { BACKGROUNDS, TITLES, GACHA_ITEMS } from '../constants';
 
@@ -13,7 +13,16 @@ export default function ProfileModal({
   onPlayerUpdate,
   playDecideSound,
   playCancelSound,
+  highlightBackgroundId,
 }) {
+  const backgroundSectionRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && highlightBackgroundId) {
+      backgroundSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isOpen, highlightBackgroundId]);
+
   if (!isOpen || !player) return null;
 
   const collection = player.collection || {};
@@ -167,7 +176,7 @@ export default function ProfileModal({
             </div>
           </div>
 
-          <div>
+          <div ref={backgroundSectionRef}>
             <h3 className="text-lg font-black text-gray-700 mb-3 flex items-center gap-2">
               <span>🎨</span> はいけい を かえる
             </h3>
@@ -177,6 +186,7 @@ export default function ProfileModal({
               ).map((bg) => {
                 const hasBg = backgrounds.includes(bg.id);
                 const isSelected = currentBackground === bg.id;
+                const isHighlighted = highlightBackgroundId === bg.id;
                 return (
                   <button
                     key={bg.id}
@@ -186,9 +196,11 @@ export default function ProfileModal({
                     className={`relative aspect-video rounded-xl overflow-hidden border-4 transition-all group ${
                       isSelected
                         ? 'border-sky-500 shadow-lg scale-105 z-10'
-                        : hasBg
-                          ? 'border-gray-200 hover:border-sky-300 hover:shadow-md active:scale-95'
-                          : 'border-gray-200 opacity-50 grayscale cursor-not-allowed'
+                        : isHighlighted
+                          ? 'border-amber-400 shadow-lg ring-2 ring-amber-300 scale-105 z-10'
+                          : hasBg
+                            ? 'border-gray-200 hover:border-sky-300 hover:shadow-md active:scale-95'
+                            : 'border-gray-200 opacity-50 grayscale cursor-not-allowed'
                     }`}
                   >
                     <div

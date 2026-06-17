@@ -19,38 +19,32 @@ export const TITLES = [
   { id: 'collection_complete', name: '👑 ずかんコンプリート', desc: 'ごほうびを すべてあつめる', emoji: '👑', color: 'text-orange-600', bg: 'bg-orange-100' },
 ];
 
+export const RARITY_SORT_RANK = {
+  ノーマル: 1,
+  '⭐レア⭐': 2,
+  レア: 2,
+  '✨激レア✨': 3,
+  '🔥激レア🔥': 4,
+  '🌟超激レア🌟': 5,
+  '✨レジェンド✨': 6,
+};
+
+export const RARITY_ZUKAN_SECTIONS = [
+  { rarity: '✨レジェンド✨', label: '✨ レジェンド ✨' },
+  { rarity: '🌟超激レア🌟', label: '🌟 超激レア 🌟' },
+  { rarity: '✨激レア✨', label: '✨ 激レア ✨' },
+  { rarity: 'レア', label: '⭐ レア ⭐' },
+  { rarity: 'ノーマル', label: 'ノーマル' },
+];
+
+export function compareItemsByRarity(a, b) {
+  const rankDiff = (RARITY_SORT_RANK[b.rarity] ?? 0) - (RARITY_SORT_RANK[a.rarity] ?? 0);
+  if (rankDiff !== 0) return rankDiff;
+  return a.name.localeCompare(b.name, 'ja');
+}
+
 export const GACHA_ITEMS = [
-  { name: 'でんせつのドラゴン', emoji: '🐉', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'コスモスペースシップ', emoji: '🛸', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'マスターソード', emoji: '🗡️', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'まほうのグリモア', emoji: '📖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'アルティメットロボ', emoji: '🤖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'でんせつのけん', emoji: '⚔️', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'でんせつのたて', emoji: '🛡️', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'ドラゴンのたまご', emoji: '🥚', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'まほうのランプ', emoji: '🪔', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'ゴールドトロフィー', emoji: '🏆', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'しんかいのくじら', emoji: '🐋', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'ほのおのとり', emoji: '🔥', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'ロボット', emoji: '🤖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
-  { name: 'おうかん', emoji: '👑', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'ほうせき', emoji: '💎', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'きょうりゅう', emoji: '🦕', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'ゆにこーん', emoji: '🦄', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'てんしのつばさ', emoji: '😇', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'にじいろのかぎ', emoji: '🗝️', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'まほうのぼうし', emoji: '🎩', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'ゴールドコイン', emoji: '🪙', rarity: '✨激レア✨', color: '#eab308', foil: true },
-  { name: 'ろけっと', emoji: '🚀', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'すーぱーかー', emoji: '🏎️', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'まほうのステッキ', emoji: '🪄', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'おおきなケーキ', emoji: '🎂', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'でかいアイス', emoji: '🍦', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'にんじゃかたな', emoji: '🗡️', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'たからのちず', emoji: '🗺️', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'でんきゅう', emoji: '💡', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'やきゅうボール', emoji: '⚾', rarity: 'レア', color: '#22c55e', foil: false },
-  { name: 'ゴーカート', emoji: '🏎️', rarity: 'レア', color: '#22c55e', foil: false },
+  // ノーマル
   { name: 'おもちゃのロボ', emoji: '🤖', rarity: 'ノーマル', color: '#3b82f6', foil: false },
   { name: 'とくだいバーガー', emoji: '🍔', rarity: 'ノーマル', color: '#3b82f6', foil: false },
   { name: 'まっかなリンゴ', emoji: '🍎', rarity: 'ノーマル', color: '#3b82f6', foil: false },
@@ -66,15 +60,66 @@ export const GACHA_ITEMS = [
   { name: 'おりがみ', emoji: '📄', rarity: 'ノーマル', color: '#3b82f6', foil: false },
   { name: 'わたがし', emoji: '🍭', rarity: 'ノーマル', color: '#3b82f6', foil: false },
   { name: 'きのこ', emoji: '🍄', rarity: 'ノーマル', color: '#3b82f6', foil: false },
+
+  // レア
+  { name: 'ろけっと', emoji: '🚀', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'すーぱーかー', emoji: '🏎️', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'まほうのステッキ', emoji: '🪄', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'おおきなケーキ', emoji: '🎂', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'でかいアイス', emoji: '🍦', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'にんじゃかたな', emoji: '🗡️', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'たからのちず', emoji: '🗺️', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'でんきゅう', emoji: '💡', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'やきゅうボール', emoji: '⚾', rarity: 'レア', color: '#22c55e', foil: false },
+  { name: 'ゴーカート', emoji: '🏎️', rarity: 'レア', color: '#22c55e', foil: false },
+
+  // 激レア
+  { name: 'おうかん', emoji: '👑', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ほうせき', emoji: '💎', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'きょうりゅう', emoji: '🦕', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ゆにこーん', emoji: '🦄', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'てんしのつばさ', emoji: '😇', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'にじいろのかぎ', emoji: '🗝️', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'まほうのぼうし', emoji: '🎩', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ゴールドコイン', emoji: '🪙', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: '星のネックレス', emoji: '📿', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: '金のハープ', emoji: '🎶', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: '虹のふきん', emoji: '🌈', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: '冒険者のバッグ', emoji: '🎒', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'サファイアリング', emoji: '💍', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: 'ねむりのひつじ', emoji: '🐑', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: '海賊旗', emoji: '🏴‍☠️', rarity: '✨激レア✨', color: '#eab308', foil: true },
+  { name: '光のたま', emoji: '🔆', rarity: '✨激レア✨', color: '#eab308', foil: true },
+
+  // 超激レア
+  { name: 'タイムマシン', emoji: '⏰', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: '虹のクリスタル', emoji: '🔮', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: '黄金のペガサス', emoji: '🐴', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: '流星群', emoji: '☄️', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'でんせつの宝箱', emoji: '🎁', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'アルティメットロボ', emoji: '🤖', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'でんせつのけん', emoji: '⚔️', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'でんせつのたて', emoji: '🛡️', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'ドラゴンのたまご', emoji: '🥚', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'まほうのランプ', emoji: '🪔', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'しんかいのくじら', emoji: '🐋', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: '雷の弓', emoji: '🏹', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: '氷のおしろ', emoji: '🏰', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'ぎんがの舟', emoji: '🛶', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: '不死鳥の羽', emoji: '🪽', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: '古代の化石', emoji: '🦴', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+  { name: 'ダーククリスタル', emoji: '💠', rarity: '🌟超激レア🌟', color: '#ef4444', foil: true },
+
+  // レジェンド
+  { name: 'でんせつのドラゴン', emoji: '🐉', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'コスモスペースシップ', emoji: '🛸', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'マスターソード', emoji: '🗡️', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'まほうのグリモア', emoji: '📖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'ゴールドトロフィー', emoji: '🏆', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+  { name: 'ほのおのとり', emoji: '🔥', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
 ];
 
-export const getRarityWeight = (rarity) => {
-  if (rarity === '✨レジェンド✨') return 5;
-  if (rarity === '🌟超激レア🌟') return 4;
-  if (rarity === '✨激レア✨' || rarity === '🔥激レア🔥') return 3;
-  if (rarity === '⭐レア⭐' || rarity === 'レア') return 2;
-  return 1;
-};
+export const getRarityWeight = (rarity) => RARITY_SORT_RANK[rarity] ?? 1;
 
 export const resolveBackground = (bgId) =>
   BACKGROUNDS.find((b) => b.id === (bgId || 'default')) || BACKGROUNDS[0];

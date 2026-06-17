@@ -66,7 +66,7 @@ export default function GameSidebar({
               <span className="text-cyan-600 shrink-0">✖{player?.seTickets || 0}</span>
             </div>
             <div className="flex justify-between items-center bg-fuchsia-50 rounded px-1 py-0.5">
-              <span className="truncate">🌟 激レア</span>
+              <span className="truncate">🌟 超激レア</span>
               <span className="text-fuchsia-600 shrink-0">✖{player?.legendTickets || 0}</span>
             </div>
           </div>

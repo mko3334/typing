@@ -5,7 +5,7 @@ export default function TicketRewardModal({ ticketReward, onClose }) {
 
   const ticketLabel =
     ticketReward.type === 'legend'
-      ? '🌟 激レア以上確定チケット 🌟'
+      ? '🌟 超激レア以上チケット 🌟'
       : ticketReward.type === 'se'
         ? '🔊 こうかおんガチャチケット 🔊'
         : ticketReward.type === 'bgm'
@@ -41,7 +41,7 @@ export default function TicketRewardModal({ ticketReward, onClose }) {
               <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
                 <div className="absolute inset-0 bg-white/10 animate-pulse" />
                 <div className="text-5xl mb-2 animate-bounce">🌟🎟️🌟</div>
-                <div className="text-xs tracking-wider">げきレアいじょう</div>
+                <div className="text-xs tracking-wider">ちょうげきレアいじょう</div>
                 <div className="text-base mt-1">かくていチケット</div>
               </div>
             ) : ticketReward.type === 'se' ? (
@@ -76,7 +76,7 @@ export default function TicketRewardModal({ ticketReward, onClose }) {
             onClick={handleConfirm}
             className="premium-button bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-black text-lg px-8 py-3 w-full shadow-lg"
           >
-            {ticketReward.titleObj ? 'やったー！' : 'つぎへすすむ'}
+            {ticketReward.titleObj ? 'やったー！' : 'うけとる！'}
           </button>
         </div>
       </div>
