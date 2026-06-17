@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import localforage from 'localforage';
 import { Settings, Play, Info, CheckCircle2, ChevronLeft, ChevronRight, Speaker, Music, User, Star, Trophy, ArrowRight, Heart, Crown, ShoppingCart, AlertTriangle, Edit3, X, Cloud, Lock, Trash2, KeyRound } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { saveCloudData, loadCloudData, saveDeviceTransfer, loadDeviceTransfer, saveFullBackup, loadFullBackup, saveCloudPlayer, loadSingleCloudPlayer, loadAllCloudPlayers, listenToAllCloudPlayers, deleteCloudPlayer, addWordRequest, getWordRequests, deleteWordRequest, addAdoptedWord, getAdoptedWords, deleteAdoptedWord, sendGiftToCloudPlayer } from './firebase';
+import { FINGER_MAP } from './constants';
 
 const ROMAJI_MAP = {
   'は': ['ha'], 'ひ': ['hi'], 'ふ': ['hu', 'fu'], 'へ': ['he'], 'ほ': ['ho'],
@@ -301,74 +303,8 @@ const WORDS = {
   }))
 };
 
-// タイピング時の指ガイド用マッピング
-const FINGER_MAP = {
-  q: { hand: 'left', finger: 'pinky', label: 'ひだり手・こゆび' },
-  a: { hand: 'left', finger: 'pinky', label: 'ひだり手・こゆび' },
-  z: { hand: 'left', finger: 'pinky', label: 'ひだり手・こゆび' },
-  w: { hand: 'left', finger: 'ring', label: 'ひだり手・くすりゆび' },
-  s: { hand: 'left', finger: 'ring', label: 'ひだり手・くすりゆび' },
-  x: { hand: 'left', finger: 'ring', label: 'ひだり手・くすりゆび' },
-  e: { hand: 'left', finger: 'middle', label: 'ひだり手・なかゆび' },
-  d: { hand: 'left', finger: 'middle', label: 'ひだり手・なかゆび' },
-  c: { hand: 'left', finger: 'middle', label: 'ひだり手・なかゆび' },
-  r: { hand: 'left', finger: 'index', label: 'ひだり手・ひとさしゆび' },
-  f: { hand: 'left', finger: 'index', label: 'ひだり手・ひとさしゆび' },
-  v: { hand: 'left', finger: 'index', label: 'ひだり手・ひとさしゆび' },
-  t: { hand: 'left', finger: 'index', label: 'ひだり手・ひとさしゆび' },
-  g: { hand: 'left', finger: 'index', label: 'ひだり手・ひとさしゆび' },
-  b: { hand: 'left', finger: 'index', label: 'ひだり手・ひとさしゆび' },
-  y: { hand: 'right', finger: 'index', label: 'みぎ手・ひとさしゆび' },
-  h: { hand: 'right', finger: 'index', label: 'みぎ手・ひとさしゆび' },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// ガチャコレクション用アイテム（emoji付き）
+const COLLECTION_GACHA_ITEMS = [
   { name: 'きょうりゅう',           emoji: '🦕', rarity: '✨激レア✨', color: '#eab308', foil: true, weight: 10 },
   { name: 'ゆにこーん',             emoji: '🦄', rarity: '✨激レア✨', color: '#eab308', foil: true, weight: 10 },
   { name: 'てんしのつばさ',         emoji: '😇', rarity: '✨激レア✨', color: '#eab308', foil: true, weight: 10 },
@@ -406,27 +342,7 @@ const FINGER_MAP = {
   { name: 'きのこ',                 emoji: '🍄', rarity: 'ノーマル', color: '#3b82f6', foil: false, weight: 60 }
 ];
 
-// 仮想キーボードのレイアウト
-const KEYBOARD_ROWS = [
-  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'],
-  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-  ['Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/']
-];
-
-// 人助けサブイベントのマスターデータ（10種類）
-const SUB_EVENTS = [
-  {
-    id: 'lost_child',
-    type: 'typing',
-    title: 'まいごの おんなのこ',
-    image: '/subevent_lost_child.png',
-    bubble: '😭',
-    name: 'はなちゃん',
-    rallies: [
-  { name: 'わたがし',               emoji: '🍭', rarity: 'ノーマル', color: '#3b82f6', foil: false, weight: 60 },
-  { name: 'きのこ',                 emoji: '🍄', rarity: 'ノーマル', color: '#3b82f6', foil: false, weight: 60 }
-];
+const GACHA_ITEMS = COLLECTION_GACHA_ITEMS;
 
 // 仮想キーボードのレイアウト
 const KEYBOARD_ROWS = [
@@ -434,25 +350,6 @@ const KEYBOARD_ROWS = [
   ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
   ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
   ['Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/']
-];
-
-// 人助けサブイベントのマスターデータ（10種類）
-const SUB_EVENTS = [
-  {
-  'ばーか！',
-  'あっちいけ！',
-  'うるさい！',
-  'めんどくさい',
-  'おまえがやれ！',
-  'やだね！',
-  'しらん！',
-  'だめ！',
-  'フンッ！',
-  'おそい！',
-  'へたくそ！',
-  'むり！',
-  'きらい！',
-  'しらんかお'
 ];
 
 // 難易度自動判定ロジック
@@ -587,58 +484,15 @@ const SUB_EVENTS = [
     title: 'おもちゃを失くした男の子',
     image: '/subevent_cleanup.png',
     bubble: '⚽❓',
-    name: 'ゆうとく  const updateAndSavePlayerData = async (playerId, updates) => {
-    if (!playerId) return;
-    const currentData = await localforage.getItem('player_data_' + playerId) || {};
-    const nowIso = new Date().toISOString();
-    const newData = { ...currentData, ...updates, lastUpdatedAt: nowIso };
-    await localforage.setItem('player_data_' + playerId, newData);
+    name: 'ゆうとくん',
+    text: 'サッカーボールをなくしちゃった！探すの手伝って！',
+    requiredItems: ['サッカーボール'],
+    reward: { points: 120, tickets: { special: 1 } }
+  }
+];
 
-    const pList = await localforage.getItem('players') || [];
-    const updatedPlayers = pList.map((p) => {
-      if (p.id === playerId) {
-        const nextP = { ...p };
-        if (updates.points !== undefined) nextP.points = updates.points;
-        if (updates.collection !== undefined) {
-          nextP.collectionCount = Object.keys(updates.collection).length;
-          nextP.collection = updates.collection;
-        }
-        if (updates.newItems !== undefined) {
-          nextP.newItems = updates.newItems;
-        }
-        if (updates.achievements !== undefined) nextP.achievements = updates.achievements;
-        if (updates.currentTitle !== undefined) nextP.currentTitle = updates.currentTitle;
-        if (updates.currentIcon !== undefined) nextP.currentIcon = updates.currentIcon;
-        if (updates.backgrounds !== undefined) nextP.backgrounds = updates.backgrounds;
-        if (updates.currentBackground !== undefined) nextP.currentBackground = updates.currentBackground;
-        if (updates.specialTickets !== undefined) nextP.specialTickets = updates.specialTickets;
-        if (updates.legendTickets !== undefined) nextP.legendTickets = updates.legendTickets;
-        if (updates.bgmTickets !== undefined) nextP.bgmTickets = updates.bgmTickets;
-        if (updates.seTickets !== undefined) nextP.seTickets = updates.seTickets;
-        if (updates.unlockedBgms !== undefined) nextP.unlockedBgms = updates.unlockedBgms;
-        if (updates.currentBgm !== undefined) nextP.currentBgm = updates.currentBgm;
-        if (updates.unlockedSes !== undefined) nextP.unlockedSes = updates.unlockedSes;
-        if (updates.currentSe !== undefined) nextP.currentSe = updates.currentSe;
-        if (updates.cloudId !== undefined) nextP.cloudId = updates.cloudId;
-        if (updates.playCount !== undefined) nextP.playCount = updates.playCount;
-        if (updates.specialWordTriggered !== undefined) nextP.specialWordTriggered = updates.specialWordTriggered;
-        if (updates.isArchived !== undefined) nextP.isArchived = updates.isArchived;
-        if (updates.recentPlays !== undefined) nextP.recentPlays = updates.recentPlays;
-        if (updates.totalPlayMs !== undefined) nextP.totalPlayMs = updates.totalPlayMs;
-        if (updates.sessionCount !== undefined) nextP.sessionCount = updates.sessionCount;
-        nextP.hasPassword = false;
-        nextP.isCloudSync = false;
-        return nextP;
-      }
-      return p;
-    });
-
-    await localforage.setItem('players', updatedPlayers.map(({ id, name, isCloudSync, isArchived }) => ({ id, name, isCloudSync, isArchived: isArchived || false })));
-    setPlayers(updatedPlayers);
-
-    // 即時セーブを実行 (更新した対象の playerId を渡す)
-    await autoSaveToCloud(playerId);
-  };onst [isTransitioning, setIsTransitioning] = useState(false);
+export default function App() {
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [clearStep, setClearStep] = useState(0); // 0:クリア! 1:テロップ 2:ポイント大表示
 
   // プレイヤー管理用の状態
@@ -739,30 +593,12 @@ const SUB_EVENTS = [
   const triggerConfetti = useCallback(() => {
     confetti({
       particleCount: 150,
-    confetti({
-      particleCount: 150,
       spread: 70,
       origin: { y: 0.6 },
-      colors: ['#0ea5e9', '#facc15', '#f43f5e', '#10b981']
+      colors: ['#0ea5e9', '#facc15', '#f43f5e', '#10b981'],
     });
   }, []);
 
-
-  const updateAndSavePlayerData = async (playerId, updates) => {
-  }, []);
-
-  const updateAndSavePlayerData = async (playerId, updates) => {
-    if (!playerId) return;
-    const currentData = await localforage.getItem('player_data_' + playerId) || {};
-    const nowIso = new Date().toISOString();
-    const newData = { ...currentData, ...updates, lastUpdatedAt: nowIso };
-    await localforage.setItem('player_data_' + playerId, newData);
-
-    const pList = await localforage.getItem('players') || [];
-      origin: { y: 0.6 },
-      colors: ['#0ea5e9', '#facc15', '#f43f5e', '#10b981']
-    });
-  }, []);
 
   const updateAndSavePlayerData = async (playerId, updates) => {
     if (!playerId) return;
@@ -919,21 +755,6 @@ const SUB_EVENTS = [
     playGlobalDecideSound();
     setIsSaving(true);
 
-        setActiveGift(remainingGifts[0]);
-      } else {
-        // すべて受け取り完了
-        setActiveGift(null);
-        setIsGiftRewardModalOpen(false);
-      }
-    }
-  };
-
-  // 管理者からのプレゼント送信処理
-  const handleSendGift = async () => {
-    if (!presentTargetPlayer) return;
-    playGlobalDecideSound();
-    setIsSaving(true);
-
     try {
       const targetPlayerId = presentTargetPlayer.id;
       const giftData = {
@@ -975,46 +796,18 @@ const SUB_EVENTS = [
     if (!targetPlayerId) return;
     setIsSaving(true);
     try {
-        pData.collection.forEach(item => {
-          counts[item.name] = (counts[item.name] || 0) + 1;
-        });
-        pData.collection = counts;
+      const data = await localforage.getItem('player_data_' + targetPlayerId);
+      const pList = await localforage.getItem('players') || [];
+      const pInfo = pList.find((p) => p.id === targetPlayerId);
+      if (data && pInfo) {
+        await saveCloudPlayer(pInfo.id, { ...data, name: pInfo.name });
       }
-
-      await localforage.setItem('players', loadedPlayers.map(({ id, name, isCloudSync }) => ({ id, name, isCloudSync })));
-      await localforage.setItem('currentPlayerId', loadedCurrentPlayerId);
-      await localforage.setItem('player_data_' + initialPlayer.id, pData);
+    } catch (e) {
+      console.error('Auto save player failed', e);
+    } finally {
+      setIsSaving(false);
     }
-
-    const enrichedPlayers = await Promise.all(loadedPlayers.map(async p => {
-      let pData = await localforage.getItem('player_data_' + p.id);
-      if (!pData) {
-        pData = {
-          points: 0,
-          collection: {},
-          newItems: [],
-          achievements: ['rookie'],
-      await localforage.setItem('currentPlayerId', loadedCurrentPlayerId);
-      await localforage.setItem('player_data_' + initialPlayer.id, pData);
-    }
-
-    const enrichedPlayers = await Promise.all(loadedPlayers.map(async p => {
-      let pData = await localforage.getItem('player_data_' + p.id);
-      if (!pData) {
-        pData = {
-          points: 0,
-          collection: {},
-          newItems: [],
-          achievements: ['rookie'],
-          currentTitle: 'rookie',
-          backgrounds: ['default'],
-          currentBackground: 'default',
-      await localforage.setItem('activeEvents', spawned);
-    } else {
-      setActiveEvents([]);
-      await localforage.setItem('activeEvents', []);
-    }
-  }, [solvedSubEventIds]);
+  };
 
   const loadPlayerData = async (playerId) => {
     const data = await localforage.getItem('player_data_' + playerId);
@@ -1205,105 +998,47 @@ const SUB_EVENTS = [
 
   const handleAdoptWord = async (request, finalDifficulty) => {
     if (!request) return;
-    
-    // 1. 採用されたワードを adopted_words コレクションに保存
+
     const adoptedData = {
       kana: request.kana,
       romaji: request.romaji,
-            
-            const isExistInCloud = cloudPlayersMap[p.id] !== undefined || 
-                                   Object.values(cloudPlayersMap).some(cp => cp.name === p.name);
+      difficulty: finalDifficulty,
+      playerName: request.playerName || 'ゲスト',
+      playerId: request.playerId || null
+    };
 
-            if (!p.isCloudSync || !isExistInCloud) {
-              const pData = await localforage.getItem('player_data_' + p.id);
-              if (pData) {
-                const success = await saveCloudPlayer(p.id, { 
-                  ...pData, 
-                  name: p.name, 
-                  isCloudSync: true,
-                  isArchived: p.isArchived || false
-                });
-                if (success) {
-                  currentPlayers[i].isCloudSync = true;
-                  await localforage.setItem('player_data_' + p.id, { ...pData, isCloudSync: true, isArchived: p.isArchived || false });
-                  playersChanged = true;
-                  // アップロード成功したプレイヤーをマーク（ループ2での上書きを防ぐ）
-                  uploadedPlayerIds.add(p.id);
-                  // cloudPlayersMapも最新データで更新（ループ2での参照に対応）
-                  cloudPlayersMap[p.id] = { ...pData, name: p.name, isCloudSync: true, isArchived: p.isArchived || false };
-                }
-              }
-            }
-          }
-
-          // 2. クラウドにあってローカルにないデータをローカルに反映
-          //    （ループ1でアップロード済みのプレイヤーはスキップ）
-          for (const [docId, data] of Object.entries(cloudPlayersMap)) {
-            if (!data || !data.name) continue;
-            const playerName = data.name;
-            const existingPlayerIndex = currentPlayers.findIndex(p => p.name === playerName);
-            let playerId;
-            
-            if (existingPlayerIndex >= 0) {
-              playerId = currentPlayers[existingPlayerIndex].id;
-              // ループ1でアップロード済みのプレイヤーはクラウドデータで上書きしない
-              if (uploadedPlayerIds.has(playerId)) continue;
-              
-              const localData = await localforage.getItem('player_data_' + playerId) || {};
-              const localTime = localData.lastUpdatedAt ? new Date(localData.lastUpdatedAt).getTime() : 0;
-              const cloudTime = data.lastUpdatedAt ? new Date(data.lastUpdatedAt).getTime() : 0;
-
-              // クラウドのデータの方が新しい場合のみローカルを上書きする
-              if (cloudTime > localTime || !currentPlayers[existingPlayerIndex].isCloudSync) {
-                await localforage.setItem('player_data_' + playerId, { ...data, isCloudSync: true });
-                
-                const localArchived = !!currentPlayers[existingPlayerIndex].isArchived;
-                const cloudArchived = !!data.isArchived;
-                if (localArchived !== cloudArchived || !currentPlayers[existingPlayerIndex].isCloudSync) {
-                  currentPlayers[existingPlayerIndex].isCloudSync = true;
-                  currentPlayers[existingPlayerIndex].isArchived = cloudArchived;
-                  playersChanged = true;
-                }
-              } else {
-                // ローカルの方が新しい、または同じ場合は上書きせず、isCloudSync を false にしてクラウドへのアップロード待ちにする
-                if (currentPlayers[existingPlayerIndex].isCloudSync) {
-                  currentPlayers[existingPlayerIndex].isCloudSync = false;
-                  playersChanged = true;
-                }
-              }
-            } else {
-              // クラウド側で既にアーカイブされているプレイヤーはローカルに新規追加しない
-              if (data.isArchived) continue;
-              playerId = docId.startsWith('player_') ? docId : 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-              currentPlayers.push({ id: playerId, name: playerName, isCloudSync: true, isArchived: false });
-              playersChanged = true;
-              
-              // 新規のプレイヤーデータなのでローカルに保存
-              await localforage.setItem('player_data_' + playerId, { ...data, isCloudSync: true });
-            }
-          }
-          
-          if (playersChanged) {
-            await localforage.setItem('players', currentPlayers);
-          }
-          
-          const currentId = await localforage.getItem('currentPlayerId');
-          if (!currentId || !currentPlayers.some(p => p.id === currentId && !p.isArchived)) {
-            const activePlayers = currentPlayers.filter(p => !p.isArchived);
-            if (activePlayers.length > 0) {
-              await localforage.setItem('currentPlayerId', activePlayers[0].id);
-            } else {
-              await localforage.removeItem('currentPlayerId');
-            }
-          }
-          
-          await loadSettings();
-        } catch (error) {
-    } else {
-      setSubEventChoices([]);
-      setSubEventSelected(false);
+    const successAdopt = await addAdoptedWord(adoptedData);
+    if (!successAdopt) {
+      alert('採用に失敗しました。接続を確認してください。');
+      return;
     }
-  }, [isSubEventModalOpen, activeSubEvent, currentRallyIndex]);
+
+    await deleteWordRequest(request.id);
+
+    let rewardMsg = '';
+    if (request.playerId) {
+      const pData = await localforage.getItem('player_data_' + request.playerId);
+      if (pData) {
+        const newPoints = (pData.points || 0) + 1000;
+        const currentUnreadAdoptions = pData.unreadAdoptions || [];
+        await updateAndSavePlayerData(request.playerId, {
+          points: newPoints,
+          unreadAdoptions: [...currentUnreadAdoptions, request.kana]
+        });
+        if (currentPlayerId === request.playerId) {
+          setPoints(newPoints);
+        }
+        rewardMsg = `\n\nプレイヤー「${request.playerName}」に1000ポイントをおくりました！`;
+      }
+    }
+
+    await loadAdoptedWords();
+    if (typeof loadWordRequests === 'function') {
+      await loadWordRequests();
+    }
+    setAdoptingRequest(null);
+    alert(`「${request.kana}」を採用しました！${rewardMsg}`);
+  };
 
 
 
@@ -1409,71 +1144,47 @@ const SUB_EVENTS = [
               await localforage.setItem('player_data_' + playerId, { ...data, isCloudSync: true });
             }
           }
-          
 
+          if (playersChanged) {
+            await localforage.setItem('players', currentPlayers);
+          }
 
+          const currentId = await localforage.getItem('currentPlayerId');
+          if (!currentId || !currentPlayers.some(p => p.id === currentId && !p.isArchived)) {
+            const activePlayers = currentPlayers.filter(p => !p.isArchived);
+            if (activePlayers.length > 0) {
+              await localforage.setItem('currentPlayerId', activePlayers[0].id);
+            } else {
+              await localforage.removeItem('currentPlayerId');
+            }
+          }
 
+          await loadSettings();
+        } catch (error) {
+          console.error('Cloud sync failed:', error);
+        } finally {
+          setIsSyncing(false);
+        }
+      };
+      syncCloudData();
+    } else {
+      setIsSyncing(false);
+    }
+  }, [isPasswordAuthenticated]);
 
+  useEffect(() => {
+    loadSettings();
+    loadAdoptedWords();
+  }, []);
 
+  useEffect(() => {
+    if (!currentPlayerId) return;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-    };
-    sendHeartbeat();
-
-    const interval = setInterval(sendHeartbeat, 15000);
-    return () => clearInterval(interval);
-  }, [currentPlayerId, players]);
-
-  const doSelectPlayer = async (playerId) => {
-    sessionStartRef.current = Date.now(); // セッション開始時刻を記録
+    const sendHeartbeat = async () => {
+      try {
+        const pData = await localforage.getItem('player_data_' + currentPlayerId);
+        const cp = players.find(p => p.id === currentPlayerId);
+        if (pData && cp) {
           await saveCloudPlayer(currentPlayerId, {
             ...pData,
             name: cp.name,
@@ -1482,7 +1193,7 @@ const SUB_EVENTS = [
           });
         }
       } catch (e) {
-        console.error("Heartbeat send failed:", e);
+        console.error('Heartbeat send failed:', e);
       }
     };
     sendHeartbeat();
@@ -1490,6 +1201,7 @@ const SUB_EVENTS = [
     const interval = setInterval(sendHeartbeat, 15000);
     return () => clearInterval(interval);
   }, [currentPlayerId, players]);
+
 
   const doSelectPlayer = async (playerId) => {
     sessionStartRef.current = Date.now(); // セッション開始時刻を記録
@@ -1535,40 +1247,9 @@ const SUB_EVENTS = [
       setAppScreen('home');
     }
     await checkPendingGifts(playerId);
-              let pts = 100;
-              if (difficulty === 'very_hard') pts = 1000;
-              else if (difficulty === 'hard') pts = 500;
-              else if (difficulty === 'normal') pts = 200;
-              else if (difficulty === 'alphabet_quiz') pts = 50;
+  };
 
-              if (difficulty !== 'easy' && difficulty !== 'alphabet_quiz') {
-                if (missCount === 0) {
-                  pts = pts * 2;
-                } else if (missCount <= 3) {
-                  pts = pts + 100;
-                }
-              }
-
-              // アシストを1つオフにするごとに+100pt（全モード共通）
-              if (!assistSettings.keyboardHighlight) pts += 100;
-              if (!assistSettings.showRomajiHint) pts += 100;
-              setEarnedPoints(pts);
-              // 3段階クリア演出開始
-              setClearStep(0);
-              setGachaState('point_reward');
-              // ステップ 1: テロップ
-              setTimeout(() => setClearStep(1), 900);
-              // ステップ 2: ポイント大表示＋実際に加算
-              setTimeout(() => {
-                setClearStep(2);
-                addPoints(pts);
-                checkAchievements('clear', { points: points + pts });
-                playSE('points');
-              }, 1800);
-            }
-          } else {
-            setWordIndex((prev) => prev + 1);
-            setTypedChars('');
+  const handleCustomAudioUpload = async (type, file) => {
     setCustomAudio(newAudio);
     await localforage.setItem('customAudio', newAudio);
   };
@@ -1630,232 +1311,103 @@ const SUB_EVENTS = [
             spawnRandomSubEvents();
 
             if (gameMode === 'classic') {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        ...updates,
-        solvedSubEventIds: nextSolved
-      });
+              setGachaState('ready');
+              checkAchievements('clear');
+            } else {
+              let pts = 100;
+              if (difficulty === 'very_hard') pts = 1000;
+              else if (difficulty === 'hard') pts = 500;
+              else if (difficulty === 'normal') pts = 200;
+              else if (difficulty === 'alphabet_quiz') pts = 50;
+              if (difficulty !== 'easy' && difficulty !== 'alphabet_quiz') {
+                if (missCount === 0) pts = pts * 2;
+                else if (missCount <= 3) pts = pts + 100;
+              }
+              if (!assistSettings.keyboardHighlight) pts += 100;
+              if (!assistSettings.showRomajiHint) pts += 100;
+              setEarnedPoints(pts);
+              setClearStep(0);
+              setGachaState('point_reward');
+              setTimeout(() => setClearStep(1), 900);
+              setTimeout(() => {
+                setClearStep(2);
+                addPoints(pts);
+                checkAchievements('clear', { points: points + pts });
+                playSE('points');
+              }, 1800);
+            }
+          } else {
+            setWordIndex((prev) => prev + 1);
+            setTypedChars('');
+          }
+          setMissCount(0);
+          setIsTransitioning(false);
+        };
+        playSE('wordClear');
+        setTimeout(proceedToNext, 350);
+      }
+    } else {
+      setMissCount((c) => c + 1);
+      playSE('error');
     }
+  }, [isSubEventModalOpen, isPlayerModalOpen, isAuthModalOpen, passwordChangePlayerId, isTransitioning, isAllClear, ticketReward, nextValidChars, typedChars, validRomajiList, currentWord, wordIndex, gameWords, gameMode, difficulty, missCount, assistSettings, points, playSE, spawnRandomSubEvents, checkAchievements, addPoints, setGachaState, setClearStep, setEarnedPoints, setWordIndex, setTypedChars, setIsAllClear, setTicketReward, setIsTransitioning, setMissCount]);
 
-    setActiveEvents(prev => prev.filter(e => e.eventId !== activeSubEvent.id));
+  const handleSolveSubEvent = useCallback(async () => {
+    if (!activeSubEvent) return;
+    const BONUS_POINTS = 1000;
+    const newPoints = points + BONUS_POINTS;
+    setPoints(newPoints);
+    const nextSolved = [...solvedSubEventIds, activeSubEvent.id];
+    setSolvedSubEventIds(nextSolved);
+    if (currentPlayerId) {
+      await updateAndSavePlayerData(currentPlayerId, { points: newPoints, solvedSubEventIds: nextSolved });
+    }
+    setActiveEvents((prev) => prev.filter((e) => e.eventId !== activeSubEvent.id));
+    setSubEventReward({ name: activeSubEvent.name, title: activeSubEvent.title, rewardPoints: BONUS_POINTS, image: activeSubEvent.image });
+    setIsSubEventModalOpen(false);
+    setActiveSubEvent(null);
+    setCurrentRallyIndex(0);
+    setSubEventTypedChars('');
+    playSE('clear');
+  }, [activeSubEvent, points, solvedSubEventIds, currentPlayerId, updateAndSavePlayerData, playSE]);
 
-    setSubEventReward({
-      title: activeSubEvent.title,
-      text: rewardText,
-      image: activeSubEvent.image
-    });
-
+  const handleGiveItem = useCallback(async (selectedItemName) => {
+    if (!activeSubEvent || activeSubEvent.type !== 'give_item') return;
+    const currentCount = collection[selectedItemName] || 0;
+    if (currentCount < 1) { playSE('error'); return; }
+    const updatedCollection = { ...collection, [selectedItemName]: currentCount - 1 };
+    if (updatedCollection[selectedItemName] === 0) delete updatedCollection[selectedItemName];
+    setCollection(updatedCollection);
+    let iconResetUpdate = {};
+    if (currentIcon === selectedItemName && !updatedCollection[selectedItemName]) {
+      setCurrentIcon(null);
+      iconResetUpdate = { currentIcon: null };
+    }
+    const BONUS_POINTS = 1000;
+    const newPoints = points + BONUS_POINTS;
+    setPoints(newPoints);
+    const nextSolved = [...solvedSubEventIds, activeSubEvent.id];
+    setSolvedSubEventIds(nextSolved);
+    if (currentPlayerId) {
+      await updateAndSavePlayerData(currentPlayerId, { points: newPoints, collection: updatedCollection, solvedSubEventIds: nextSolved, ...iconResetUpdate });
+    }
+    setActiveEvents((prev) => prev.filter((e) => e.eventId !== activeSubEvent.id));
+    setSubEventReward({ name: activeSubEvent.name, title: activeSubEvent.title, rewardPoints: BONUS_POINTS, image: activeSubEvent.image });
     setIsSubEventModalOpen(false);
     setActiveSubEvent(null);
     setCurrentRallyIndex(0);
     setSubEventTypedChars('');
     setSelectedGivingItem(null);
-
     playSE('clear');
-  }, [activeSubEvent, collection, points, specialTickets, bgmTickets, seTickets, legendTickets, solvedSubEventIds, currentPlayerId, players, updateAndSavePlayerData, playSE, currentIcon]);
+  }, [activeSubEvent, collection, points, solvedSubEventIds, currentPlayerId, currentIcon, updateAndSavePlayerData, playSE]);
 
-
-  // サブイベント（人助け）のキー入力ハンドラ
   const handleSubEventKeyDown = useCallback((e) => {
     if (e.repeat) return;
     if (!isSubEventModalOpen || !activeSubEvent) return;
-    
-    // アイテム譲渡イベントで、まだアイテムを選択していない場合はタイピング不要
+    if (activeSubEvent.type === 'typing' && !subEventSelected) return;
     if (activeSubEvent.type === 'give_item' && !selectedGivingItem) return;
-    
-    // 英数字・一部の記号のみ判定
     if (!/^[a-zA-Z0-9\-\!\?\,\.]$/.test(e.key)) return;
-    
     const inputChar = e.key.toLowerCase();
-    
-    // タイピング判定用のワードを決定
     let validRomajiList = [];
     if (activeSubEvent.type === 'typing') {
       const currentRally = activeSubEvent.rallies[currentRallyIndex];
@@ -1863,222 +1415,28 @@ const SUB_EVENTS = [
       const autoRomaji = currentRally ? generateAllRomaji(currentRally.kana) : [];
       validRomajiList = [...new Set([...manualRomaji, ...autoRomaji])];
     } else if (activeSubEvent.type === 'give_item' && selectedGivingItem) {
-      // 「どうぞ」を入力ワードとする
       validRomajiList = generateAllRomaji('どうぞ');
     }
-    
-    // 現在の入力状況に前方一致するローマ字候補
     const subEventNextValidChars = [...new Set(
-  const handleSolveSubEvent = useCallback(async () => {
-    if (!activeSubEvent) return;
-    
-    // チケットの代わりに1000ポイントを付与
-    const BONUS_POINTS = 1000;
-    const newPoints = points + BONUS_POINTS;
-    setPoints(newPoints);
-    await localforage.setItem('points', newPoints);
-    const updates = { points: newPoints };
-    
-    // 解決したイベントを記録
-    const nextSolved = [...solvedSubEventIds, activeSubEvent.id];
-    setSolvedSubEventIds(nextSolved);
-    
-    // プレイヤーのデータを更新
-    if (currentPlayerId) {
-      const updatedPlayers = players.map(pl => {
-        if (pl.id === currentPlayerId) {
-          return {
-            ...pl,
-            points: newPoints,
-            solvedSubEventIds: nextSolved
-          };
+      validRomajiList.filter((r) => r.startsWith(subEventTypedChars)).map((r) => r[subEventTypedChars.length]).filter(Boolean)
+    )];
+    if (!subEventNextValidChars.includes(inputChar)) { playSE('error'); return; }
+    const newTyped = subEventTypedChars + inputChar;
+    setSubEventTypedChars(newTyped);
+    playSE('type');
+    if (validRomajiList.some((r) => r === newTyped)) {
+      if (activeSubEvent.type === 'typing') {
+        if (currentRallyIndex + 1 < activeSubEvent.rallies.length) {
+          setCurrentRallyIndex((i) => i + 1);
+          setSubEventTypedChars('');
+        } else {
+          handleSolveSubEvent();
         }
-        return pl;
-      });
-      setPlayers(updatedPlayers);
-      await localforage.setItem('players', updatedPlayers);
-      
-      // クラウド保存
-      await updateAndSavePlayerData(currentPlayerId, {
-        ...updates,
-        solvedSubEventIds: nextSolved
-      });
-    }
-    
-    // 広場からイベントを削除
-    setActiveEvents(prev => prev.filter(e => e.eventId !== activeSubEvent.id));
-    
-    // 報酬ダイアログの表示
-    setSubEventReward({
-      name: activeSubEvent.name,
-      title: activeSubEvent.title,
-      rewardPoints: BONUS_POINTS,
-      image: activeSubEvent.image
-    });
-    
-    // モーダルクローズ
-    setIsSubEventModalOpen(false);
-    setActiveSubEvent(null);
-    setCurrentRallyIndex(0);
-    setSubEventTypedChars('');
-    
-    // お祝いSE
-    playSE('clear');
-  }, [activeSubEvent, points, solvedSubEventIds, currentPlayerId, players, updateAndSavePlayerData, playSE]);
-
-  // サブイベント（アイテム譲渡）のアクションハンドラ
-  const handleGiveItem = useCallback(async (selectedItemName) => {
-    if (!activeSubEvent || activeSubEvent.type !== 'give_item') return;
-
-    const currentCount = collection[selectedItemName] || 0;
-    if (currentCount < 1) {
-      playSE('error');
-      return;
-    }
-
-    const updatedCollection = {
-      ...collection,
-      [selectedItemName]: currentCount - 1
-    };
-    if (updatedCollection[selectedItemName] === 0) {
-      delete updatedCollection[selectedItemName];
-    }
-    setCollection(updatedCollection);
-    await localforage.setItem('collection', updatedCollection);
-
-    // 【追加】設定中のアイコンをあげて無くなった場合、デフォルトに戻す
-    let iconResetUpdate = {};
-    if (currentIcon === selectedItemName && !updatedCollection[selectedItemName]) {
-      setCurrentIcon(null);
-      iconResetUpdate = { currentIcon: null };
-    }
-
-    // チケットの代わりに1000ポイントを付与
-    const BONUS_POINTS = 1000;
-    const newPoints = points + BONUS_POINTS;
-    setPoints(newPoints);
-    await localforage.setItem('points', newPoints);
-    const updates = { points: newPoints, collection: updatedCollection, ...iconResetUpdate };
-
-    const nextSolved = [...solvedSubEventIds, activeSubEvent.id];
-    setSolvedSubEventIds(nextSolved);
-
-    if (currentPlayerId) {
-      const updatedPlayers = players.map(pl => {
-        if (pl.id === currentPlayerId) {
-          return {
-            ...pl,
-            points: newPoints,
-            collection: updatedCollection,
-            currentIcon: iconResetUpdate.currentIcon !== undefined ? iconResetUpdate.currentIcon : pl.currentIcon,
-            solvedSubEventIds: nextSolved
-          };
-        }
-        return pl;
-      });
-      setPlayers(updatedPlayers);
-      await localforage.setItem('players', updatedPlayers);
-
-      await updateAndSavePlayerData(currentPlayerId, {
-        ...updates,
-        solvedSubEventIds: nextSolved
-      });
-    }
-
-    setActiveEvents(prev => prev.filter(e => e.eventId !== activeSubEvent.id));
-
-    setSubEventReward({
-      name: activeSubEvent.name,
-      title: activeSubEvent.title,
-        updates.bgmTickets = val;
-        rewardText += ` ＋ おんがくチケット ${reward.tickets.bgm}まい`;
-      }
-      if (reward.tickets.se) {
-        const val = seTickets + reward.tickets.se;
-        setSeTickets(val);
-        await localforage.setItem('seTickets', val);
-        updates.seTickets = val;
-        rewardText += ` ＋ こうかおんチケット ${reward.tickets.se}まい`;
-      }
-      if (reward.tickets.legend) {
-        const val = legendTickets + reward.tickets.legend;
-        setLegendTickets(val);
-        await localforage.setItem('legendTickets', val);
-        updates.legendTickets = val;
-        rewardText += ` ＋ レジェンドチケット ${reward.tickets.legend}まい`;
+      } else {
+        handleGiveItem(selectedGivingItem);
       }
     }
-
-    const nextSolved = [...solvedSubEventIds, activeSubEvent.id];
-    setSolvedSubEventIds(nextSolved);
-
-    if (currentPlayerId) {
-      const updatedPlayers = players.map(pl => {
-        if (pl.id === currentPlayerId) {
-          return {
-            ...pl,
-            points: newPoints,
-            collection: updatedCollection,
-            currentIcon: iconResetUpdate.currentIcon !== undefined ? iconResetUpdate.currentIcon : pl.currentIcon,
-            specialTickets: updates.specialTickets !== undefined ? updates.specialTickets : pl.specialTickets,
-            bgmTickets: updates.bgmTickets !== undefined ? updates.bgmTickets : pl.bgmTickets,
-            seTickets: updates.seTickets !== undefined ? updates.seTickets : pl.seTickets,
-            legendTickets: updates.legendTickets !== undefined ? updates.legendTickets : pl.legendTickets,
-            solvedSubEventIds: nextSolved
-          };
-        }
-        return pl;
-      });
-      setPlayers(updatedPlayers);
-      await localforage.setItem('players', updatedPlayers);
-
-      await updateAndSavePlayerData(currentPlayerId, {
-        ...updates,
-        solvedSubEventIds: nextSolved
-      });
-    }
-
-    setActiveEvents(prev => prev.filter(e => e.eventId !== activeSubEvent.id));
-
-    setSubEventReward({
-      title: activeSubEvent.title,
-      text: rewardText,
-      image: activeSubEvent.image
-    });
-
-    setIsSubEventModalOpen(false);
-    setActiveSubEvent(null);
-    setCurrentRallyIndex(0);
-    setSubEventTypedChars('');
-    setSelectedGivingItem(null);
-
-    playSE('clear');
-  }, [activeSubEvent, collection, points, specialTickets, bgmTickets, seTickets, legendTickets, solvedSubEventIds, currentPlayerId, players, updateAndSavePlayerData, playSE, currentIcon]);
-
-
-  // サブイベント（人助け）のキー入力ハンドラ
-  const handleSubEventKeyDown = useCallback((e) => {
-    if (e.repeat) return;
-    if (!isSubEventModalOpen || !activeSubEvent) return;
-    
-    // タイピングイベントで、まだ3択が選択されていない場合はキー入力を無視
-    if (activeSubEvent.type === 'typing' && !subEventSelected) return;
-    
-    // アイテム譲渡イベントで、まだアイテムを選択していない場合はタイピング不要
-    if (activeSubEvent.type === 'give_item' && !selectedGivingItem) return;
-    
-    // 英数字・一部の記号のみ判定
-    if (!/^[a-zA-Z0-9\-\!\?\,\.]$/.test(e.key)) return;
-    
-    const inputChar = e.key.toLowerCase();
-    
-    // タイピング判定用のワードを決定
-    let validRomajiList = [];
-    if (activeSubEvent.type === 'typing') {
-      const currentRally = activeSubEvent.rallies[currentRallyIndex];
-      const manualRomaji = currentRally?.romaji || [];
-      const autoRomaji = currentRally ? generateAllRomaji(currentRally.kana) : [];
-      validRomajiList = [...new Set([...manualRomaji, ...autoRomaji])];
+  }, [isSubEventModalOpen, activeSubEvent, subEventSelected, selectedGivingItem, currentRallyIndex, subEventTypedChars, playSE, handleSolveSubEvent, handleGiveItem]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -2110,10 +1468,10 @@ const SUB_EVENTS = [
   const handleRequestKanaChange = (val) => {
     setRequestKana(val);
     if (val.trim()) {
-      kana: requestKana.trim(),
-      romaji: requestRomaji.split('/').map(r => r.trim()).filter(Boolean),
-      emoji: requestEmoji.trim(),
-      playerName: currentPlayer?.name || 'ゲスト'
+      const list = generateAllRomaji(val);
+      if (list && list.length > 0) {
+        setRequestRomaji(list.join(' / '));
+      } else {
         setRequestRomaji('');
       }
     } else {
@@ -2124,6 +1482,7 @@ const SUB_EVENTS = [
   // リクエストをFirestoreに送信する
   const handleSendRequest = async (e) => {
     e.preventDefault();
+    if (!requestKana.trim() || !requestRomaji.trim()) {
       alert('「かな」と「ローマ字」は必ずいれてね！');
       return;
     }
@@ -2160,33 +1519,6 @@ const SUB_EVENTS = [
         alert('削除に失敗しました。');
       }
     }
-  const loadWordRequests = useCallback(async () => {
-    const data = await getWordRequests();
-    setWordRequests(data);
-  }, []);
-
-  // タブがリクエストに切り替わったときにロードする
-  useEffect(() => {
-    if (isPlayerModalOpen && playerModalTab === 'requests') {
-      loadWordRequests();
-    }
-  }, [isPlayerModalOpen, playerModalTab, loadWordRequests]);
-
-  // かな入力時にローマ字を自動生成する
-  const handleRequestKanaChange = (val) => {
-    setRequestKana(val);
-    if (val.trim()) {
-      const list = generateAllRomaji(val);
-      if (list && list.length > 0) {
-        setRequestRomaji(list.join(' / '));
-      } else {
-        setRequestRomaji('');
-      }
-    } else {
-      setRequestRomaji('');
-    }
-  };
-
   // リクエストをFirestoreに送信する
   const handleSendRequest = async (e) => {
     e.preventDefault();
@@ -2420,15 +1752,13 @@ const SUB_EVENTS = [
         alert('リクエストをおくったよ！ありがとう！');
         setRequestKana('');
         setRequestRomaji('');
-            ゲームをはじめるにはパスワードがひつようです
-          </p>
+        setIsRequestModalOpen(false);
+      } else {
+        alert('おくれませんでした。インターネットの接続を確認してね。');
+      }
+    }, 50);
+  };
 
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (inputPassword === '0001') {
-              setIsPasswordAuthenticated(true);
-            } else {
-              alert('パスワードがちがうよ！');
   const activeBg = BACKGROUNDS.find(bg => bg.id === currentBackground) || BACKGROUNDS[0];
 
   if (!isPasswordAuthenticated) {
@@ -6312,693 +5642,3 @@ const SUB_EVENTS = [
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              </p>
-              
-              <button
-                onClick={() => {
-                  const onConfirm = ticketReward.onConfirm;
-                  setTicketReward(null);
-                  if (onConfirm) onConfirm();
-                }}
-                className="premium-button bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-black text-lg px-8 py-3 w-full shadow-lg"
-              >
-                {ticketReward.titleObj ? 'やったー！' : 'つぎへすすむ'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    {/* 初回同期ローディング */}
-    {isSyncing && (
-      <div className="fixed inset-0 bg-sky-500 z-[100] flex flex-col items-center justify-center p-4">
-        <div className="text-white text-5xl mb-4 animate-bounce">☁️</div>
-        <h2 className="text-white text-xl md:text-2xl font-black mb-2">データをよみこみ中...</h2>
-        <div className="w-48 h-2 bg-sky-400 rounded-full overflow-hidden">
-          <div className="w-1/2 h-full bg-white animate-pulse" />
-        </div>
-      </div>
-    )}
-
-
-
-      {/* 画面右下のセーブ中インジケータ */}
-      {isSaving && (
-        <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-3.5 py-2 rounded-full shadow-lg border border-white/20 text-xs font-black text-gray-700 dark:text-gray-200 animate-fade-in pointer-events-none">
-          <RefreshCcw className="w-3.5 h-3.5 animate-spin text-green-500" />
-          <span>セーブ中...</span>
-        </div>
-      )}
-
-    </div>
-  );
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    onClick={async () => {
-                      playGlobalDecideSound();
-                      setCurrentIcon(null);
-                      await updateAndSavePlayerData(currentPlayerId, { currentIcon: null });
-                    }}
-                    className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 ${
-                      currentIcon === null
-                        ? 'bg-yellow-50 border-yellow-400 shadow-md scale-105 z-10'
-                        : 'bg-white border-gray-200 hover:border-yellow-300 hover:bg-yellow-50/30 active:scale-95'
-                    }`}
-                  >
-                    <span className="text-2xl sm:text-3xl">{TITLES.find(t => t.id === currentTitle)?.emoji || '👦'}</span>
-                  </button>
-                  {GACHA_ITEMS.filter(item => collection[item.name] > 0).map(item => {
-                    const isSelected = currentIcon === item.name;
-                    const isLegend = item.rarity === '✨レジェンド✨';
-                    const customStyle = !isLegend ? { borderColor: item.color } : {};
-                    const selectedClass = isSelected ? 'outline outline-4 outline-yellow-400 bg-yellow-50 scale-105 z-10' : 'hover:bg-yellow-50/30 active:scale-95';
-
-                    return (
-                      <button
-                        key={item.name}
-                        onClick={async () => {
-                          playGlobalDecideSound();
-                          setCurrentIcon(item.name);
-                          await updateAndSavePlayerData(currentPlayerId, { currentIcon: item.name });
-                        }}
-                        className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-white ${selectedClass} ${isLegend ? 'legend-card border-none' : ''}`}
-                        style={customStyle}
-                        title={item.name}
-                      >
-                        <span className="text-2xl sm:text-3xl">{item.emoji}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 称号リスト */}
-              <div>
-                <h3 className="text-lg font-black text-gray-700 mb-3 flex items-center gap-2">
-                  <span>🏆</span> しょうごう を かえる
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {TITLES.map(t => {
-                    const hasTitle = achievements.includes(t.id);
-                    const isSelected = currentTitle === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        disabled={!hasTitle}
-                        onClick={async () => {
-                          playGlobalDecideSound();
-                          setCurrentTitle(t.id);
-                          await updateAndSavePlayerData(currentPlayerId, { currentTitle: t.id });
-                        }}
-                        className={`p-3 rounded-xl flex flex-col items-center justify-center border-2 transition-all text-center relative ${
-                          isSelected 
-                            ? 'bg-yellow-50 border-yellow-400 shadow-md scale-105 z-10' 
-                            : hasTitle 
-                              ? 'bg-white border-gray-200 hover:border-yellow-300 hover:bg-yellow-50/30 active:scale-95' 
-                              : 'bg-gray-100 border-gray-200 opacity-50 grayscale cursor-not-allowed'
-                        }`}
-                      >
-                        <span className="text-2xl mb-1">{hasTitle ? t.emoji : '🔒'}</span>
-                        <span className="font-black text-xs sm:text-sm text-gray-800 leading-tight mb-1">{hasTitle ? t.name : '？？？'}</span>
-                        {hasTitle && <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 leading-tight">{t.desc}</span>}
-                        {isSelected && <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">セット中</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-
-
-              {/* 背景リスト */}
-              <div>
-                <h3 className="text-lg font-black text-gray-700 mb-3 flex items-center gap-2">
-                  <span>🎨</span> はいけい を かえる
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {BACKGROUNDS.map(bg => {
-                    const hasBg = backgrounds.includes(bg.id);
-                    const isSelected = currentBackground === bg.id;
-                    return (
-                      <button
-                        key={bg.id}
-                        disabled={!hasBg}
-                        onClick={async () => {
-                          playGlobalDecideSound();
-                          setCurrentBackground(bg.id);
-                          await updateAndSavePlayerData(currentPlayerId, { currentBackground: bg.id });
-                        }}
-                        className={`relative aspect-video rounded-xl overflow-hidden border-4 transition-all group ${
-                          isSelected 
-                            ? 'border-sky-500 shadow-lg scale-105 z-10' 
-                            : hasBg 
-                              ? 'border-gray-200 hover:border-sky-300 hover:shadow-md active:scale-95' 
-                              : 'border-gray-200 opacity-50 grayscale cursor-not-allowed'
-                        }`}
-                      >
-                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${bg.url})` }} />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity group-hover:bg-black/20">
-                          <span className="font-black text-white text-sm sm:text-base drop-shadow-md">
-                            {hasBg ? bg.name : '🔒 ？？？'}
-                          </span>
-                        </div>
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 bg-sky-500 text-white p-1 rounded-full shadow-md z-10">
-                            <CheckCircle2 className="w-4 h-4" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 特別キーワード成功時・称号獲得時のチケット獲得ポップアップ */}
-      {ticketReward && ticketReward.show && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in pointer-events-auto">
-          <div className="bg-white border-8 border-yellow-400 p-8 rounded-3xl text-center max-w-sm w-full mx-4 shadow-2xl relative animate-pop-out">
-            <div className="absolute inset-0 bg-gradient-to-b from-yellow-100/50 to-transparent pointer-events-none rounded-2xl z-0" />
-            
-            <div className="relative z-10 space-y-6">
-              <div className="text-2xl font-black text-purple-600 animate-bounce">
-                {ticketReward.titleObj ? '🏆 称号ゲット！ 🏆' : '⚡ 激アツ！大せいこう ⚡'}
-              </div>
-
-              {/* 称号カード（称号獲得時のみ） */}
-              {ticketReward.titleObj && (
-                <div className="bg-yellow-50 border-4 border-yellow-300 px-4 py-3 rounded-2xl shadow-inner">
-                  <div className="text-xs font-bold text-gray-500 mb-0.5">🏆 あたらしいしょうごうを獲得！</div>
-                  <div className="text-lg font-black text-gray-800">{ticketReward.titleObj.name}</div>
-                  <div className="text-[10px] font-bold text-gray-400 mt-0.5">{ticketReward.titleObj.desc}</div>
-                </div>
-              )}
-              
-              {/* 特別チケット獲得バナー（称号獲得時のみ追加表示） */}
-              {ticketReward.titleObj && (
-                <div className="bg-gradient-to-r from-fuchsia-100 to-amber-100 border-2 border-fuchsia-300 px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 animate-pulse">
-                  <span className="text-base">🎟️</span>
-                  <span className="text-xs font-black text-fuchsia-700">特別チケット獲得！</span>
-                  <span className="text-base">🎟️</span>
-                </div>
-              )}
-              
-              {/* チケットのイラスト */}
-              <div className="flex justify-center my-4 relative">
-                {ticketReward.type === 'legend' ? (
-                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-white/10 animate-pulse" />
-                    <div className="text-5xl mb-2 animate-bounce">🌟🎟️🌟</div>
-                    <div className="text-xs tracking-wider">げきレアいじょう</div>
-                    <div className="text-base mt-1">かくていチケット</div>
-                  </div>
-                ) : ticketReward.type === 'se' ? (
-                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
-                    <div className="text-5xl mb-2 animate-bounce">🔊👾🔊</div>
-                    <div className="text-xs tracking-wider">こうかおんの</div>
-                    <div className="text-base mt-1">ガチャチケット</div>
-                  </div>
-                ) : ticketReward.type === 'bgm' ? (
-                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
-                    <div className="text-5xl mb-2 animate-bounce">🎵💿🎵</div>
-                    <div className="text-xs tracking-wider">おんがくの</div>
-                    <div className="text-base mt-1">ガチャチケット</div>
-                  </div>
-                ) : (
-                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
-                    <div className="text-5xl mb-2 animate-bounce">🎨🎟️🎨</div>
-                    <div className="text-xs tracking-wider">はいけいの</div>
-                    <div className="text-base mt-1">ガチャチケット</div>
-                  </div>
-                )}
-              </div>
-              
-              <p className="text-base font-black text-gray-700 leading-snug">
-                {ticketReward.type === 'legend' 
-                  ? '🌟 激レア以上確定チケット 🌟' 
-                  : ticketReward.type === 'se'
-                  ? '🔊 こうかおんガチャチケット 🔊'
-                  : ticketReward.type === 'bgm'
-                  ? '🎵 おんがくガチャチケット 🎵'
-                  : '🎨 はいけいガチャチケット 🎨'}
-                <br />
-                を {ticketReward.count || 1}まい ゲットしたよ！
-              </p>
-              
-              <button
-                onClick={() => {
-                  const onConfirm = ticketReward.onConfirm;
-                  setTicketReward(null);
-                  if (onConfirm) onConfirm();
-                }}
-                className="premium-button bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-black text-lg px-8 py-3 w-full shadow-lg"
-              >
-                {ticketReward.titleObj ? 'やったー！' : 'つぎへすすむ'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    {/* 初回同期ローディング */}
-    {isSyncing && (
-      <div className="fixed inset-0 bg-sky-500 z-[100] flex flex-col items-center justify-center p-4">
-        <div className="text-white text-5xl mb-4 animate-bounce">☁️</div>
-        <h2 className="text-white text-xl md:text-2xl font-black mb-2">データをよみこみ中...</h2>
-        <div className="w-48 h-2 bg-sky-400 rounded-full overflow-hidden">
-          <div className="w-1/2 h-full bg-white animate-pulse" />
-        </div>
-      </div>
-    )}
-
-
-
-      {/* 画面右下のセーブ中インジケータ */}
-      {isSaving && (
-        <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-3.5 py-2 rounded-full shadow-lg border border-white/20 text-xs font-black text-gray-700 dark:text-gray-200 animate-fade-in pointer-events-none">
-          <RefreshCcw className="w-3.5 h-3.5 animate-spin text-green-500" />
-          <span>セーブ中...</span>
-        </div>
-      )}
-
-    </div>
-  );
-}
