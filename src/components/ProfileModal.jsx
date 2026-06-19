@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { User, X, CheckCircle2 } from 'lucide-react';
 import { BACKGROUNDS, TITLES, GACHA_ITEMS } from '../constants';
+import { optimizedAssetUrl } from '../utils/assetImages';
 
 function countOwnedTypes(collection = {}) {
   return Object.keys(collection).filter((key) => collection[key] > 0).length;
@@ -205,7 +206,7 @@ export default function ProfileModal({
                   >
                     <div
                       className="absolute inset-0 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${bg.url})` }}
+                      style={{ backgroundImage: `url(${optimizedAssetUrl(bg.url)})` }}
                     />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity group-hover:bg-black/20">
                       <span className="font-black text-white text-sm sm:text-base drop-shadow-md">

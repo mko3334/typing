@@ -1,5 +1,6 @@
 import { WRONG_PHRASES, SUB_EVENT_SPAWN_POSITIONS, TYPING_SUB_EVENTS } from '../data/subEvents';
 import { generateAllRomaji } from '../constants';
+import { applyCorrectionToRally } from './wordCorrections';
 
 const TICKET_TYPES = ['special', 'bgm', 'se', 'legend'];
 const TICKET_DROP_RATE = 0.12;
@@ -13,6 +14,33 @@ function shuffle(array) {
   return next;
 }
 
+function parsePercent(value) {
+  return Number.parseFloat(String(value).replace('%', ''));
+}
+
+function pickSpreadPositions(count) {
+  const pool = shuffle(SUB_EVENT_SPAWN_POSITIONS);
+  const picked = [];
+
+  for (const pos of pool) {
+    if (picked.length >= count) break;
+    const tooClose = picked.some((existing) => {
+      const topDiff = Math.abs(parsePercent(existing.top) - parsePercent(pos.top));
+      const leftDiff = Math.abs(parsePercent(existing.left) - parsePercent(pos.left));
+      return topDiff < 10 && leftDiff < 12;
+    });
+    if (!tooClose) picked.push(pos);
+  }
+
+  while (picked.length < count && picked.length < pool.length) {
+    const candidate = pool[picked.length];
+    if (!picked.includes(candidate)) picked.push(candidate);
+    else break;
+  }
+
+  return picked;
+}
+
 export function buildChoices(correctKana) {
   const wrongPool = WRONG_PHRASES.filter((phrase) => phrase !== correctKana);
   const wrongChoices = shuffle(wrongPool).slice(0, 2);
@@ -24,11 +52,14 @@ export function getChoiceDisplay(choice, rally) {
   return choice;
 }
 
-export function getValidRomajiList(rally) {
-  const manual = Array.isArray(rally?.romaji) ? rally.romaji : [];
-  const auto = rally?.kana ? generateAllRomaji(rally.kana) : [];
+export function getValidRomajiList(rally, eventId) {
+  const corrected = applyCorrectionToRally(rally, eventId);
+  const manual = Array.isArray(corrected?.romaji) ? corrected.romaji : [];
+  const auto = corrected?.kana ? generateAllRomaji(corrected.kana) : [];
   return [...new Set([...manual, ...auto])];
 }
+
+export const PLAZA_SUB_EVENT_TARGET = 3;
 
 export function spawnRandomSubEvents(solvedIds = [], existingActive = []) {
   const solved = new Set(solvedIds);
@@ -39,9 +70,11 @@ export function spawnRandomSubEvents(solvedIds = [], existingActive = []) {
 
   if (available.length === 0) return [];
 
-  const spawnCount = Math.min(available.length, 1 + Math.floor(Math.random() * 3));
-  const picked = shuffle(available).slice(0, spawnCount);
-  const positions = shuffle(SUB_EVENT_SPAWN_POSITIONS).slice(0, spawnCount);
+  const slots = Math.min(available.length, PLAZA_SUB_EVENT_TARGET - existingActive.length);
+  if (slots <= 0) return [];
+
+  const picked = shuffle(available).slice(0, slots);
+  const positions = pickSpreadPositions(slots);
 
   return picked.map((event, index) => ({
     eventId: event.id,

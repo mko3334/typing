@@ -49,7 +49,7 @@ export default function useGameAudio(player, appScreen) {
   const activeBgmId = appScreen === 'title' ? 'default' : currentBgm;
 
   useEffect(() => {
-    if (appScreen === 'title' || appScreen === 'home' || appScreen === 'typing' || appScreen === 'shop') {
+    if (appScreen === 'title' || appScreen === 'home' || appScreen === 'typing' || appScreen === 'shop' || appScreen === 'hiragana') {
       playBgm(activeBgmId, { customAudio, volume, bgmRef });
     }
   }, [appScreen, activeBgmId, customAudio, volume]);

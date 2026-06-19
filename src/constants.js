@@ -1,3 +1,5 @@
+import { optimizedAssetUrl } from './utils/assetImages';
+
 export const BACKGROUNDS = [
   { id: 'default', name: 'デフォルトのへや', url: '/bg.png' },
   { id: 'space', name: '宇宙のたび 🚀', url: '/space_bg.png' },
@@ -11,12 +13,24 @@ export const BACKGROUNDS = [
 
 export const TITLES = [
   { id: 'rookie', name: '🔰 タイピングルーキー', desc: 'はじめから もっている しょうごう', emoji: '👦', color: 'text-sky-600', bg: 'bg-sky-100' },
+  { id: 'easy_clear', name: '🌱 イージークリア', desc: 'イージーで 10もん クリアする', emoji: '🌱', color: 'text-lime-600', bg: 'bg-lime-100' },
+  { id: 'normal_clear', name: '⭐ ノーマルクリア', desc: 'ノーマルで 10もん クリアする', emoji: '⭐', color: 'text-blue-600', bg: 'bg-blue-100' },
   { id: 'no_miss', name: '🎯 ミスなし名人', desc: 'ノーマルいじょうで ミス0で クリアする', emoji: '🎯', color: 'text-yellow-600', bg: 'bg-yellow-100' },
   { id: 'hard_clear', name: '🔥 ハードチャレンジャー', desc: 'むずかしい（ハード）を クリアする', emoji: '🔥', color: 'text-red-600', bg: 'bg-red-100' },
+  { id: 'very_hard_clear', name: '💎 ベリーハードクリア', desc: 'ベリーハードを クリアする', emoji: '💎', color: 'text-violet-600', bg: 'bg-violet-100' },
+  { id: 'alphabet_master', name: '🔠 アルファベットマスター', desc: 'おおもじ・こもじ クイズを クリアする', emoji: '🔠', color: 'text-orange-600', bg: 'bg-orange-100' },
+  { id: 'typing_veteran', name: '⌨️ タイピングベテラン', desc: 'タイピングを 20かい プレイする', emoji: '⌨️', color: 'text-slate-600', bg: 'bg-slate-100' },
+  { id: 'sub_helper', name: '🤝 おてつだい名人', desc: 'サブクエストを 5かい クリアする', emoji: '🤝', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  { id: 'hiragana_starter', name: '🔤 ひらがなスターター', desc: 'あ行ステージを クリアする', emoji: '🔤', color: 'text-sky-600', bg: 'bg-sky-100' },
+  { id: 'hiragana_challenger', name: '📝 ひらがなチャレンジャー', desc: 'ひらがな 5行 クリアする', emoji: '📝', color: 'text-indigo-600', bg: 'bg-indigo-100' },
+  { id: 'hiragana_master', name: '🎌 ひらがなマスター', desc: 'ひらがな ぜん行 クリアする', emoji: '🎌', color: 'text-rose-600', bg: 'bg-rose-100' },
+  { id: 'shuffle_star', name: '🎲 シャッフルスター', desc: 'シャッフルテストを 1かい クリアする', emoji: '🎲', color: 'text-fuchsia-600', bg: 'bg-fuchsia-100' },
   { id: 'collection_15', name: '✨ ガチャマスター', desc: 'ずかんを 15しゅるいいじょう あつめる', emoji: '✨', color: 'text-pink-600', bg: 'bg-pink-100' },
   { id: 'points_1000', name: '🪙 ポイントリッチ', desc: '1000ポイントいじょう ためる', emoji: '🪙', color: 'text-amber-600', bg: 'bg-amber-100' },
+  { id: 'points_10000', name: '💰 ポイントキング', desc: '10000ポイントいじょう ためる', emoji: '💰', color: 'text-yellow-700', bg: 'bg-yellow-100' },
   { id: 'legend_hunter', name: '🦄 レジェンドハンター', desc: 'レジェンドレアの アイテムを あてる', emoji: '🦄', color: 'text-purple-600', bg: 'bg-purple-100' },
   { id: 'collection_complete', name: '👑 ずかんコンプリート', desc: 'ごほうびを すべてあつめる', emoji: '👑', color: 'text-orange-600', bg: 'bg-orange-100' },
+  { id: 'gacha_spender', name: '🎰 ガチャ好き', desc: 'ガチャを 30かい まわす', emoji: '🎰', color: 'text-pink-700', bg: 'bg-pink-100' },
 ];
 
 export const RARITY_SORT_RANK = {
@@ -121,8 +135,10 @@ export const GACHA_ITEMS = [
 
 export const getRarityWeight = (rarity) => RARITY_SORT_RANK[rarity] ?? 1;
 
-export const resolveBackground = (bgId) =>
-  BACKGROUNDS.find((b) => b.id === (bgId || 'default')) || BACKGROUNDS[0];
+export const resolveBackground = (bgId) => {
+  const bg = BACKGROUNDS.find((b) => b.id === (bgId || 'default')) || BACKGROUNDS[0];
+  return { ...bg, url: optimizedAssetUrl(bg.url) };
+};
 
 export const ROMAJI_TABLE = {
   'あ': ['a'], 'い': ['i'], 'う': ['u'], 'え': ['e'], 'お': ['o'],
@@ -134,7 +150,7 @@ export const ROMAJI_TABLE = {
   'ま': ['ma'], 'み': ['mi'], 'む': ['mu'], 'め': ['me'], 'も': ['mo'],
   'や': ['ya'], 'ゆ': ['yu'], 'よ': ['yo'],
   'ら': ['ra'], 'り': ['ri'], 'る': ['ru'], 'れ': ['re'], 'ろ': ['ro'],
-  'わ': ['wa'], 'を': ['wo', 'o'], 'ん': ['nn', 'n'],
+  'わ': ['wa'], 'を': ['wo'], 'ん': ['nn', 'n'],
   'が': ['ga'], 'ぎ': ['gi'], 'ぐ': ['gu'], 'げ': ['ge'], 'ご': ['go'],
   'ざ': ['za'], 'じ': ['zi', 'ji'], 'ず': ['zu'], 'ぜ': ['ze'], 'ぞ': ['zo'],
   'だ': ['da'], 'ぢ': ['di'], 'づ': ['du'], 'で': ['de'], 'ど': ['do'],

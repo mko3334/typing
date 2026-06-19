@@ -1,7 +1,17 @@
 import React from 'react';
+import { Tag } from 'lucide-react';
 import { TITLES, GACHA_ITEMS, getRarityWeight, resolveBackground } from '../constants';
 
-export default function PlayerCard({ player, onClick, readOnly = false }) {
+export default function PlayerCard({
+  player,
+  onClick,
+  onTagClick,
+  readOnly = false,
+  bulkSelectMode = false,
+  bulkSelected = false,
+  onBulkToggle,
+  isLockedElsewhere = false,
+}) {
   const bgItem = resolveBackground(player.currentBackground);
   const iconItem = player.currentIcon
     ? GACHA_ITEMS.find((i) => i.name === player.currentIcon)
@@ -99,6 +109,13 @@ export default function PlayerCard({ player, onClick, readOnly = false }) {
         </div>
       )}
 
+      {isLockedElsewhere && (
+        <div className="absolute top-1.5 left-1.5 z-20 bg-indigo-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-green-300 rounded-full animate-ping" />
+          あそびちゅう
+        </div>
+      )}
+
       {player.tags?.length > 0 && (
         <div className="absolute top-1.5 right-1.5 flex flex-wrap gap-0.5 max-w-[45%] justify-end z-10">
           {player.tags.slice(0, 2).map((tag) => (
@@ -116,6 +133,39 @@ export default function PlayerCard({ player, onClick, readOnly = false }) {
           )}
         </div>
       )}
+
+      {bulkSelectMode && (
+        <div className="absolute top-1.5 left-1.5 z-20">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onBulkToggle?.();
+            }}
+            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-black shadow-md transition-all ${
+              bulkSelected
+                ? 'bg-indigo-500 border-indigo-600 text-white'
+                : 'bg-white border-gray-300 text-gray-400'
+            }`}
+          >
+            {bulkSelected ? '✓' : ''}
+          </button>
+        </div>
+      )}
+
+      {onTagClick && !readOnly && !bulkSelectMode && !isLockedElsewhere && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onTagClick(player);
+          }}
+          className="absolute bottom-1.5 right-1.5 z-20 p-1.5 rounded-full bg-white/90 border border-indigo-200 text-indigo-600 shadow-sm hover:bg-indigo-50 active:scale-95 transition-all"
+          title="タグを 編集"
+        >
+          <Tag className="w-3.5 h-3.5" />
+        </button>
+      )}
     </>
   );
 
@@ -126,8 +176,20 @@ export default function PlayerCard({ player, onClick, readOnly = false }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      className={`${cardClassName} transition-all cursor-pointer hover:border-sky-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]`}
+      onClick={() => {
+        if (isLockedElsewhere) return;
+        if (bulkSelectMode) {
+          onBulkToggle?.();
+          return;
+        }
+        onClick?.();
+      }}
+      disabled={isLockedElsewhere && !bulkSelectMode}
+      className={`${cardClassName} transition-all ${
+        isLockedElsewhere
+          ? 'opacity-60 grayscale cursor-not-allowed border-gray-300 bg-gray-100'
+          : 'cursor-pointer hover:border-sky-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
+      } ${bulkSelected ? 'ring-2 ring-indigo-400 border-indigo-300' : ''}`}
     >
       {cardContent}
     </button>

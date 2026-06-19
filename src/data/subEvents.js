@@ -21,12 +21,12 @@ export const WRONG_PHRASES = [
 ];
 
 export const SUB_EVENT_SPAWN_POSITIONS = [
-  { top: '32%', left: '58%' },
-  { top: '58%', left: '62%' },
-  { top: '48%', left: '28%' },
-  { top: '68%', left: '52%' },
+  { top: '12%', left: '58%' },
+  { top: '18%', left: '32%' },
+  { top: '24%', left: '72%' },
+  { top: '30%', left: '18%' },
+  { top: '36%', left: '50%' },
   { top: '42%', left: '78%' },
-  { top: '55%', left: '15%' },
 ];
 
 function rally(speaker, text, kana, options = {}) {

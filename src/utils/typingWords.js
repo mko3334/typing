@@ -95,3 +95,30 @@ export function pickGameWords(
 
   return { words, newPlayCount, newTriggered };
 }
+
+export function pickReplacementWord(
+  difficulty,
+  excludeKanas = [],
+  extraWords = [],
+) {
+  const exclude = new Set(excludeKanas.filter(Boolean));
+  const basePool = WORDS[difficulty] || WORDS.normal;
+  const adoptedForDifficulty = extraWords.filter((w) => w.difficulty === difficulty || !w.difficulty);
+  const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji }) => ({
+    kana,
+    romaji: Array.isArray(romaji) ? romaji : [romaji],
+    emoji: emoji || '✨',
+  }))].filter((word) => word.kana && !exclude.has(word.kana));
+
+  if (pool.length === 0) return null;
+  return shuffle(pool)[0];
+}
+
+export function pickSubEventReplacement(excludeKanas = []) {
+  const exclude = new Set(excludeKanas.filter(Boolean));
+  const pool = [...(WORDS.normal || []), ...(WORDS.hard || [])].filter(
+    (word) => word.kana && !exclude.has(word.kana),
+  );
+  if (pool.length === 0) return null;
+  return shuffle(pool)[0];
+}

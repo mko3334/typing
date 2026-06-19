@@ -1,10 +1,29 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { User, Plus, Search, X, Tag } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { User, Plus, Search, X, Tag, RefreshCcw } from 'lucide-react';
 import { loadAllCloudPlayers, saveCloudPlayer } from '../firebase';
-import localforage from 'localforage';
 import PlayerCard from './PlayerCard';
 import AdminPanel from './AdminPanel';
+import PlayerTagEditModal from './PlayerTagEditModal';
+import TagManagePanel from './TagManagePanel';
 import { enrichPlayer } from '../utils/player';
+import {
+  loadLocalPlayerEntries,
+  mergeCloudAndLocalPlayers,
+  persistMergedPlayers,
+  persistPlayerLocally,
+  withTimeout,
+  loadTagMaster,
+  saveTagMaster,
+  collectAllTags,
+} from '../utils/playerStorage';
+import { optimizedAssetUrl, preloadImages } from '../utils/assetImages';
+import { resolveBackground } from '../constants';
+import {
+  getDeviceSessionId,
+  isPlayerLockedElsewhere,
+  PLAYING_TIMEOUT_MS,
+} from '../utils/playerSession';
+import ConfirmModal from './ConfirmModal';
 
 function dedupePlayersByName(players) {
   const byName = new Map();
@@ -66,7 +85,9 @@ function playDecideSoundExternal(playDecideSound) {
 
 export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
   const [players, setPlayers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
+  const [cloudSyncing, setCloudSyncing] = useState(false);
+  const [prefetching, setPrefetching] = useState(true);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [modalTab, setModalTab] = useState('players');
   const [searchNameInput, setSearchNameInput] = useState('');
@@ -74,49 +95,216 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
   const [showNewPlayer, setShowNewPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [sortMode, setSortMode] = useState('name-asc');
+  const [loadNotice, setLoadNotice] = useState('');
+  const [pendingPlayer, setPendingPlayer] = useState(null);
+  const [showTagManagePanel, setShowTagManagePanel] = useState(false);
+  const [tagMaster, setTagMaster] = useState([]);
+  const [newTagInput, setNewTagInput] = useState('');
+  const [tagEditTarget, setTagEditTarget] = useState(null);
+  const [isBulkTagMode, setIsBulkTagMode] = useState(false);
+  const [bulkSelectedPlayerIds, setBulkSelectedPlayerIds] = useState([]);
+  const loadRequestRef = useRef(0);
 
-  useEffect(() => {
-    loadPlayers();
+  const loadPlayers = useCallback(async ({ showSpinner = true } = {}) => {
+    const requestId = loadRequestRef.current + 1;
+    loadRequestRef.current = requestId;
+    if (showSpinner) setListLoading(true);
+    setLoadNotice('');
+
+    try {
+      const localList = await loadLocalPlayerEntries();
+      if (loadRequestRef.current !== requestId) return;
+
+      if (localList.length > 0) {
+        setPlayers(dedupePlayersByName(localList));
+        setListLoading(false);
+      }
+
+      setCloudSyncing(true);
+      const cloudPlayersMap = await withTimeout(loadAllCloudPlayers(), 5000, null);
+      if (loadRequestRef.current !== requestId) return;
+
+      const merged = mergeCloudAndLocalPlayers(cloudPlayersMap, localList);
+      setPlayers(dedupePlayersByName(merged));
+      void persistMergedPlayers(merged);
+
+      if (cloudPlayersMap === null) {
+        setLoadNotice(
+          merged.length > 0
+            ? 'クラウドと つながらないので、この端末の セーブを 表示しています。'
+            : 'クラウドから セーブを 読み込めませんでした。ネットワークを 確認するか、新しく つくってください。',
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      if (loadRequestRef.current !== requestId) return;
+      const fallback = await loadLocalPlayerEntries();
+      setPlayers(dedupePlayersByName(fallback));
+      setLoadNotice('セーブの 読み込みに 失敗しました。この端末に 保存があれば 表示しています。');
+    } finally {
+      if (loadRequestRef.current === requestId) {
+        setListLoading(false);
+        setCloudSyncing(false);
+        setPrefetching(false);
+      }
+    }
   }, []);
 
   useEffect(() => {
-    if (showPlayerModal) {
-      loadPlayers();
-    }
-  }, [showPlayerModal]);
+    loadPlayers({ showSpinner: false });
+  }, [loadPlayers]);
 
   useEffect(() => {
     if (showPlayerModal && modalTab === 'admin') {
-      loadPlayers();
+      loadPlayers({ showSpinner: false });
     }
-  }, [showPlayerModal, modalTab]);
+  }, [showPlayerModal, modalTab, loadPlayers]);
 
-  const loadPlayers = async () => {
-    setLoading(true);
-    try {
-      const cloudPlayersMap = await loadAllCloudPlayers();
-      const list = [];
+  useEffect(() => {
+    if (!showPlayerModal || modalTab !== 'players') return undefined;
+    const timer = setInterval(() => {
+      loadPlayers({ showSpinner: false });
+    }, PLAYING_TIMEOUT_MS / 3);
+    return () => clearInterval(timer);
+  }, [showPlayerModal, modalTab, loadPlayers]);
 
-      if (cloudPlayersMap) {
-        Object.entries(cloudPlayersMap).forEach(([docId, data]) => {
-          if (!data?.name) return;
-          list.push(enrichPlayer(docId, data));
-        });
+  useEffect(() => {
+    loadTagMaster().then(setTagMaster).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!pendingPlayer) return;
+    const bg = resolveBackground(pendingPlayer.currentBackground);
+    preloadImages([
+      optimizedAssetUrl('/mall_home_bg.png'),
+      bg.url,
+    ]);
+  }, [pendingPlayer]);
+
+  const allTags = useMemo(
+    () => collectAllTags(players, tagMaster),
+    [players, tagMaster],
+  );
+
+  const persistPlayerUpdates = useCallback(async (updatedPlayers, changedIds = null) => {
+    setPlayers(updatedPlayers);
+    const targets = changedIds
+      ? updatedPlayers.filter((player) => changedIds.includes(player.id))
+      : updatedPlayers;
+    void persistMergedPlayers(targets);
+    for (const player of targets) {
+      saveCloudPlayer(player.id, player).catch(() => {});
+    }
+  }, []);
+
+  const updatePlayersByIds = useCallback(
+    async (playerIds, updater) => {
+      const idSet = new Set(playerIds);
+      const updatedPlayers = players.map((player) => {
+        if (!idSet.has(player.id)) return player;
+        return updater(player);
+      });
+      await persistPlayerUpdates(updatedPlayers, playerIds);
+    },
+    [players, persistPlayerUpdates],
+  );
+
+  const registerTagInMaster = useCallback(async (tag) => {
+    const trimmed = tag?.trim();
+    if (!trimmed) return;
+    if (tagMaster.includes(trimmed)) return;
+    const next = await saveTagMaster([...tagMaster, trimmed]);
+    setTagMaster(next);
+  }, [tagMaster]);
+
+  const handleCreateMasterTag = useCallback(async (rawTag) => {
+    const trimmed = rawTag?.trim();
+    if (!trimmed) return;
+    await registerTagInMaster(trimmed);
+    setNewTagInput('');
+    playDecideSoundExternal(playDecideSound);
+  }, [registerTagInMaster, playDecideSound]);
+
+  const handleDeleteTagEverywhere = useCallback(async (tag) => {
+    if (!tag) return;
+    if (!window.confirm(`タグ「${tag}」を すべての プレイヤーから 削除しますか？`)) return;
+
+    const updatedPlayers = players.map((player) => ({
+      ...player,
+      tags: (player.tags || []).filter((entry) => entry !== tag),
+      lastUpdatedAt: new Date().toISOString(),
+    }));
+    const nextMaster = await saveTagMaster(tagMaster.filter((entry) => entry !== tag));
+    setTagMaster(nextMaster);
+    setSelectedTag('');
+    await persistPlayerUpdates(updatedPlayers);
+    playDecideSoundExternal(playDecideSound);
+  }, [players, tagMaster, persistPlayerUpdates, playDecideSound]);
+
+  const openSingleTagEdit = useCallback((player) => {
+    playDecideSoundExternal(playDecideSound);
+    setTagEditTarget({
+      mode: 'set',
+      playerIds: [player.id],
+      initialTags: player.tags || [],
+      title: `「${player.name}」の タグ`,
+      subtitle: 'タップで ON/OFF して 保存してね',
+    });
+  }, [playDecideSound]);
+
+  const openBulkTagEdit = useCallback(() => {
+    if (bulkSelectedPlayerIds.length === 0) return;
+    playDecideSoundExternal(playDecideSound);
+    setTagEditTarget({
+      mode: 'add',
+      playerIds: bulkSelectedPlayerIds,
+      initialTags: [],
+      title: 'まとめて タグ付け',
+      subtitle: `${bulkSelectedPlayerIds.length}人に つけるタグを えらんでね`,
+    });
+  }, [bulkSelectedPlayerIds, playDecideSound]);
+
+  const handleSavePlayerTags = useCallback(async (selectedTags, pendingNewTag) => {
+    if (!tagEditTarget) return;
+    const { mode, playerIds } = tagEditTarget;
+    const trimmedNewTag = pendingNewTag?.trim();
+    const tags = [...selectedTags];
+    if (trimmedNewTag && !tags.includes(trimmedNewTag)) {
+      tags.push(trimmedNewTag);
+    }
+
+    for (const tag of tags) {
+      await registerTagInMaster(tag);
+    }
+
+    await updatePlayersByIds(playerIds, (player) => {
+      if (mode === 'add') {
+        return {
+          ...player,
+          tags: [...new Set([...(player.tags || []), ...tags])],
+          lastUpdatedAt: new Date().toISOString(),
+        };
       }
+      return {
+        ...player,
+        tags,
+        lastUpdatedAt: new Date().toISOString(),
+      };
+    });
 
-      setPlayers(dedupePlayersByName(list));
-    } catch (e) {
-      console.error(e);
-      setPlayers([]);
+    setTagEditTarget(null);
+    if (mode === 'add') {
+      setIsBulkTagMode(false);
+      setBulkSelectedPlayerIds([]);
     }
-    setLoading(false);
-  };
+    playDecideSoundExternal(playDecideSound);
+  }, [tagEditTarget, registerTagInMaster, updatePlayersByIds, playDecideSound]);
 
-  const allTags = useMemo(() => {
-    const tags = new Set();
-    players.forEach((p) => (p.tags || []).forEach((t) => tags.add(t)));
-    return [...tags].sort();
-  }, [players]);
+  const toggleBulkPlayer = useCallback((playerId) => {
+    setBulkSelectedPlayerIds((prev) =>
+      prev.includes(playerId) ? prev.filter((id) => id !== playerId) : [...prev, playerId],
+    );
+  }, []);
 
   const filteredPlayers = useMemo(() => {
     const filtered = players.filter((p) => {
@@ -132,8 +320,15 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
 
   const handleStart = () => {
     playDecideSoundExternal(playDecideSound);
+    preloadImages([optimizedAssetUrl('/mall_home_bg.png')]);
     setShowPlayerModal(true);
     setModalTab('players');
+    if (players.length === 0) {
+      setListLoading(true);
+    }
+    if (!cloudSyncing) {
+      loadPlayers({ showSpinner: players.length === 0 });
+    }
   };
 
   const handleCreatePlayer = async () => {
@@ -160,15 +355,32 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
       isCloudSync: true,
     };
     await saveCloudPlayer(id, newData);
-    await localforage.setItem('player_data_' + id, newData);
+    await persistPlayerLocally(id, { ...newData, id });
     setNewPlayerName('');
     setShowNewPlayer(false);
     await loadPlayers();
   };
 
   const handleSelect = (player) => {
+    if (isBulkTagMode) {
+      toggleBulkPlayer(player.id);
+      return;
+    }
+    if (isPlayerLockedElsewhere(player, getDeviceSessionId())) {
+      playDecideSoundExternal(playDecideSound);
+      return;
+    }
     playDecideSoundExternal(playDecideSound);
+    setPendingPlayer(player);
+  };
+
+  const handleConfirmSelect = () => {
+    if (!pendingPlayer) return;
+    playDecideSoundExternal(playDecideSound);
+    const player = pendingPlayer;
+    setPendingPlayer(null);
     onSelectPlayer(player);
+    setShowPlayerModal(false);
   };
 
   return (
@@ -176,7 +388,7 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
       <main className="relative w-full h-[100dvh] min-h-0 flex flex-col items-center px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] overflow-hidden animate-fade-in">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/title_bg.png)' }}
+          style={{ backgroundImage: `url(${optimizedAssetUrl('/title_bg.png')})` }}
           aria-hidden
         />
         <div
@@ -187,9 +399,12 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
         <div className="relative z-10 flex flex-col items-center w-full max-w-[min(500px,94vw)] flex-1 min-h-0 justify-center gap-2 sm:gap-3 landscape:gap-1.5">
           <h1 className="w-full min-h-0 max-h-[calc(100dvh-7.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] landscape:max-h-[calc(100dvh-5.75rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex items-center justify-center shrink transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 select-none animate-pop-out">
             <img
-              src="/logo.png"
+              src={optimizedAssetUrl('/logo.png')}
               alt="ガチャっとタイピング！"
               className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               style={{
                 filter:
                   'drop-shadow(3px 0 0 white) drop-shadow(-3px 0 0 white) drop-shadow(0 3px 0 white) drop-shadow(0 -3px 0 white) drop-shadow(2px 2px 0 white) drop-shadow(-2px 2px 0 white) drop-shadow(2px -2px 0 white) drop-shadow(-2px -2px 0 white) drop-shadow(0 8px 16px rgba(0,0,0,0.2))',
@@ -201,9 +416,17 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
             <button
               type="button"
               onClick={handleStart}
-              className="w-full premium-button bg-sky-500 hover:bg-sky-600 text-white text-lg sm:text-xl py-3 sm:py-3.5 shadow-lg flex justify-center items-center gap-1.5 active:scale-95 transition-transform font-black"
+              disabled={prefetching && players.length === 0}
+              className="w-full premium-button bg-sky-500 hover:bg-sky-600 disabled:bg-sky-400 disabled:cursor-wait text-white text-lg sm:text-xl py-3 sm:py-3.5 shadow-lg flex justify-center items-center gap-1.5 active:scale-95 transition-transform font-black"
             >
-              スタート！
+              {prefetching && players.length === 0 ? (
+                <>
+                  <RefreshCcw className="w-5 h-5 animate-spin" />
+                  セーブを よみこみ中...
+                </>
+              ) : (
+                'スタート！'
+              )}
             </button>
           </div>
         </div>
@@ -331,7 +554,10 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
 
                   <button
                     type="button"
-                    onClick={() => playDecideSoundExternal(playDecideSound)}
+                    onClick={() => {
+                      playDecideSoundExternal(playDecideSound);
+                      setShowTagManagePanel(true);
+                    }}
                     className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black text-[10px] sm:text-xs rounded-xl shadow-sm active:scale-95 transition-all cursor-pointer shrink-0 whitespace-nowrap"
                   >
                     <Tag className="w-3.5 h-3.5" /> タグ
@@ -352,10 +578,22 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
 
             {/* コンテンツ */}
             <div className="flex-1 min-h-0 flex flex-col">
+              {loadNotice && modalTab === 'players' && !listLoading && (
+                <div className="mb-2 shrink-0 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-800">
+                  {loadNotice}
+                </div>
+              )}
+              {cloudSyncing && modalTab === 'players' && !listLoading && filteredPlayers.length > 0 && (
+                <div className="mb-2 shrink-0 flex items-center gap-2 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-[11px] font-bold text-sky-700">
+                  <RefreshCcw className="w-3.5 h-3.5 animate-spin shrink-0" />
+                  クラウドの セーブを 更新しています…
+                </div>
+              )}
               {modalTab === 'players' ? (
-                loading ? (
-                  <div className="flex-1 flex items-center justify-center text-gray-500 font-bold">
-                    よみこみ中...
+                listLoading ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-gray-500 font-bold gap-3 py-12">
+                    <RefreshCcw className="w-10 h-10 animate-spin text-sky-500" />
+                    <p className="text-sm sm:text-base">セーブデータを よみこんでいます…</p>
                   </div>
                 ) : filteredPlayers.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-gray-400 font-bold gap-2">
@@ -365,7 +603,16 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
                 ) : (
                   <div className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 pr-1 pb-4">
                     {filteredPlayers.map((p) => (
-                      <PlayerCard key={p.id} player={p} onClick={() => handleSelect(p)} />
+                      <PlayerCard
+                        key={p.id}
+                        player={p}
+                        onClick={() => handleSelect(p)}
+                        onTagClick={isBulkTagMode ? undefined : openSingleTagEdit}
+                        isLockedElsewhere={isPlayerLockedElsewhere(p, getDeviceSessionId())}
+                        bulkSelectMode={isBulkTagMode}
+                        bulkSelected={bulkSelectedPlayerIds.includes(p.id)}
+                        onBulkToggle={() => toggleBulkPlayer(p.id)}
+                      />
                     ))}
                   </div>
                 )
@@ -381,9 +628,81 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
                 />
               )}
             </div>
+
+            {isBulkTagMode && modalTab === 'players' && (
+              <div className="absolute bottom-3 left-3 right-3 z-20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 bg-white/95 backdrop-blur-md border border-indigo-100 rounded-2xl p-2.5 shadow-lg">
+                <div className="text-xs sm:text-sm font-black text-indigo-800">
+                  {bulkSelectedPlayerIds.length}人 えらんだよ
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBulkSelectedPlayerIds(filteredPlayers.map((player) => player.id))}
+                    className="px-2 py-1 bg-white border border-indigo-200 rounded-lg text-[10px] font-bold text-indigo-600 hover:bg-indigo-50"
+                  >
+                    すべて
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBulkSelectedPlayerIds([])}
+                    className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-500 hover:bg-gray-50"
+                  >
+                    はずす
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBulkTagMode(false);
+                      setBulkSelectedPlayerIds([]);
+                    }}
+                    className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-black text-xs rounded-xl"
+                  >
+                    やめる
+                  </button>
+                  <button
+                    type="button"
+                    disabled={bulkSelectedPlayerIds.length === 0}
+                    onClick={openBulkTagEdit}
+                    className="px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl shadow-md"
+                  >
+                    タグを決定
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+      {showTagManagePanel && (
+        <TagManagePanel
+          allTags={allTags}
+          selectedTag={selectedTag}
+          onSelectTag={setSelectedTag}
+          newTagInput={newTagInput}
+          onNewTagInputChange={setNewTagInput}
+          onCreateTag={handleCreateMasterTag}
+          onDeleteTag={handleDeleteTagEverywhere}
+          onStartBulkTagMode={() => {
+            setShowTagManagePanel(false);
+            setIsBulkTagMode(true);
+            setBulkSelectedPlayerIds([]);
+            playDecideSoundExternal(playDecideSound);
+          }}
+          onClose={() => setShowTagManagePanel(false)}
+        />
+      )}
+
+      <PlayerTagEditModal
+        isOpen={!!tagEditTarget}
+        title={tagEditTarget?.title || ''}
+        subtitle={tagEditTarget?.subtitle || ''}
+        availableTags={allTags}
+        initialTags={tagEditTarget?.initialTags || []}
+        mode={tagEditTarget?.mode || 'set'}
+        onClose={() => setTagEditTarget(null)}
+        onSave={handleSavePlayerTags}
+      />
 
       {showNewPlayer && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -419,6 +738,21 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!pendingPlayer}
+        title="このデータではじめますか？"
+        message={
+          pendingPlayer
+            ? `「${pendingPlayer.name}」さんの\nセーブデータで あそびますか？`
+            : ''
+        }
+        confirmLabel="はじめる！"
+        cancelLabel="やめる"
+        confirmClassName="bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600"
+        onCancel={() => setPendingPlayer(null)}
+        onConfirm={handleConfirmSelect}
+      />
     </>
   );
 }

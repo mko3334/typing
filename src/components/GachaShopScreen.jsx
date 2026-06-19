@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { resolveBackground } from '../constants';
+import { optimizedAssetUrl } from '../utils/assetImages';
 import {
   applyCollectionPulls,
   computeAchievements,
@@ -298,9 +299,11 @@ export default function GachaShopScreen({
     setSpinHotTier(null);
 
     const collection = updates.collection ?? player.collection ?? {};
+    const gachaPullCount = (player?.gachaPullCount || 0) + 1;
     await onPlayerUpdate?.({
       ...updates,
-      achievements: computeAchievements({ ...player, ...updates }, collection),
+      gachaPullCount,
+      achievements: computeAchievements({ ...player, ...updates, gachaPullCount }, collection),
       collectionCount: Object.keys(collection).filter((k) => collection[k] > 0).length,
     });
 
@@ -641,7 +644,7 @@ export default function GachaShopScreen({
           style={{
             backgroundImage: previewBgActive && cosmeticPreviewUrl
               ? `url(${cosmeticPreviewUrl})`
-              : 'url(/shop_bg.png)',
+              : `url(${optimizedAssetUrl('/shop_bg.png')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
@@ -658,7 +661,7 @@ export default function GachaShopScreen({
                   <GachaMachine
                     badge="ごほうび"
                     badgeClass="bg-red-500"
-                    image="/gacha_normal.png"
+                    image={optimizedAssetUrl('/gacha_normal.png')}
                     title="ごほうびガチャ"
                     subtitle="コレクションアイテム"
                   >
@@ -674,7 +677,7 @@ export default function GachaShopScreen({
                   </GachaMachine>
 
                   <GachaMachine
-                    image="/gacha_background.png"
+                    image={optimizedAssetUrl('/gacha_background.png')}
                     title="はいけいガチャ"
                     subtitle="背景テーマ"
                     ticketCount={player?.specialTickets || 0}
@@ -692,7 +695,7 @@ export default function GachaShopScreen({
                   </GachaMachine>
 
                   <GachaMachine
-                    image="/gacha_music.png"
+                    image={optimizedAssetUrl('/gacha_music.png')}
                     title="おんがくガチャ"
                     subtitle="BGMスキン"
                     ticketCount={player?.bgmTickets || 0}
@@ -707,7 +710,7 @@ export default function GachaShopScreen({
                   </GachaMachine>
 
                   <GachaMachine
-                    image="/gacha_se.png"
+                    image={optimizedAssetUrl('/gacha_se.png')}
                     title="こうかおんガチャ"
                     subtitle="効果音スキン"
                     ticketCount={player?.seTickets || 0}
@@ -724,7 +727,7 @@ export default function GachaShopScreen({
                   <GachaMachine
                     badge="超激レア以上"
                     badgeClass="bg-fuchsia-500 animate-pulse"
-                    image="/gacha_legend.png"
+                    image={optimizedAssetUrl('/gacha_legend.png')}
                     title="超激レア以上ガチャ"
                     subtitle="超激レア以上 確定！"
                     ticketCount={player?.legendTickets || 0}

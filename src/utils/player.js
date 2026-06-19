@@ -1,3 +1,5 @@
+import { normalizeHiraganaProgress } from './hiraganaTyping';
+
 export function enrichPlayer(id, data) {
   const collection = data.collection || {};
   const ownedCount = Object.keys(collection).filter((k) => collection[k] > 0).length;
@@ -42,5 +44,16 @@ export function enrichPlayer(id, data) {
     pendingGifts: Array.isArray(data.pendingGifts) ? data.pendingGifts : [],
     solvedSubEventIds: Array.isArray(data.solvedSubEventIds) ? data.solvedSubEventIds : [],
     plazaSubEvents: Array.isArray(data.plazaSubEvents) ? data.plazaSubEvents : [],
+    isPlaying: data.isPlaying === true,
+    lastActiveTime: data.lastActiveTime || null,
+    playingSessionId: data.playingSessionId || null,
+    hiraganaProgress: normalizeHiraganaProgress(data.hiraganaProgress),
+    difficultyClears:
+      data.difficultyClears && typeof data.difficultyClears === 'object' ? data.difficultyClears : {},
+    noMissClear: data.noMissClear === true,
+    gachaPullCount:
+      Number.isFinite(Number(data.gachaPullCount)) && Number(data.gachaPullCount) >= 0
+        ? Number(data.gachaPullCount)
+        : 0,
   };
 }

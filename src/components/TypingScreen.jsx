@@ -5,13 +5,16 @@ import {
   KEYBOARD_ROWS,
   resolveBackground,
 } from '../constants';
-import { pickGameWords } from '../utils/typingWords';
-import { getAdoptedWords } from '../firebase';
+import { pickGameWords, pickReplacementWord } from '../utils/typingWords';
+import { getAdoptedWords, submitTypingReport } from '../firebase';
+import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
+import { computeAchievements } from '../utils/gacha';
 import GameSidebar from './GameSidebar';
 import CollectionSidebar from './CollectionSidebar';
 import AssistSettingsModal from './AssistSettingsModal';
 import TicketRewardModal from './TicketRewardModal';
 import ConfirmModal from './ConfirmModal';
+import TypingProblemReportModal from './TypingProblemReportModal';
 
 const COUNTDOWN_STEPS = ['3', '2', '1', 'GO!!'];
 const CHAOS_WINDOW_MS = 1500;
@@ -204,6 +207,7 @@ export default function TypingScreen({
   }, [onPlayerUpdate]);
 
   useEffect(() => {
+    refreshWordCorrections();
     getAdoptedWords().then((words) => {
       adoptedWordsRef.current = words || [];
     });
@@ -229,6 +233,9 @@ export default function TypingScreen({
   const [countdownStep, setCountdownStep] = useState(0);
   const [leaveConfirm, setLeaveConfirm] = useState(null);
   const [typingWarning, setTypingWarning] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportToast, setReportToast] = useState('');
   const keyPressWindowRef = useRef([]);
   const lastTypingWarningAtRef = useRef(0);
   const typingWarningTimerRef = useRef(null);
@@ -273,7 +280,7 @@ export default function TypingScreen({
       adoptedWordsRef.current,
     );
     playMetaRef.current = { playCount: newPlayCount, specialWordTriggered: newTriggered };
-    setGameWords(words);
+    setGameWords(words.map((word) => applyCorrectionToWord(word, difficulty)));
     onPlayerUpdateRef.current?.({ playCount: newPlayCount, specialWordTriggered: newTriggered });
     setWordIndex(0);
     setTypedChars('');
@@ -385,16 +392,94 @@ export default function TypingScreen({
     });
   }, [onSaveAndTitle, localPoints, localTickets]);
 
+  useEffect(() => {
+    if (!reportToast) return undefined;
+    const timer = setTimeout(() => setReportToast(''), 2800);
+    return () => clearTimeout(timer);
+  }, [reportToast]);
+
+  const handleReportConfirm = useCallback(
+    async (reason) => {
+      if (!currentWord || reportSubmitting) return;
+      setReportSubmitting(true);
+      try {
+        const reportId = await submitTypingReport({
+          context: 'main',
+          difficulty,
+          wordIndex,
+          playerId: player?.id || null,
+          playerName: player?.name || 'ゲスト',
+          kana: currentWord.kana,
+          romaji: currentWord.romaji,
+          emoji: currentWord.emoji || '',
+          displayRomaji,
+          reason,
+        });
+
+        const excludeKanas = gameWords.map((word) => word.kana);
+        const replacement = pickReplacementWord(
+          difficulty,
+          excludeKanas,
+          adoptedWordsRef.current,
+        );
+        if (replacement) {
+          setGameWords((prev) =>
+            prev.map((word, index) =>
+              index === wordIndex
+                ? applyCorrectionToWord(replacement, difficulty)
+                : word,
+            ),
+          );
+          setTypedChars('');
+          setReportToast(
+            reportId ? 'べつの 問題に かえたよ！' : '問題は かえたけど、ほうこくの 保存に 失敗したよ…',
+          );
+        } else {
+          setReportToast(reportId ? 'ほうこくを うけつけたよ！' : 'ほうこくの 送信に 失敗したよ…');
+        }
+        setReportOpen(false);
+      } finally {
+        setReportSubmitting(false);
+      }
+    },
+    [
+      currentWord,
+      difficulty,
+      displayRomaji,
+      gameWords,
+      player?.id,
+      player?.name,
+      reportSubmitting,
+      wordIndex,
+    ],
+  );
+
   const finishClear = useCallback(
     (pts) => {
       setEarnedPoints(pts);
       setIsAllClear(true);
       const newPoints = localPoints + pts;
       setLocalPoints(newPoints);
-      onPlayerUpdateRef.current?.({ points: newPoints });
+
+      const difficultyClears = { ...(player?.difficultyClears || {}) };
+      if (['easy', 'normal', 'hard', 'very_hard', 'alphabet_quiz'].includes(difficulty)) {
+        difficultyClears[difficulty] = true;
+      }
+      const earnedNoMiss =
+        missCount === 0 && difficulty !== 'easy' && difficulty !== 'alphabet_quiz';
+      const updates = {
+        points: newPoints,
+        difficultyClears,
+        noMissClear: player?.noMissClear || earnedNoMiss,
+      };
+      updates.achievements = computeAchievements(
+        { ...player, ...updates },
+        player?.collection || {},
+      );
+      onPlayerUpdateRef.current?.(updates);
       setTimeout(() => playSE?.('points'), 300);
     },
-    [localPoints, playSE],
+    [difficulty, localPoints, missCount, player, playSE],
   );
 
   const handleKeyDown = useCallback(
@@ -706,6 +791,16 @@ export default function TypingScreen({
             nextCharForAssist={nextCharForAssist}
             isTransitioning={isTransitioning}
           />
+
+          {!isCountdown && !isAllClear && !isTransitioning && currentWord && (
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="mt-1 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 border-2 border-amber-300 rounded-2xl font-black text-xs shadow-sm active:scale-95 transition-all"
+            >
+              🚨 問題を ほうこく
+            </button>
+          )}
         </div>
       </main>
 
@@ -747,6 +842,20 @@ export default function TypingScreen({
         onCancel={() => setTypingWarning(false)}
         onConfirm={() => setTypingWarning(false)}
       />
+
+      <TypingProblemReportModal
+        isOpen={reportOpen}
+        wordLabel={currentWord?.kana || ''}
+        onCancel={() => setReportOpen(false)}
+        onConfirm={handleReportConfirm}
+        submitting={reportSubmitting}
+      />
+
+      {reportToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[130] bg-amber-600/95 text-white px-5 py-3 rounded-2xl font-black text-sm shadow-xl animate-fade-in">
+          {reportToast}
+        </div>
+      )}
 
       {countdownOverlay}
     </div>

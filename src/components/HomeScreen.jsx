@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { resolveBackground } from '../constants';
+import { optimizedAssetUrl } from '../utils/assetImages';
 import {
   calcSubEventReward,
   getSubEventById,
   spawnRandomSubEvents,
   ticketUpdatesFromReward,
 } from '../utils/subEvents';
+import { computeAchievements } from '../utils/gacha';
 import GameSidebar from './GameSidebar';
 import DifficultySelector from './DifficultySelector';
 import AssistSettingsModal from './AssistSettingsModal';
@@ -68,10 +70,10 @@ function SubEventPin({ top, left, emoji, image, title, delay, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-20 group hover:scale-110 active:scale-95 transition-transform duration-200 animate-bounce"
+      className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-[12] group hover:scale-110 active:scale-95 transition-transform duration-200 animate-bounce"
       style={{ top, left, animationDelay: delay }}
     >
-      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-yellow-400 overflow-hidden shadow-lg bg-white relative">
+      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-[3px] border-yellow-400 overflow-hidden shadow-lg bg-white relative">
         {image ? (
           <img src={image} alt={title} className="w-full h-full object-cover" />
         ) : (
@@ -94,6 +96,7 @@ export default function HomeScreen({
   onOpenMusic,
   onOpenShop,
   onOpenZukan,
+  onOpenHiragana,
   onPlayerUpdate,
   playDecideSound,
   playCancelSound,
@@ -106,7 +109,13 @@ export default function HomeScreen({
   const [activeSubEvents, setActiveSubEvents] = useState([]);
   const [activeSubEvent, setActiveSubEvent] = useState(null);
   const [subEventReward, setSubEventReward] = useState(null);
+  const [mallImageReady, setMallImageReady] = useState(false);
   const activeBg = resolveBackground(player?.currentBackground);
+  const mallImageUrl = optimizedAssetUrl('/mall_home_bg.png');
+
+  useEffect(() => {
+    setMallImageReady(false);
+  }, [mallImageUrl]);
 
   useEffect(() => {
     if (!player?.id) return;
@@ -115,17 +124,22 @@ export default function HomeScreen({
     const stored = (player.plazaSubEvents || []).filter((entry) => !solved.has(entry.eventId));
 
     if (stored.length > 0) {
-      setActiveSubEvents(stored);
-      if (stored.length !== (player.plazaSubEvents || []).length) {
-        onPlayerUpdate?.({ plazaSubEvents: stored });
+      const extra = spawnRandomSubEvents([...solved], stored);
+      const merged = extra.length > 0 ? [...stored, ...extra] : stored;
+      setActiveSubEvents(merged);
+      if (
+        extra.length > 0 ||
+        merged.length !== (player.plazaSubEvents || []).length
+      ) {
+        queueMicrotask(() => onPlayerUpdate?.({ plazaSubEvents: merged }));
       }
       return;
     }
 
-    const spawned = spawnRandomSubEvents(player.solvedSubEventIds || []);
+    const spawned = spawnRandomSubEvents(player.solvedSubEventIds || [], []);
     setActiveSubEvents(spawned);
     if (spawned.length > 0) {
-      onPlayerUpdate?.({ plazaSubEvents: spawned });
+      queueMicrotask(() => onPlayerUpdate?.({ plazaSubEvents: spawned }));
     }
   }, [player?.id]);
 
@@ -147,7 +161,12 @@ export default function HomeScreen({
       let remaining = activeSubEvents.filter((entry) => entry.eventId !== event.id);
 
       if (remaining.length === 0) {
-        remaining = spawnRandomSubEvents(solvedIds);
+        remaining = spawnRandomSubEvents(solvedIds, []);
+      } else {
+        const extra = spawnRandomSubEvents(solvedIds, remaining);
+        if (extra.length > 0) {
+          remaining = [...remaining, ...extra];
+        }
       }
 
       const ticketDelta = ticketUpdatesFromReward(rewardRoll.ticket);
@@ -160,6 +179,7 @@ export default function HomeScreen({
           Object.entries(ticketDelta).map(([key, count]) => [key, (player[key] || 0) + count]),
         ),
       };
+      updates.achievements = computeAchievements({ ...player, ...updates }, player.collection || {});
 
       onPlayerUpdate?.(updates);
       setActiveSubEvents(remaining);
@@ -213,8 +233,18 @@ export default function HomeScreen({
       />
 
       <main className="flex-1 h-full flex flex-col items-center justify-center min-h-0 p-2 animate-fade-in overflow-hidden">
-        <div className="relative w-full aspect-square max-w-[90vh] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl rounded-3xl overflow-hidden shadow-2xl border-4 border-yellow-300 bg-white">
-          <img src="/mall_home_bg.png" alt="ショッピングモール" className="w-full h-full object-cover" />
+        <div className="relative w-full aspect-square max-w-[90vh] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl rounded-3xl overflow-hidden shadow-2xl border-4 border-yellow-300 bg-gradient-to-br from-sky-100 via-amber-50 to-indigo-100">
+          <img
+            src={mallImageUrl}
+            alt="ショッピングモール"
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              mallImageReady ? 'opacity-100' : 'opacity-0'
+            }`}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            onLoad={() => setMallImageReady(true)}
+          />
           <div className="absolute inset-0 bg-black/5" />
 
           <button
@@ -263,8 +293,19 @@ export default function HomeScreen({
             onClick={openDifficulty}
           />
           <MallPin
-            top="75%"
-            left="25%"
+            top="58%"
+            left="18%"
+            label="🔤 ひらがなタイピング"
+            variant="purple"
+            delay="0.7s"
+            onClick={() => {
+              playDecideSound?.();
+              onOpenHiragana?.();
+            }}
+          />
+          <MallPin
+            top="72%"
+            left="28%"
             label="🔠 おおもじ・こもじ クイズ"
             variant="gradient-orange"
             delay="0.8s"
@@ -329,6 +370,7 @@ export default function HomeScreen({
       {activeSubEvent && (
         <SubEventModal
           event={activeSubEvent}
+          player={player}
           assistSettings={assistSettings}
           onClose={closeSubEvent}
           onComplete={handleSubEventComplete}

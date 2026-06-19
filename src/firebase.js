@@ -1,14 +1,22 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc } from 'firebase/firestore';
+import {
+  addLocalTypingReport,
+  deleteLocalTypingReport,
+  getLocalTypingReports,
+  isLocalTypingReportId,
+  mergeTypingReports,
+  updateLocalTypingReport,
+} from './utils/typingReportStorage';
 
 const firebaseConfig = {
   projectId: "game-86071",
-  appId: "1:1442050997:web:3a85e135aff35c66e51ffc",
+  appId: "1:1442050997:web:f552405c41e8e991e51ffc",
   storageBucket: "game-86071.firebasestorage.app",
   apiKey: "AIzaSyCRJ9rTd3Ss3QxczGc1R0rwUJXccGSLMco",
   authDomain: "game-86071.firebaseapp.com",
   messagingSenderId: "1442050997",
-  measurementId: "G-BMVNBNSFFE"
+  measurementId: "G-RLYCHPSV8M"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -368,6 +376,131 @@ export const sendGiftToCloudPlayer = async (playerId, giftData) => {
     return false;
   } catch (error) {
     console.error("Error sending gift to cloud player:", error);
+    return false;
+  }
+};
+
+// --- タイピング問題報告 ---
+export const submitTypingReport = async (reportData) => {
+  const createdAt = new Date().toISOString();
+  const entry = {
+    ...reportData,
+    status: 'open',
+    createdAt,
+  };
+
+  try {
+    const newDocRef = doc(collection(db, 'typing_reports'));
+    await setDoc(newDocRef, entry);
+    await addLocalTypingReport({ id: newDocRef.id, ...entry });
+    return newDocRef.id;
+  } catch (error) {
+    console.error('Error submitting typing report:', error);
+    const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    await addLocalTypingReport({ id: localId, ...entry, savedLocally: true });
+    return localId;
+  }
+};
+
+export const getTypingReports = async () => {
+  let cloudReports = [];
+  let cloudError = null;
+
+  try {
+    const collRef = collection(db, 'typing_reports');
+    const snapshot = await getDocs(collRef);
+    snapshot.forEach((docSnap) => {
+      cloudReports.push({ id: docSnap.id, ...docSnap.data() });
+    });
+  } catch (error) {
+    cloudError = error;
+    console.error('Error getting typing reports:', error);
+  }
+
+  const localReports = await getLocalTypingReports();
+  const reports = mergeTypingReports(cloudReports, localReports);
+
+  return {
+    reports,
+    cloudError,
+    hasCloudAccess: !cloudError,
+  };
+};
+
+export const updateTypingReport = async (reportId, data) => {
+  if (!reportId) return false;
+
+  if (isLocalTypingReportId(reportId)) {
+    return updateLocalTypingReport(reportId, data);
+  }
+
+  try {
+    const docRef = doc(db, 'typing_reports', reportId);
+    await setDoc(docRef, data, { merge: true });
+    await updateLocalTypingReport(reportId, data);
+    return true;
+  } catch (error) {
+    console.error('Error updating typing report:', error);
+    return updateLocalTypingReport(reportId, data);
+  }
+};
+
+export const deleteTypingReport = async (reportId) => {
+  if (!reportId) return false;
+
+  if (isLocalTypingReportId(reportId)) {
+    return deleteLocalTypingReport(reportId);
+  }
+
+  try {
+    const docRef = doc(db, 'typing_reports', reportId);
+    await deleteDoc(docRef);
+    await deleteLocalTypingReport(reportId);
+    return true;
+  } catch (error) {
+    console.error('Error deleting typing report:', error);
+    return deleteLocalTypingReport(reportId);
+  }
+};
+
+// --- ワード修正（管理者が保存した訂正） ---
+export const saveWordCorrection = async (correctionData) => {
+  try {
+    const newDocRef = doc(collection(db, 'word_corrections'));
+    await setDoc(newDocRef, {
+      ...correctionData,
+      updatedAt: new Date().toISOString(),
+    });
+    return newDocRef.id;
+  } catch (error) {
+    console.error('Error saving word correction:', error);
+    return null;
+  }
+};
+
+export const getWordCorrections = async () => {
+  try {
+    const collRef = collection(db, 'word_corrections');
+    const snapshot = await getDocs(collRef);
+    const corrections = [];
+    snapshot.forEach((docSnap) => {
+      corrections.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return corrections;
+  } catch (error) {
+    console.error('Error getting word corrections:', error);
+    return [];
+  }
+};
+
+export const deleteWordCorrection = async (correctionId) => {
+  if (!correctionId) return false;
+  try {
+    const docRef = doc(db, 'word_corrections', correctionId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting word correction:', error);
     return false;
   }
 };

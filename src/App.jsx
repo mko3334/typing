@@ -1,9 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import localforage from 'localforage';
 import { DEFAULT_ASSIST_SETTINGS } from './constants';
 import { loadSingleCloudPlayer, saveCloudPlayer } from './firebase';
 import { enrichPlayer } from './utils/player';
 import { computeSessionUpdates } from './utils/playTime';
+import { persistPlayerLocally, withTimeout } from './utils/playerStorage';
+import {
+  buildClearPlayingSessionPatch,
+  buildPlayingSessionPatch,
+  HEARTBEAT_INTERVAL_MS,
+} from './utils/playerSession';
 import useGameAudio from './hooks/useGameAudio';
 import TitleScreen from './components/TitleScreen';
 import HomeScreen from './components/HomeScreen';
@@ -15,7 +20,9 @@ import GachaShopScreen from './components/GachaShopScreen';
 import ZukanModal from './components/ZukanModal';
 import SaveCompleteModal, { SaveLoadingOverlay } from './components/SaveCompleteModal';
 import GiftRewardModal from './components/GiftRewardModal';
+import HiraganaTypingScreen from './components/HiraganaTypingScreen';
 import TitlePasswordGate, { isTitleAccessGranted } from './components/TitlePasswordGate';
+import { CRITICAL_IMAGE_URLS, preloadImages } from './utils/assetImages';
 
 export default function App() {
   const [appScreen, setAppScreen] = useState('title');
@@ -43,6 +50,10 @@ export default function App() {
     assistSettingsRef.current = assistSettings;
   }, [assistSettings]);
 
+  useEffect(() => {
+    preloadImages(CRITICAL_IMAGE_URLS);
+  }, []);
+
   const { playSE, playDecideSound, playCancelSound, resumeOnSelect, previewBgm, previewSe } =
     useGameAudio(currentPlayer, appScreen);
 
@@ -54,7 +65,7 @@ export default function App() {
   }, []);
 
   const syncPendingGifts = useCallback(async (player) => {
-    const cloudData = await loadSingleCloudPlayer(player.id);
+    const cloudData = await withTimeout(loadSingleCloudPlayer(player.id), 8000, null);
     const pendingGifts = Array.isArray(cloudData?.pendingGifts)
       ? cloudData.pendingGifts
       : player.pendingGifts || [];
@@ -70,19 +81,56 @@ export default function App() {
     }
   }, []);
 
-  const handleSelectPlayer = async (player) => {
+  const handleSelectPlayer = (player) => {
+    if (!player?.id) return;
+
     const lastPlayedAt = new Date().toISOString();
-    let next = { ...player, lastPlayedAt };
-    next = await syncPendingGifts(next);
+    const next = {
+      ...player,
+      lastPlayedAt,
+      ...buildPlayingSessionPatch(),
+    };
+
     currentPlayerRef.current = next;
     setCurrentPlayer(next);
     setAssistSettings(next?.assistSettings || DEFAULT_ASSIST_SETTINGS);
     sessionStartRef.current = Date.now();
     resumeOnSelect();
     setAppScreen('home');
-    saveCloudPlayer(next.id, next).catch(() => {});
     showNextGift(next);
+
+    persistPlayerLocally(next.id, next).catch((error) => {
+      console.error('persistPlayerLocally:', error);
+    });
+    saveCloudPlayer(next.id, next).catch(() => {});
+    syncPendingGifts(next).then((synced) => {
+      const syncedWithSession = { ...synced, ...buildPlayingSessionPatch() };
+      currentPlayerRef.current = syncedWithSession;
+      setCurrentPlayer(syncedWithSession);
+      persistPlayerLocally(syncedWithSession.id, syncedWithSession).catch(() => {});
+      saveCloudPlayer(syncedWithSession.id, syncedWithSession).catch(() => {});
+      showNextGift(syncedWithSession);
+    });
   };
+
+  useEffect(() => {
+    if (appScreen === 'title' || !currentPlayer?.id) return undefined;
+
+    const sendHeartbeat = () => {
+      const prev = currentPlayerRef.current;
+      if (!prev?.id) return;
+      const patch = buildPlayingSessionPatch();
+      const next = { ...prev, ...patch };
+      currentPlayerRef.current = next;
+      setCurrentPlayer(next);
+      saveCloudPlayer(prev.id, next).catch(() => {});
+      persistPlayerLocally(prev.id, next).catch(() => {});
+    };
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [appScreen, currentPlayer?.id]);
 
   const handleAcceptGift = useCallback(async () => {
     const prev = currentPlayerRef.current;
@@ -101,7 +149,7 @@ export default function App() {
     currentPlayerRef.current = next;
     setCurrentPlayer(next);
     await saveCloudPlayer(next.id, next);
-    localforage.setItem('player_data_' + next.id, { ...next, isCloudSync: true }).catch(() => {});
+    await persistPlayerLocally(next.id, { ...next, isCloudSync: true });
 
     if (remainingGifts.length > 0) {
       setActiveGift(remainingGifts[0]);
@@ -113,11 +161,15 @@ export default function App() {
   const handleLogout = useCallback(async () => {
     const prev = currentPlayerRef.current;
     if (prev?.id) {
-      const withPlayTime = applySessionPlayTime(prev);
-      if (withPlayTime !== prev) {
-        currentPlayerRef.current = withPlayTime;
-        await saveCloudPlayer(withPlayTime.id, withPlayTime);
-      }
+      let next = applySessionPlayTime(prev);
+      next = {
+        ...next,
+        ...buildClearPlayingSessionPatch(),
+        lastUpdatedAt: new Date().toISOString(),
+      };
+      currentPlayerRef.current = next;
+      await saveCloudPlayer(next.id, next);
+      await persistPlayerLocally(next.id, next);
     }
     sessionStartRef.current = null;
     currentPlayerRef.current = null;
@@ -126,13 +178,13 @@ export default function App() {
     setAppScreen('title');
   }, [applySessionPlayTime]);
 
-  const handlePlayerUpdate = useCallback(async (updates) => {
+  const handlePlayerUpdate = useCallback((updates) => {
     const prev = currentPlayerRef.current;
     if (!prev?.id) return;
     const next = { ...prev, ...updates };
     currentPlayerRef.current = next;
     setCurrentPlayer(next);
-    await saveCloudPlayer(next.id, next);
+    saveCloudPlayer(next.id, next).catch(() => {});
   }, []);
 
   const handleSaveAndTitle = useCallback(async (updates = {}) => {
@@ -146,19 +198,21 @@ export default function App() {
       ...merged,
       assistSettings: updates.assistSettings ?? assistSettingsRef.current,
       lastPlayedAt: new Date().toISOString(),
+      lastUpdatedAt: new Date().toISOString(),
+      ...buildClearPlayingSessionPatch(),
     };
     currentPlayerRef.current = next;
     setCurrentPlayer(next);
 
     try {
-      const success = await saveCloudPlayer(next.id, next);
-      if (!success) {
-        throw new Error('save failed');
-      }
-      await localforage.setItem('player_data_' + next.id, { ...next, isCloudSync: true });
+      await persistPlayerLocally(next.id, next);
+      const success = await withTimeout(saveCloudPlayer(next.id, next), 12000, false);
       setSavedPlayerPreview(enrichPlayer(next.id, next));
+      if (!success) {
+        alert('この端末には セーブしました。クラウドへの 送信は 後でもう一度 試してね。');
+      }
     } catch {
-      alert('クラウドへのセーブに失敗しました。インターネット接続を確認してね。');
+      alert('セーブに 失敗しました。もう一度 試してね。');
     } finally {
       setIsSaving(false);
     }
@@ -204,6 +258,11 @@ export default function App() {
     setIsZukanOpen(true);
   };
 
+  const openHiragana = () => {
+    playDecideSound();
+    setAppScreen('hiragana');
+  };
+
   return (
     <div className="w-full min-h-screen font-sans text-gray-800 overflow-hidden relative selection:bg-sky-200">
       {appScreen === 'title' && (
@@ -233,6 +292,7 @@ export default function App() {
           onOpenMusic={openMusic}
           onOpenShop={openShop}
           onOpenZukan={openZukan}
+          onOpenHiragana={openHiragana}
           onPlayerUpdate={handlePlayerUpdate}
           playDecideSound={playDecideSound}
           playCancelSound={playCancelSound}
@@ -253,6 +313,24 @@ export default function App() {
           onOpenMusic={openMusic}
           onOpenShop={openShop}
           onOpenZukan={openZukan}
+          playSE={playSE}
+        />
+      )}
+
+      {appScreen === 'hiragana' && (
+        <HiraganaTypingScreen
+          player={currentPlayer}
+          assistSettings={assistSettings}
+          onAssistChange={handleAssistChange}
+          onPlayerUpdate={handlePlayerUpdate}
+          onBack={() => setAppScreen('home')}
+          onSaveAndTitle={handleSaveAndTitle}
+          onOpenProfile={openProfile}
+          onOpenMusic={openMusic}
+          onOpenShop={openShop}
+          onOpenZukan={openZukan}
+          playDecideSound={playDecideSound}
+          playCancelSound={playCancelSound}
           playSE={playSE}
         />
       )}

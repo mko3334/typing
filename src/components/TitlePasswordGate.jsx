@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Key } from 'lucide-react';
 import { TITLE_ACCESS_PASSWORD } from '../utils/admin';
+import { optimizedAssetUrl } from '../utils/assetImages';
 
 const STORAGE_KEY = 'kids_typing_title_unlocked';
 
@@ -42,7 +43,7 @@ export default function TitlePasswordGate({ onUnlock, playDecideSound }) {
     <div className="relative w-full h-[100dvh] min-h-0 flex flex-col items-center justify-center px-4 overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/title_bg.png)' }}
+        style={{ backgroundImage: `url(${optimizedAssetUrl('/title_bg.png')})` }}
         aria-hidden
       />
       <div

@@ -2,7 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { FINGER_MAP, KEYBOARD_ROWS } from '../constants';
 import { buildChoices, getChoiceDisplay, getValidRomajiList } from '../utils/subEvents';
+import { pickSubEventReplacement } from '../utils/typingWords';
+import { submitTypingReport } from '../firebase';
+import { refreshWordCorrections } from '../utils/wordCorrections';
 import FuriganaText from './FuriganaText';
+import TypingProblemReportModal from './TypingProblemReportModal';
 
 function FingerGuide({ nextChar, assistSettings }) {
   const nextFinger = FINGER_MAP[nextChar?.toLowerCase()];
@@ -128,6 +132,7 @@ function VirtualKeyboard({ assistSettings, nextCharForAssist }) {
 
 export default function SubEventModal({
   event,
+  player,
   assistSettings,
   onClose,
   onComplete,
@@ -138,16 +143,35 @@ export default function SubEventModal({
   const [choiceSelected, setChoiceSelected] = useState(false);
   const [typedChars, setTypedChars] = useState('');
   const [wrongChoiceHint, setWrongChoiceHint] = useState('');
+  const [rallyOverrides, setRallyOverrides] = useState({});
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportToast, setReportToast] = useState('');
 
-  const currentRally = event.rallies[rallyIndex];
+  const baseRally = event.rallies[rallyIndex];
+  const currentRally = useMemo(() => {
+    if (!baseRally) return null;
+    const override = rallyOverrides[rallyIndex];
+    return override ? { ...baseRally, ...override } : baseRally;
+  }, [baseRally, rallyIndex, rallyOverrides]);
+
+  useEffect(() => {
+    refreshWordCorrections();
+  }, []);
+
+  useEffect(() => {
+    if (!reportToast) return undefined;
+    const timer = setTimeout(() => setReportToast(''), 2800);
+    return () => clearTimeout(timer);
+  }, [reportToast]);
   const choices = useMemo(
-    () => (currentRally ? buildChoices(currentRally.kana) : []),
-    [currentRally],
+    () => (baseRally ? buildChoices(baseRally.kana) : []),
+    [baseRally],
   );
 
   const validRomajiList = useMemo(
-    () => (currentRally ? getValidRomajiList(currentRally) : []),
-    [currentRally],
+    () => (currentRally ? getValidRomajiList(currentRally, event.id) : []),
+    [currentRally, event.id],
   );
 
   const displayRomaji = useMemo(() => {
@@ -175,7 +199,7 @@ export default function SubEventModal({
   };
 
   const handleChoice = (choice) => {
-    if (choice === currentRally.kana) {
+    if (choice === baseRally.kana) {
       playSE?.('correct');
       setWrongChoiceHint('');
       setChoiceSelected(true);
@@ -184,6 +208,65 @@ export default function SubEventModal({
       setWrongChoiceHint('{ちが|違}うことを {おし|教}えてあげて');
     }
   };
+
+  const handleReportConfirm = useCallback(
+    async (reason) => {
+      if (!currentRally || reportSubmitting) return;
+      setReportSubmitting(true);
+      try {
+        const reportId = await submitTypingReport({
+          context: 'sub_event',
+          eventId: event.id,
+          eventTitle: event.title,
+          rallyIndex,
+          playerId: player?.id || null,
+          playerName: player?.name || 'ゲスト',
+          kana: currentRally.kana,
+          romaji: getValidRomajiList(currentRally, event.id),
+          kanaDisplay: currentRally.kanaDisplay || currentRally.kana,
+          displayRomaji,
+          reason,
+        });
+
+        const excludeKanas = event.rallies.flatMap((rally, index) => {
+          const override = rallyOverrides[index];
+          return [override?.kana || rally.kana];
+        });
+        const replacement = pickSubEventReplacement(excludeKanas);
+        if (replacement) {
+          setRallyOverrides((prev) => ({
+            ...prev,
+            [rallyIndex]: {
+              kana: replacement.kana,
+              romaji: replacement.romaji,
+              kanaDisplay: replacement.kana,
+            },
+          }));
+          setTypedChars('');
+          setReportToast(
+            reportId ? 'べつの 問題に かえたよ！' : '問題は かえたけど、ほうこくの 保存に 失敗したよ…',
+          );
+        } else {
+          setReportToast(reportId ? 'ほうこくを うけつけたよ！' : 'ほうこくの 送信に 失敗したよ…');
+        }
+        setReportOpen(false);
+      } finally {
+        setReportSubmitting(false);
+      }
+    },
+    [
+      currentRally,
+      displayRomaji,
+      event.id,
+      event.rallies,
+      event.title,
+      player?.id,
+      player?.name,
+      rallyIndex,
+      rallyOverrides,
+      reportSubmitting,
+    ],
+  );
 
   const advanceRally = useCallback(() => {
     if (rallyIndex + 1 >= event.rallies.length) {
@@ -291,7 +374,7 @@ export default function SubEventModal({
                   onClick={() => handleChoice(choice)}
                   className="bg-white hover:bg-sky-50 active:scale-[0.98] border-2 border-sky-200 hover:border-sky-400 text-gray-800 font-black text-base sm:text-lg py-3 px-4 rounded-2xl shadow-sm hover:shadow-md transition-all text-center"
                 >
-                  <FuriganaText>{getChoiceDisplay(choice, currentRally)}</FuriganaText>
+                  <FuriganaText>{getChoiceDisplay(choice, baseRally)}</FuriganaText>
                 </button>
               ))}
             </div>
@@ -336,9 +419,30 @@ export default function SubEventModal({
               assistSettings={assistSettings}
               nextCharForAssist={nextCharForAssist}
             />
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="mt-3 mx-auto px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 border-2 border-amber-300 rounded-2xl font-black text-xs shadow-sm active:scale-95 transition-all"
+            >
+              🚨 問題を ほうこく
+            </button>
           </>
         )}
       </div>
+
+      <TypingProblemReportModal
+        isOpen={reportOpen}
+        wordLabel={currentRally?.kanaDisplay || currentRally?.kana || ''}
+        onCancel={() => setReportOpen(false)}
+        onConfirm={handleReportConfirm}
+        submitting={reportSubmitting}
+      />
+
+      {reportToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[130] bg-amber-600/95 text-white px-5 py-3 rounded-2xl font-black text-sm shadow-xl animate-fade-in">
+          {reportToast}
+        </div>
+      )}
     </div>
   );
 }

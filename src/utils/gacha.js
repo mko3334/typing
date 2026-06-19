@@ -1,5 +1,6 @@
 import { BACKGROUNDS, GACHA_ITEMS } from '../constants';
 import { BGM_LIST, SE_LIST } from '../audio';
+import { HIRAGANA_ROWS } from '../data/hiraganaRows';
 
 const REWARD_PULL_COSTS = {
   1: 100,
@@ -162,6 +163,25 @@ export function computeAchievements(player, collection) {
 
   if (ownedCount >= 15) achievements.add('collection_15');
   if ((player?.points || 0) >= 1000) achievements.add('points_1000');
+  if ((player?.points || 0) >= 10000) achievements.add('points_10000');
+  if ((player?.playCount || 0) >= 20) achievements.add('typing_veteran');
+  if ((player?.gachaPullCount || 0) >= 30) achievements.add('gacha_spender');
+  if ((player?.solvedSubEventIds || []).length >= 5) achievements.add('sub_helper');
+
+  const difficultyClears = player?.difficultyClears || {};
+  if (difficultyClears.easy) achievements.add('easy_clear');
+  if (difficultyClears.normal) achievements.add('normal_clear');
+  if (difficultyClears.hard) achievements.add('hard_clear');
+  if (difficultyClears.very_hard) achievements.add('very_hard_clear');
+  if (difficultyClears.alphabet_quiz) achievements.add('alphabet_master');
+  if (player?.noMissClear) achievements.add('no_miss');
+
+  const hiragana = player?.hiraganaProgress || {};
+  const clearedRows = hiragana.clearedRowIds || [];
+  if (clearedRows.includes('a')) achievements.add('hiragana_starter');
+  if (clearedRows.length >= 5) achievements.add('hiragana_challenger');
+  if (clearedRows.length >= HIRAGANA_ROWS.length) achievements.add('hiragana_master');
+  if ((hiragana.shuffleClearCount || 0) >= 1) achievements.add('shuffle_star');
 
   const hasLegend = GACHA_ITEMS.some(
     (item) => item.rarity === '✨レジェンド✨' && (collection[item.name] || 0) > 0,
