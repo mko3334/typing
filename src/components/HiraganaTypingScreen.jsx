@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ArrowLeft, Lock, CheckCircle2, BarChart3, Shuffle, ListOrdered } from 'lucide-react';
+import { ArrowLeft, BarChart3, Shuffle, ListOrdered } from 'lucide-react';
 import { FINGER_MAP, KEYBOARD_ROWS, resolveBackground } from '../constants';
 import { HIRAGANA_ROWS } from '../data/hiraganaRows';
 import {
   buildPracticeQueue,
-  getCharAccuracy,
   getCurrentStageRowIndex,
   getRomajiList,
   getRowSummary,
@@ -18,18 +17,30 @@ import {
 } from '../utils/hiraganaTyping';
 import {
   applyHiraganaRewardToPlayer,
+  buildOrderTestCompleteReward,
   buildShuffleCompleteReward,
   buildStageClearReward,
 } from '../utils/hiraganaRewards';
 import GameSidebar from './GameSidebar';
 import HiraganaRewardModal from './HiraganaRewardModal';
+import {
+  HiraganaHero,
+  HiraganaInfoChip,
+  HiraganaKanaBubble,
+  HiraganaPopPanel,
+  HiraganaPrimaryButton,
+  HiraganaProgressPills,
+  HiraganaSceneBackdrop,
+  HiraganaStageCard,
+  HiraganaTabButton,
+} from './hiragana/HiraganaVisuals';
 
 function VirtualKeyboard({ assistSettings, nextChar, shake }) {
   const formatChar = (c) => (assistSettings?.letterCase === 'upper' ? c.toUpperCase() : c);
 
   return (
     <div className={`mt-3 w-full max-w-xl shrink-0 ${shake ? 'animate-shake' : ''}`}>
-      <div className="bg-white/70 backdrop-blur-md p-3 rounded-[1.5rem] shadow-inner border border-white/40">
+      <div className="bg-white/85 backdrop-blur-md p-3 rounded-[1.5rem] shadow-lg border-4 border-white/70">
         {KEYBOARD_ROWS.map((row, rowIndex) => (
           <div
             key={rowIndex}
@@ -138,7 +149,16 @@ export default function HiraganaTypingScreen({
   }, [activeStageRow.chars, playMode, queue, queueIndex, stageCharIndex]);
 
   const validRomaji = useMemo(() => getRomajiList(currentKana), [currentKana]);
-  const displayRomaji = assistSettings?.showRomajiHint !== false ? validRomaji[0] || '' : '';
+  const isTestPlay = playMode === 'order' || playMode === 'shuffle';
+  const playAssistSettings = useMemo(
+    () =>
+      isTestPlay
+        ? { ...assistSettings, showRomajiHint: false, keyboardHighlight: false }
+        : assistSettings,
+    [assistSettings, isTestPlay],
+  );
+  const displayRomaji =
+    playAssistSettings?.showRomajiHint !== false ? validRomaji[0] || '' : '';
   const nextChar = typedChars.length < (validRomaji[0]?.length || 0)
     ? validRomaji[0]?.[typedChars.length]?.toLowerCase()
     : '';
@@ -248,25 +268,20 @@ export default function HiraganaTypingScreen({
 
     const nextQueueIndex = queueIndex + 1;
     if (nextQueueIndex >= queue.length) {
-      if (playMode === 'shuffle') {
-        const reward = buildShuffleCompleteReward();
-        const accuracy =
-          queue.length + sessionMisses > 0
-            ? Math.round((queue.length / (queue.length + sessionMisses)) * 100)
-            : 100;
-        grantReward(
-          reward,
-          {
-            clearedRowIds,
-            charStats: nextStats,
-            shuffleClearCount: progress.shuffleClearCount + 1,
-            allRowsRewardClaimed: progress.allRowsRewardClaimed,
-          },
-          { misses: sessionMisses, accuracy },
-        );
-      } else {
-        persistProgress(clearedRowIds, nextStats);
-      }
+      const accuracy =
+        queue.length + sessionMisses > 0
+          ? Math.round((queue.length / (queue.length + sessionMisses)) * 100)
+          : 100;
+      const progressPatch = {
+        clearedRowIds,
+        charStats: nextStats,
+        shuffleClearCount:
+          playMode === 'shuffle' ? progress.shuffleClearCount + 1 : progress.shuffleClearCount,
+        allRowsRewardClaimed: progress.allRowsRewardClaimed,
+      };
+      const reward =
+        playMode === 'shuffle' ? buildShuffleCompleteReward() : buildOrderTestCompleteReward();
+      grantReward(reward, progressPatch, { misses: sessionMisses, accuracy });
       setTypedChars('');
       playSE?.('clear');
       return;
@@ -279,7 +294,6 @@ export default function HiraganaTypingScreen({
     clearedRowIds,
     currentKana,
     grantReward,
-    persistProgress,
     playMode,
     playSE,
     progress.allRowsRewardClaimed,
@@ -337,11 +351,14 @@ export default function HiraganaTypingScreen({
   const weakChars = getWeakChars(charStats);
 
   if (phase === 'play') {
+    const playRow = playMode === 'stage' ? activeStageRow : HIRAGANA_ROWS.find((r) => r.id === queue[queueIndex]?.rowId) || activeStageRow;
+
     return (
       <div
         className="h-screen flex w-full relative overflow-hidden"
         style={{ backgroundImage: `url(${resolveBackground(player?.currentBackground).url})` }}
       >
+        <div className="absolute inset-0 hiragana-scene-bg opacity-90 pointer-events-none" />
         <GameSidebar
           player={player}
           onSaveAndTitle={onSaveAndTitle}
@@ -354,11 +371,12 @@ export default function HiraganaTypingScreen({
           onZukan={onOpenZukan}
           onMusic={onOpenMusic}
           onAssist={() => setIsAssistOpen(true)}
+          showAssist={!isTestPlay}
         />
 
-        <main className="flex-1 flex flex-col items-center justify-center p-3 min-h-0 overflow-y-auto">
-          <div className="w-full max-w-2xl bg-white/90 backdrop-blur-sm rounded-3xl border-4 border-sky-300 shadow-xl p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
+        <main className="relative z-[1] flex-1 flex flex-col items-center justify-center p-3 min-h-0 overflow-y-auto">
+          <HiraganaPopPanel className="w-full max-w-2xl p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4 gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -366,60 +384,46 @@ export default function HiraganaTypingScreen({
                   setPhase('menu');
                   persistProgress(clearedRowIds, charStats);
                 }}
-                className="flex items-center gap-1 text-sm font-black text-gray-600 hover:text-sky-600"
+                className="flex items-center gap-1 text-sm font-black text-indigo-600 hover:text-pink-600 bg-white/80 px-3 py-1.5 rounded-full border-2 border-indigo-100"
               >
                 <ArrowLeft className="w-4 h-4" /> もどる
               </button>
-              <span className="text-xs font-black text-sky-700 bg-sky-50 px-3 py-1 rounded-full">
+              <span className={`text-xs font-black px-3 py-1.5 rounded-full border-2 border-white shadow-sm bg-gradient-to-r ${playRow.theme} text-white`}>
                 {playMode === 'stage'
-                  ? `${activeStageRow.label} ステージ`
+                  ? `${playRow.emoji} ${activeStageRow.label}`
                   : testMode === 'shuffle'
-                    ? 'シャッフルテスト'
-                    : 'じゅんばんテスト'}
+                    ? '🎲 シャッフルテスト'
+                    : '📝 じゅんばんテスト'}
               </span>
-              <span className="text-xs font-bold text-gray-500">ミス {sessionMisses}</span>
+              <span className="text-xs font-black text-rose-600 bg-rose-50 border-2 border-rose-200 px-2.5 py-1 rounded-full">
+                ミス {sessionMisses}
+              </span>
             </div>
 
             {playMode === 'stage' && (
-              <div className="flex justify-center gap-2 mb-4 flex-wrap">
-                {activeStageRow.chars.map((kana, index) => (
-                  <div
-                    key={kana}
-                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl font-black border-2 ${
-                      index < stageCharIndex
-                        ? 'bg-green-100 border-green-400 text-green-700'
-                        : index === stageCharIndex
-                          ? 'bg-sky-500 border-sky-600 text-white scale-110 shadow-lg'
-                          : 'bg-gray-50 border-gray-200 text-gray-400'
-                    }`}
-                  >
-                    {kana}
-                  </div>
-                ))}
-              </div>
+              <HiraganaProgressPills chars={activeStageRow.chars} currentIndex={stageCharIndex} />
             )}
 
-            <div className="text-center py-4">
-              <p className="text-xs font-bold text-gray-500 mb-2">うつ文字（ローマ字）</p>
-              <div className="text-6xl sm:text-7xl font-black text-sky-600 mb-2">{currentKana}</div>
-              {displayRomaji && (
-                <p className="text-lg font-black text-indigo-500 tracking-widest">{displayRomaji}</p>
-              )}
-              <div className="mt-3 text-2xl font-mono font-black text-gray-700 min-h-[2rem]">
-                {typedChars || '…'}
-              </div>
-              {playMode !== 'stage' && (
-                <p className="text-xs font-bold text-gray-400 mt-2">
-                  {queueIndex + 1} / {queue.length}
-                </p>
-              )}
-            </div>
+            <HiraganaKanaBubble
+              kana={currentKana}
+              row={playRow}
+              isTestPlay={isTestPlay}
+              displayRomaji={displayRomaji}
+              typedChars={typedChars}
+              shake={shake}
+            />
 
-            <VirtualKeyboard assistSettings={assistSettings} nextChar={nextChar} shake={shake} />
-            <p className="text-center text-[10px] font-bold text-gray-400 mt-3">
-              キーボードで ローマ字を うってね
+            {playMode !== 'stage' && (
+              <p className="text-center text-xs font-black text-indigo-500 mt-3 bg-indigo-50 border border-indigo-100 rounded-full py-1">
+                {queueIndex + 1} / {queue.length} もん
+              </p>
+            )}
+
+            <VirtualKeyboard assistSettings={playAssistSettings} nextChar={nextChar} shake={shake} />
+            <p className="text-center text-[10px] font-black text-pink-500 mt-3">
+              ⌨️ キーボードで ローマ字を うってね！
             </p>
-          </div>
+          </HiraganaPopPanel>
         </main>
 
         {pendingReward && (
@@ -429,7 +433,7 @@ export default function HiraganaTypingScreen({
             playDecideSound={playDecideSound}
             onClose={() => {
               const kind = pendingReward.kind;
-              const earnedPoints = pendingReward.points || 0;
+              const isFirstClear = pendingReward.isFirstClear === true;
               setPendingReward(null);
               setRewardStats(null);
               if (kind === 'stage') {
@@ -438,7 +442,7 @@ export default function HiraganaTypingScreen({
                 setSessionMisses(0);
                 setActiveStageRowId(null);
                 const continueNext =
-                  earnedPoints > 0 && clearedRowIds.length < HIRAGANA_ROWS.length;
+                  isFirstClear && clearedRowIds.length < HIRAGANA_ROWS.length;
                 if (continueNext) {
                   const nextRow = HIRAGANA_ROWS[getCurrentStageRowIndex(clearedRowIds)];
                   setActiveStageRowId(nextRow.id);
@@ -473,134 +477,122 @@ export default function HiraganaTypingScreen({
       />
 
       <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">
-        <div className="max-w-3xl mx-auto bg-white/92 backdrop-blur-sm rounded-3xl border-4 border-indigo-300 shadow-xl p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4">
+        <HiraganaSceneBackdrop className="max-w-3xl mx-auto space-y-4">
+          <div className="flex items-start gap-2">
             <button
               type="button"
               onClick={() => {
                 playCancelSound?.();
                 onBack();
               }}
-              className="p-2 rounded-full hover:bg-gray-100"
+              className="mt-2 p-2.5 rounded-2xl bg-white/90 border-2 border-white shadow-md hover:scale-105 transition-transform"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 text-indigo-600" />
             </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-indigo-800">🔤 ひらがなタイピング</h1>
-              <p className="text-xs font-bold text-gray-500">ローマ字入力の テスト</p>
+            <div className="flex-1">
+              <HiraganaHero subtitle="ローマ字入力の チャレンジ＆テスト" />
             </div>
           </div>
 
-          <div className="flex gap-2 mb-4 flex-wrap">
-            {[
-              { id: 'stage', label: 'ステージ', icon: ListOrdered },
-              { id: 'test', label: 'テスト', icon: Shuffle },
-              { id: 'stats', label: '成績', icon: BarChart3 },
-            ].map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
+          <HiraganaPopPanel className="p-4 sm:p-6">
+            <div className="flex gap-2 mb-5 flex-wrap">
+              <HiraganaTabButton
+                active={menuTab === 'stage'}
+                icon={ListOrdered}
+                label="ステージ"
                 onClick={() => {
                   playDecideSound?.();
-                  setMenuTab(id);
+                  setMenuTab('stage');
                 }}
-                className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-black border-2 ${
-                  menuTab === id
-                    ? 'bg-indigo-500 text-white border-indigo-600'
-                    : 'bg-white text-indigo-700 border-indigo-200'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" /> {label}
-              </button>
-            ))}
-          </div>
+              />
+              <HiraganaTabButton
+                active={menuTab === 'test'}
+                icon={Shuffle}
+                label="テスト"
+                onClick={() => {
+                  playDecideSound?.();
+                  setMenuTab('test');
+                }}
+              />
+              <HiraganaTabButton
+                active={menuTab === 'stats'}
+                icon={BarChart3}
+                label="成績"
+                onClick={() => {
+                  playDecideSound?.();
+                  setMenuTab('stats');
+                }}
+              />
+            </div>
 
           {menuTab === 'stage' && (
-            <div className="space-y-4">
-              <p className="text-sm font-bold text-gray-600">
-                上から {HIRAGANA_ROWS[0].chars.join('→')} の順で 入力して クリア！
-                クリアすると つぎの行が あきます。
+            <div className="space-y-4 animate-fade-in">
+              <p className="text-sm font-black text-indigo-700 leading-relaxed">
+                🗺️ 上から {HIRAGANA_ROWS[0].chars.join('→')} の順で クリア！
+                つぎの行が どんどん あくよ。
               </p>
-              <p className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                🎁 各行クリア（初回）500pt / ぜん行クリアで チケット各1枚
-              </p>
+              <HiraganaInfoChip tone="amber">
+                🎁 各行クリア 500pt / 再チャレンジも 500pt / ぜん行クリアで チケット各1枚
+              </HiraganaInfoChip>
               {allStagesClear && (
-                <p className="text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
-                  🎉 ぜん行クリア！ クリアした行を 選んで 再チャレンジできるよ
-                </p>
+                <HiraganaInfoChip tone="green">
+                  🎉 ぜん行クリア！ 好きな行を 選んで 再チャレンジできるよ
+                </HiraganaInfoChip>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {HIRAGANA_ROWS.map((row, index) => {
                   const unlocked = isRowUnlockedForStage(index, clearedRowIds);
                   const cleared = isRowCleared(row.id, clearedRowIds);
                   const current = index === stageRowIndex && !allStagesClear;
-                  const selectable = unlocked || cleared;
                   const isSelected = row.id === selectedStageRowId;
                   return (
-                    <button
+                    <HiraganaStageCard
                       key={row.id}
-                      type="button"
-                      disabled={!selectable}
-                      onClick={() => {
-                        if (!selectable) return;
+                      row={row}
+                      cleared={cleared}
+                      current={current}
+                      unlocked={unlocked}
+                      selected={isSelected}
+                      onSelect={() => {
+                        if (!unlocked && !cleared) return;
                         playDecideSound?.();
                         setSelectedStageRowId(row.id);
                       }}
-                      className={`rounded-2xl border-2 p-3 text-left transition-transform ${
-                        isSelected ? 'ring-2 ring-indigo-400 scale-[1.02]' : ''
-                      } ${
-                        cleared
-                          ? 'bg-green-50 border-green-300'
-                          : current
-                            ? 'bg-sky-50 border-sky-400 ring-2 ring-sky-200'
-                            : unlocked
-                              ? 'bg-white border-indigo-200 hover:border-indigo-400'
-                              : 'bg-gray-100 border-gray-200 opacity-70 cursor-not-allowed'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-black text-gray-800">{row.label}</span>
-                        {cleared ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        ) : unlocked ? null : (
-                          <Lock className="w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
-                      <p className="text-xs font-bold text-gray-500">{row.chars.join(' ')}</p>
-                    </button>
+                    />
                   );
                 })}
               </div>
-              <button
-                type="button"
+              <HiraganaPrimaryButton
                 disabled={!canStartSelectedStage}
                 onClick={startStage}
-                className="w-full py-3 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-300 text-white font-black rounded-2xl shadow-lg"
               >
                 {isSelectedStageReplay
-                  ? `${selectedStageRow.label} を 再チャレンジ`
-                  : `${selectedStageRow.label} ステージを はじめる`}
-              </button>
+                  ? `${selectedStageRow.emoji} ${selectedStageRow.label} を 再チャレンジ！`
+                  : `${selectedStageRow.emoji} ${selectedStageRow.label} を いくぞ！`}
+              </HiraganaPrimaryButton>
             </div>
           )}
 
           {menuTab === 'test' && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-fade-in">
+              <HiraganaInfoChip tone="rose">
+                ⚠️ テストは ローマ字ヒントも キーボードの光るアシストも なし！ ひらがなだけ見てね。
+              </HiraganaInfoChip>
               <div>
-                <p className="text-xs font-black text-gray-500 mb-2">テストする行</p>
+                <p className="text-xs font-black text-indigo-600 mb-2">🎯 テストする行</p>
                 <div className="flex flex-wrap gap-2">
                   {HIRAGANA_ROWS.map((row) => (
                     <button
                       key={row.id}
                       type="button"
                       onClick={() => toggleRowSelection(row.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black border-2 ${
+                      className={`px-3 py-2 rounded-2xl text-xs font-black border-3 transition-all ${
                         selectedRowIds.includes(row.id)
-                          ? 'bg-indigo-500 text-white border-indigo-600'
-                          : 'bg-white text-indigo-700 border-indigo-200'
+                          ? `bg-gradient-to-r ${row.theme} text-white border-white shadow-md scale-105`
+                          : `${row.badge} hover:scale-105`
                       }`}
                     >
-                      {row.label}
+                      {row.emoji} {row.label}
                     </button>
                   ))}
                 </div>
@@ -609,64 +601,60 @@ export default function HiraganaTypingScreen({
                 <button
                   type="button"
                   onClick={() => setTestMode('order')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black border-2 ${
+                  className={`flex-1 py-3 rounded-2xl text-xs font-black border-3 transition-all ${
                     testMode === 'order'
-                      ? 'bg-emerald-500 text-white border-emerald-600'
-                      : 'bg-white border-gray-200'
+                      ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white border-white shadow-lg scale-[1.02]'
+                      : 'bg-white border-gray-200 text-gray-600'
                   }`}
                 >
-                  じゅんばん
+                  📝 じゅんばん
                 </button>
                 <button
                   type="button"
                   onClick={() => setTestMode('shuffle')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black border-2 ${
+                  className={`flex-1 py-3 rounded-2xl text-xs font-black border-3 transition-all ${
                     testMode === 'shuffle'
-                      ? 'bg-orange-500 text-white border-orange-600'
-                      : 'bg-white border-gray-200'
+                      ? 'bg-gradient-to-r from-orange-400 to-rose-500 text-white border-white shadow-lg scale-[1.02]'
+                      : 'bg-white border-gray-200 text-gray-600'
                   }`}
                 >
-                  シャッフル
+                  🎲 シャッフル
                 </button>
               </div>
               {testMode === 'shuffle' && (
-                <p className="text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2">
-                  🎲 シャッフルテスト クリアで 1000pt ゲット！
-                </p>
+                <HiraganaInfoChip tone="orange">🎲 シャッフルテスト クリアで 2000pt！</HiraganaInfoChip>
               )}
               {testMode === 'order' && (
-                <p className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
-                  📝 じゅんばんテストは 成績記録のみ（ポイントなし）
-                </p>
+                <HiraganaInfoChip tone="sky">📝 じゅんばんテスト クリアで 1000pt！</HiraganaInfoChip>
               )}
-              <button
-                type="button"
+              <HiraganaPrimaryButton
+                variant="indigo"
                 disabled={selectedRowIds.length === 0}
                 onClick={startTest}
-                className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-300 text-white font-black rounded-2xl"
               >
-                テストスタート
-              </button>
+                🚀 テストスタート！
+              </HiraganaPrimaryButton>
             </div>
           )}
 
           {menuTab === 'stats' && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-fade-in">
               <div>
-                <h3 className="text-sm font-black text-gray-700 mb-2">にがてな文字 TOP</h3>
+                <h3 className="text-sm font-black text-indigo-700 mb-2">😅 にがてな文字 TOP</h3>
                 {weakChars.length === 0 ? (
-                  <p className="text-xs font-bold text-gray-400 bg-gray-50 rounded-xl p-4 text-center">
-                    まだ データがありません。ステージや テストで 記録されます。
+                  <p className="text-xs font-bold text-gray-400 bg-gradient-to-r from-gray-50 to-sky-50 rounded-2xl p-5 text-center border-2 border-dashed border-gray-200">
+                    まだ データがありません。<br />
+                    ステージや テストで 記録されるよ！
                   </p>
                 ) : (
                   <div className="space-y-2">
                     {weakChars.map((entry) => (
                       <div
                         key={entry.kana}
-                        className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
+                        className="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl px-4 py-3 shadow-sm"
                       >
-                        <span className="text-2xl font-black">{entry.kana}</span>
-                        <div className="text-right text-xs font-bold text-amber-800">
+                        <span className="text-3xl font-black drop-shadow-sm">{entry.kana}</span>
+                        <div className="text-right text-xs font-black text-amber-800">
                           <div>正答率 {entry.accuracy ?? 0}%</div>
                           <div className="text-amber-600">ミス {entry.misses} 回</div>
                         </div>
@@ -676,22 +664,22 @@ export default function HiraganaTypingScreen({
                 )}
               </div>
               <div>
-                <h3 className="text-sm font-black text-gray-700 mb-2">行ごとの 成績</h3>
+                <h3 className="text-sm font-black text-indigo-700 mb-2">📊 行ごとの 成績</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {HIRAGANA_ROWS.map((row) => {
                     const summary = getRowSummary(row, charStats);
                     return (
                       <div
                         key={row.id}
-                        className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold"
+                        className={`rounded-2xl border-2 px-3 py-2.5 text-xs font-bold bg-gradient-to-br from-white to-sky-50/80 ${row.badge}`}
                       >
-                        <div className="flex justify-between">
-                          <span>{row.label}</span>
-                          <span className="text-sky-600">
+                        <div className="flex justify-between items-center">
+                          <span>{row.emoji} {row.label}</span>
+                          <span className="text-sky-700 font-black">
                             {summary.accuracy != null ? `${summary.accuracy}%` : '—'}
                           </span>
                         </div>
-                        <div className="text-gray-500 mt-0.5">
+                        <div className="opacity-80 mt-0.5">
                           {summary.attempts > 0
                             ? `${summary.correct}/${summary.attempts} 正解 · ミス ${summary.misses}`
                             : '未プレイ'}
@@ -703,7 +691,8 @@ export default function HiraganaTypingScreen({
               </div>
             </div>
           )}
-        </div>
+          </HiraganaPopPanel>
+        </HiraganaSceneBackdrop>
       </main>
     </div>
   );

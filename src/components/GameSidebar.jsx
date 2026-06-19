@@ -31,6 +31,7 @@ export default function GameSidebar({
   onAssist,
   onComingSoon,
   assistActive = false,
+  showAssist = true,
 }) {
   const click = (handler) => {
     playDecideSound();
@@ -137,6 +138,7 @@ export default function GameSidebar({
           <span>おんがく</span>
         </button>
 
+        {showAssist && (
         <button
           type="button"
           onClick={() => click(onAssist || onComingSoon)}
@@ -149,6 +151,7 @@ export default function GameSidebar({
           <Sparkles className="w-4 h-4 shrink-0 animate-pulse" />
           <span>アシスト</span>
         </button>
+        )}
       </div>
     </aside>
   );

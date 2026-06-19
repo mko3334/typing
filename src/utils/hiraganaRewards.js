@@ -3,7 +3,8 @@ import { HIRAGANA_ROWS } from '../data/hiraganaRows';
 import { computeAchievements } from './gacha';
 
 export const HIRAGANA_STAGE_POINTS = 500;
-export const HIRAGANA_SHUFFLE_POINTS = 1000;
+export const HIRAGANA_ORDER_TEST_POINTS = 1000;
+export const HIRAGANA_SHUFFLE_TEST_POINTS = 2000;
 
 const ALL_ROW_TICKETS = {
   specialTickets: 1,
@@ -24,11 +25,12 @@ export function buildStageClearReward({ row, isFirstClear, allRowsJustCompleted,
     kind: 'stage',
     title: 'ステージクリア！',
     subtitle: `${row.label} を マスターしたよ！`,
-    points: isFirstClear ? HIRAGANA_STAGE_POINTS : 0,
+    points: HIRAGANA_STAGE_POINTS,
     tickets: {},
     newTitleIds,
     row,
     allRowsJustCompleted,
+    isFirstClear,
   };
 
   if (allRowsJustCompleted) {
@@ -41,12 +43,23 @@ export function buildStageClearReward({ row, isFirstClear, allRowsJustCompleted,
   return reward;
 }
 
+export function buildOrderTestCompleteReward() {
+  return {
+    kind: 'order',
+    title: 'じゅんばんテスト クリア！',
+    subtitle: 'じゅんばんテスト クリア！',
+    points: HIRAGANA_ORDER_TEST_POINTS,
+    tickets: {},
+    newTitleIds: [],
+  };
+}
+
 export function buildShuffleCompleteReward() {
   return {
     kind: 'shuffle',
-    title: 'シャッフルクリア！',
+    title: 'シャッフルテスト クリア！',
     subtitle: 'シャッフルテスト クリア！',
-    points: HIRAGANA_SHUFFLE_POINTS,
+    points: HIRAGANA_SHUFFLE_TEST_POINTS,
     tickets: {},
     newTitleIds: ['shuffle_star'],
   };

@@ -295,7 +295,7 @@ export default function HomeScreen({
           <MallPin
             top="58%"
             left="18%"
-            label="🔤 ひらがなタイピング"
+            label="🔤 ひらがなチャレンジ"
             variant="purple"
             delay="0.7s"
             onClick={() => {
