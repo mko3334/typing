@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_ASSIST_SETTINGS } from './constants';
-import { loadSingleCloudPlayer, saveCloudPlayer } from './firebase';
+import { listenToAnnouncements, loadSingleCloudPlayer, markAnnouncementReadForPlayer, saveCloudPlayer } from './firebase';
 import { enrichPlayer } from './utils/player';
 import { computeSessionUpdates } from './utils/playTime';
 import { persistPlayerLocally, withTimeout } from './utils/playerStorage';
@@ -20,9 +20,16 @@ import GachaShopScreen from './components/GachaShopScreen';
 import ZukanModal from './components/ZukanModal';
 import SaveCompleteModal, { SaveLoadingOverlay } from './components/SaveCompleteModal';
 import GiftRewardModal from './components/GiftRewardModal';
+import AnnouncementModal from './components/AnnouncementModal';
+import AnnouncementPanel from './components/AnnouncementPanel';
 import HiraganaTypingScreen from './components/HiraganaTypingScreen';
 import TitlePasswordGate, { isTitleAccessGranted } from './components/TitlePasswordGate';
 import { CRITICAL_IMAGE_URLS, preloadImages } from './utils/assetImages';
+import {
+  buildGiftUpdatesFromAnnouncement,
+  getUnreadPopupQueue,
+  partitionAnnouncementsForPlayer,
+} from './utils/announcements';
 
 export default function App() {
   const [appScreen, setAppScreen] = useState('title');
@@ -38,6 +45,9 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedPlayerPreview, setSavedPlayerPreview] = useState(null);
   const [activeGift, setActiveGift] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
+  const [activeAnnouncement, setActiveAnnouncement] = useState(null);
+  const [isAnnouncementPanelOpen, setIsAnnouncementPanelOpen] = useState(false);
   const currentPlayerRef = useRef(currentPlayer);
   const assistSettingsRef = useRef(assistSettings);
   const sessionStartRef = useRef(null);
@@ -81,6 +91,82 @@ export default function App() {
     }
   }, []);
 
+  const announcementPartition = useMemo(
+    () => partitionAnnouncementsForPlayer(announcements, currentPlayer),
+    [announcements, currentPlayer],
+  );
+
+  const hasUnreadAnnouncements =
+    announcementPartition.unreadPersonal.length + announcementPartition.unreadBroadcast.length > 0;
+
+  useEffect(() => {
+    if (!currentPlayer?.id || appScreen === 'title') {
+      setAnnouncements([]);
+      return undefined;
+    }
+    const unsub = listenToAnnouncements(setAnnouncements);
+    return unsub;
+  }, [currentPlayer?.id, appScreen]);
+
+  const handleReadAnnouncement = useCallback(async (announcement) => {
+    const prev = currentPlayerRef.current;
+    if (!prev?.id || !announcement?.id) return;
+    if ((prev.readAnnouncementIds || []).includes(announcement.id)) return;
+
+    const giftUpdates = buildGiftUpdatesFromAnnouncement(prev, announcement);
+    const readIds = await markAnnouncementReadForPlayer(
+      prev.id,
+      announcement.id,
+      prev.readAnnouncementIds,
+    );
+    if (!readIds) return;
+
+    const next = {
+      ...prev,
+      ...giftUpdates,
+      readAnnouncementIds: readIds,
+    };
+    currentPlayerRef.current = next;
+    setCurrentPlayer(next);
+    saveCloudPlayer(next.id, next).catch(() => {});
+    persistPlayerLocally(next.id, next).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (appScreen === 'title' || !currentPlayer?.id) {
+      setActiveAnnouncement(null);
+      setIsAnnouncementPanelOpen(false);
+    }
+  }, [appScreen, currentPlayer?.id]);
+
+  useEffect(() => {
+    if (appScreen !== 'home' || !currentPlayer?.id) return;
+    if (activeGift || isAnnouncementPanelOpen || activeAnnouncement) return;
+    const queue = getUnreadPopupQueue(announcements, currentPlayer);
+    if (queue.length > 0) {
+      setActiveAnnouncement(queue[0]);
+    }
+  }, [
+    appScreen,
+    currentPlayer,
+    announcements,
+    activeGift,
+    isAnnouncementPanelOpen,
+    activeAnnouncement,
+  ]);
+
+  const handleCloseAnnouncementPopup = useCallback(async () => {
+    const ann = activeAnnouncement;
+    if (!ann) return;
+    await handleReadAnnouncement(ann);
+    setActiveAnnouncement(null);
+  }, [activeAnnouncement, handleReadAnnouncement]);
+
+  const openAnnouncements = useCallback(() => {
+    playDecideSound();
+    setIsAnnouncementPanelOpen(true);
+  }, [playDecideSound]);
+
   const handleSelectPlayer = (player) => {
     if (!player?.id) return;
 
@@ -104,7 +190,11 @@ export default function App() {
     });
     saveCloudPlayer(next.id, next).catch(() => {});
     syncPendingGifts(next).then((synced) => {
-      const syncedWithSession = { ...synced, ...buildPlayingSessionPatch() };
+      const syncedWithSession = {
+        ...synced,
+        ...buildPlayingSessionPatch(),
+        readAnnouncementIds: synced.readAnnouncementIds || next.readAnnouncementIds || [],
+      };
       currentPlayerRef.current = syncedWithSession;
       setCurrentPlayer(syncedWithSession);
       persistPlayerLocally(syncedWithSession.id, syncedWithSession).catch(() => {});
@@ -293,6 +383,8 @@ export default function App() {
           onOpenShop={openShop}
           onOpenZukan={openZukan}
           onOpenHiragana={openHiragana}
+          onOpenAnnouncements={openAnnouncements}
+          announcementUnread={hasUnreadAnnouncements}
           onPlayerUpdate={handlePlayerUpdate}
           playDecideSound={playDecideSound}
           playCancelSound={playCancelSound}
@@ -313,6 +405,8 @@ export default function App() {
           onOpenMusic={openMusic}
           onOpenShop={openShop}
           onOpenZukan={openZukan}
+          onOpenAnnouncements={openAnnouncements}
+          announcementUnread={hasUnreadAnnouncements}
           playSE={playSE}
         />
       )}
@@ -329,6 +423,8 @@ export default function App() {
           onOpenMusic={openMusic}
           onOpenShop={openShop}
           onOpenZukan={openZukan}
+          onOpenAnnouncements={openAnnouncements}
+          announcementUnread={hasUnreadAnnouncements}
           playDecideSound={playDecideSound}
           playCancelSound={playCancelSound}
           playSE={playSE}
@@ -344,6 +440,8 @@ export default function App() {
           onOpenProfile={openProfile}
           onOpenMusic={openMusic}
           onOpenZukan={openZukan}
+          onOpenAnnouncements={openAnnouncements}
+          announcementUnread={hasUnreadAnnouncements}
           playDecideSound={playDecideSound}
           playCancelSound={playCancelSound}
           playSE={playSE}
@@ -400,6 +498,30 @@ export default function App() {
           gift={activeGift}
           onAccept={handleAcceptGift}
           playDecideSound={playDecideSound}
+        />
+      )}
+
+      {activeAnnouncement && !isAnnouncementPanelOpen && appScreen !== 'title' && (
+        <AnnouncementModal
+          announcement={activeAnnouncement}
+          isRead={activeAnnouncement.isRead === true}
+          mode="popup"
+          playDecideSound={playDecideSound}
+          onClose={handleCloseAnnouncementPopup}
+        />
+      )}
+
+      {isAnnouncementPanelOpen && currentPlayer && appScreen !== 'title' && (
+        <AnnouncementPanel
+          player={currentPlayer}
+          announcements={announcements}
+          playDecideSound={playDecideSound}
+          playCancelSound={playCancelSound}
+          onReadAnnouncement={handleReadAnnouncement}
+          onClose={() => {
+            playCancelSound();
+            setIsAnnouncementPanelOpen(false);
+          }}
         />
       )}
     </div>

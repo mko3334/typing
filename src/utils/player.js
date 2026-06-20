@@ -42,6 +42,7 @@ export function enrichPlayer(id, data) {
         ? Number(data.sessionCount)
         : 0,
     pendingGifts: Array.isArray(data.pendingGifts) ? data.pendingGifts : [],
+    readAnnouncementIds: Array.isArray(data.readAnnouncementIds) ? data.readAnnouncementIds : [],
     solvedSubEventIds: Array.isArray(data.solvedSubEventIds) ? data.solvedSubEventIds : [],
     plazaSubEvents: Array.isArray(data.plazaSubEvents) ? data.plazaSubEvents : [],
     isPlaying: data.isPlaying === true,

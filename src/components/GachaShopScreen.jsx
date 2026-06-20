@@ -255,6 +255,8 @@ export default function GachaShopScreen({
   onOpenProfile,
   onOpenMusic,
   onOpenZukan,
+  onOpenAnnouncements,
+  announcementUnread = false,
   playDecideSound,
   playCancelSound,
   playSE,
@@ -634,6 +636,8 @@ export default function GachaShopScreen({
         onProfile={onOpenProfile}
         onMusic={onOpenMusic}
         onZukan={onOpenZukan}
+        onAnnouncements={onOpenAnnouncements}
+        announcementUnread={announcementUnread}
       />
 
       <main className="flex-1 h-full flex flex-col items-center justify-center min-h-0 p-2 sm:p-4 overflow-hidden">

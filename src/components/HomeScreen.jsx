@@ -97,6 +97,8 @@ export default function HomeScreen({
   onOpenShop,
   onOpenZukan,
   onOpenHiragana,
+  onOpenAnnouncements,
+  announcementUnread = false,
   onPlayerUpdate,
   playDecideSound,
   playCancelSound,
@@ -208,9 +210,13 @@ export default function HomeScreen({
     setIsDifficultyOpen(true);
   };
 
-  const handleDifficultySelect = (difficulty) => {
+  const handleDifficultySelect = (modeId) => {
     setIsDifficultyOpen(false);
-    onStartTyping(difficulty);
+    if (modeId === 'hiragana') {
+      onOpenHiragana?.();
+      return;
+    }
+    onStartTyping(modeId);
   };
 
   return (
@@ -226,6 +232,8 @@ export default function HomeScreen({
         onProfile={onOpenProfile}
         onZukan={onOpenZukan}
         onMusic={onOpenMusic}
+        onAnnouncements={onOpenAnnouncements}
+        announcementUnread={announcementUnread}
         onAssist={() => {
           playDecideSound?.();
           setIsAssistOpen(true);
@@ -291,28 +299,6 @@ export default function HomeScreen({
             delay="1.0s"
             large
             onClick={openDifficulty}
-          />
-          <MallPin
-            top="58%"
-            left="18%"
-            label="🔤 ひらがなチャレンジ"
-            variant="purple"
-            delay="0.7s"
-            onClick={() => {
-              playDecideSound?.();
-              onOpenHiragana?.();
-            }}
-          />
-          <MallPin
-            top="72%"
-            left="28%"
-            label="🔠 おおもじ・こもじ クイズ"
-            variant="gradient-orange"
-            delay="0.8s"
-            onClick={() => {
-              playDecideSound?.();
-              onStartTyping('alphabet_quiz');
-            }}
           />
           <MallPin
             top="28%"

@@ -90,6 +90,8 @@ export default function HiraganaTypingScreen({
   onOpenMusic,
   onOpenShop,
   onOpenZukan,
+  onOpenAnnouncements,
+  announcementUnread = false,
   playDecideSound,
   playCancelSound,
   playSE,
@@ -372,6 +374,8 @@ export default function HiraganaTypingScreen({
           onMusic={onOpenMusic}
           onAssist={() => setIsAssistOpen(true)}
           showAssist={!isTestPlay}
+          onAnnouncements={onOpenAnnouncements}
+          announcementUnread={announcementUnread}
         />
 
         <main className="relative z-[1] flex-1 flex flex-col items-center justify-center p-3 min-h-0 overflow-y-auto">
@@ -474,6 +478,8 @@ export default function HiraganaTypingScreen({
         onZukan={onOpenZukan}
         onMusic={onOpenMusic}
         onAssist={() => setIsAssistOpen(true)}
+        onAnnouncements={onOpenAnnouncements}
+        announcementUnread={announcementUnread}
       />
 
       <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">

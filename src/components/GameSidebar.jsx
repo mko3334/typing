@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Book, Music, Sparkles } from 'lucide-react';
+import { User, Book, Music, Sparkles, Bell } from 'lucide-react';
 
 function playDecideSound() {
   try {
@@ -29,9 +29,11 @@ export default function GameSidebar({
   onZukan,
   onMusic,
   onAssist,
+  onAnnouncements,
   onComingSoon,
   assistActive = false,
   showAssist = true,
+  announcementUnread = false,
 }) {
   const click = (handler) => {
     playDecideSound();
@@ -97,6 +99,18 @@ export default function GameSidebar({
         >
           <span className="text-xl">🏠</span>
           <span>ひろばへ</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => click(onAnnouncements || onComingSoon)}
+          className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-sky-200 text-sky-600 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[8px] sm:text-[9px] font-black gap-0.5 active:scale-95 transition-transform"
+        >
+          <Bell className="w-5 h-5 shrink-0" />
+          <span>お知らせ</span>
+          {announcementUnread && (
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white animate-pulse" />
+          )}
         </button>
 
         <button

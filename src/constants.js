@@ -541,3 +541,20 @@ export const DIFFICULTY_OPTIONS = [
     points: 1000,
   },
 ];
+
+export const TYPING_EXTRA_MODES = [
+  {
+    id: 'alphabet_quiz',
+    emoji: '🔠',
+    label: '大文字小文字クイズ',
+    sub: 'おおもじ・こもじ',
+    gradient: 'from-orange-400 to-amber-500 border-amber-600',
+  },
+  {
+    id: 'hiragana',
+    emoji: '🔤',
+    label: 'ひらがなチャレンジ',
+    sub: 'ローマ字入力',
+    gradient: 'from-fuchsia-400 to-violet-500 border-violet-600',
+  },
+];

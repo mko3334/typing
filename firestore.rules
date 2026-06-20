@@ -28,5 +28,8 @@ service cloud.firestore {
     match /word_corrections/{document} {
       allow read, write: if true;
     }
+    match /announcements/{document} {
+      allow read, write: if true;
+    }
   }
 }

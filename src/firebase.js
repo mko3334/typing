@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import {
   addLocalTypingReport,
   deleteLocalTypingReport,
@@ -532,3 +532,141 @@ export const cancelGiftFromCloudPlayer = async (playerId, giftId) => {
 };
 
 export { db };
+
+// --- お知らせ ---
+function normalizeAnnouncementDoc(id, data) {
+  return { id, ...data };
+}
+
+export async function publishDueAnnouncements() {
+  try {
+    const collRef = collection(db, 'announcements');
+    const snapshot = await getDocs(collRef);
+    const now = new Date().toISOString();
+    const tasks = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (
+        data.status === 'scheduled' &&
+        data.scheduledAt &&
+        data.scheduledAt <= now
+      ) {
+        tasks.push(
+          updateDoc(doc(db, 'announcements', docSnap.id), {
+            status: 'published',
+            publishedAt: data.scheduledAt,
+          }),
+        );
+      }
+    });
+    await Promise.all(tasks);
+    return tasks.length;
+  } catch (error) {
+    console.error('Error publishing due announcements:', error);
+    return 0;
+  }
+}
+
+export async function getAnnouncements() {
+  await publishDueAnnouncements();
+  try {
+    const collRef = collection(db, 'announcements');
+    const snapshot = await getDocs(collRef);
+    const list = [];
+    snapshot.forEach((docSnap) => {
+      list.push(normalizeAnnouncementDoc(docSnap.id, docSnap.data()));
+    });
+    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    return list;
+  } catch (error) {
+    console.error('Error getting announcements:', error);
+    return [];
+  }
+}
+
+export function listenToAnnouncements(onUpdate) {
+  try {
+    const collRef = collection(db, 'announcements');
+    return onSnapshot(
+      collRef,
+      async () => {
+        const list = await getAnnouncements();
+        onUpdate(list);
+      },
+      (error) => {
+        console.error('Error listening to announcements:', error);
+      },
+    );
+  } catch (error) {
+    console.error('Error setting up announcement listener:', error);
+    return () => {};
+  }
+}
+
+export async function createAnnouncement(payload) {
+  try {
+    const newDocRef = doc(collection(db, 'announcements'));
+    const now = new Date().toISOString();
+    const immediate = payload.sendMode !== 'scheduled';
+    const clean = JSON.parse(JSON.stringify(payload));
+    delete clean.sendMode;
+
+    const data = {
+      ...clean,
+      status: immediate ? 'published' : 'scheduled',
+      publishedAt: immediate ? now : null,
+      createdAt: now,
+    };
+
+    await setDoc(newDocRef, data);
+    return { id: newDocRef.id, error: null };
+  } catch (error) {
+    console.error('Error creating announcement:', error);
+    const code = error?.code || '';
+    let message = '送信に 失敗しました';
+    if (code === 'permission-denied') {
+      message = 'Firestore の 書き込み権限がありません（お知らせ用ルールの デプロイが 必要かも）';
+    } else if (code === 'unavailable') {
+      message = 'ネットワークに つながっていません';
+    } else if (error?.message) {
+      message = error.message;
+    }
+    return { id: null, error: message };
+  }
+}
+
+export async function cancelAnnouncement(announcementId) {
+  if (!announcementId) return false;
+  try {
+    await updateDoc(doc(db, 'announcements', announcementId), {
+      status: 'cancelled',
+    });
+    return true;
+  } catch (error) {
+    console.error('Error cancelling announcement:', error);
+    return false;
+  }
+}
+
+export async function markAnnouncementReadForPlayer(playerId, announcementId, currentReadIds = []) {
+  if (!playerId || !announcementId) return false;
+  const readIds = [...new Set([...(currentReadIds || []), announcementId])];
+  try {
+    const docRef = doc(db, 'global_players', playerId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return false;
+    await setDoc(
+      docRef,
+      {
+        ...docSnap.data(),
+        readAnnouncementIds: readIds,
+        lastUpdatedAt: new Date().toISOString(),
+      },
+      { merge: true },
+    );
+    return readIds;
+  } catch (error) {
+    console.error('Error marking announcement read:', error);
+    return false;
+  }
+}

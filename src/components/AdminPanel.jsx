@@ -14,6 +14,7 @@ import {
   updateTypingReport,
 } from '../firebase';
 import { ADMIN_PASSWORD, suggestDifficultyKey } from '../utils/admin';
+import AdminAnnouncementsSection from './AdminAnnouncementsSection';
 import { formatDurationMs, getAveragePlayMs } from '../utils/playTime';
 import {
   buildMainWordKey,
@@ -858,6 +859,20 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
               </span>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              playDecideSound?.();
+              setAdminTab('announcements');
+            }}
+            className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all whitespace-nowrap ${
+              adminTab === 'announcements'
+                ? 'bg-violet-500 text-white shadow-md border-b-2 border-violet-700'
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-violet-50'
+            }`}
+          >
+            📢 お知らせ
+          </button>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
@@ -1247,6 +1262,10 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                 )}
               </div>
             </div>
+          )}
+
+          {adminTab === 'announcements' && (
+            <AdminAnnouncementsSection players={players} playDecideSound={playDecideSound} />
           )}
         </div>
 

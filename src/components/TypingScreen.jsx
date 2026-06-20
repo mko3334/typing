@@ -193,6 +193,8 @@ export default function TypingScreen({
   onOpenMusic,
   onOpenShop,
   onOpenZukan,
+  onOpenAnnouncements,
+  announcementUnread = false,
   playSE,
 }) {
   const playMetaRef = useRef({
@@ -632,6 +634,8 @@ export default function TypingScreen({
           onProfile={onOpenProfile}
           onMusic={onOpenMusic}
           onZukan={onOpenZukan}
+          onAnnouncements={onOpenAnnouncements}
+          announcementUnread={announcementUnread}
         />
         <main className="flex-1 flex flex-col items-center justify-center p-4">
           <div className="bg-white/95 border-4 border-yellow-300 rounded-3xl p-8 sm:p-10 text-center max-w-md shadow-2xl animate-fade-in">
@@ -678,6 +682,8 @@ export default function TypingScreen({
         onProfile={onOpenProfile}
         onMusic={onOpenMusic}
         onZukan={onOpenZukan}
+        onAnnouncements={onOpenAnnouncements}
+        announcementUnread={announcementUnread}
         onAssist={() => setIsAssistOpen(true)}
         assistActive={
           assistSettings.keyboardHighlight ||
