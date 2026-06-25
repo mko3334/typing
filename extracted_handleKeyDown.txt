@@ -1,0 +1,63 @@
+  const handleKeyDown = useCallback((e) => {
+    if (isSubEventModalOpen || isPlayerModalOpen || isAuthModalOpen || passwordChangePlayerId) return;
+    if (e.repeat) return;
+    if (isTransitioning || isAllClear || ticketReward) return;
+    if (!/^[a-zA-Z0-9\-\!\?\,\.]$/.test(e.key)) return;
+
+    const inputChar = e.key.toLowerCase();
+
+    if (nextValidChars.includes(inputChar)) {
+      const newTyped = typedChars + inputChar;
+      setTypedChars(newTyped);
+      playSE('type');
+
+      if (validRomajiList.some(r => r === newTyped)) {
+        setIsTransitioning(true);
+        
+        const isSpecialWord = currentWord?.isSpecial;
+
+        const proceedToNext = () => {
+          setTicketReward(null);
+          if (wordIndex + 1 >= gameWords.length) {
+            setIsAllClear(true);
+            spawnRandomSubEvents();
+
+            if (gameMode === 'classic') {
+              setGachaState('ready');
+              checkAchievements('clear');
+            } else {
+              let pts = 100;
+              if (difficulty === 'very_hard') pts = 1000;
+              else if (difficulty === 'hard') pts = 500;
+              else if (difficulty === 'normal') pts = 200;
+              else if (difficulty === 'alphabet_quiz') pts = 50;
+
+              if (difficulty !== 'easy' && difficulty !== 'alphabet_quiz') {
+                if (missCount === 0) {
+                  pts = pts * 2;
+                } else if (missCount <= 3) {
+                  pts = pts + 100;
+                }
+              }
+
+              // アシストを1つオフにするごとに+100pt（全モード共通）
+              if (!assistSettings.keyboardHighlight) pts += 100;
+              if (!assistSettings.showRomajiHint) pts += 100;
+              setEarnedPoints(pts);
+              // 3段階クリア演出開始
+              setClearStep(0);
+              setGachaState('point_reward');
+              // ステップ 1: テロップ
+              setTimeout(() => setClearStep(1), 900);
+              // ステップ 2: ポイント大表示＋実際に加算
+              setTimeout(() => {
+                setClearStep(2);
+                addPoints(pts);
+                checkAchievements('clear', { points: points + pts });
+                playSE('points');
+              }, 1800);
+            }
+          } else {
+            setWordIndex((prev) => prev + 1);
+            setTypedChars('');
+          }

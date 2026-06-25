@@ -59,9 +59,17 @@ export function getValidRomajiList(rally, eventId) {
   return [...new Set([...manual, ...auto])];
 }
 
-export const PLAZA_SUB_EVENT_TARGET = 3;
+export const PLAZA_SUB_EVENT_MAX = 3;
+export const PLAZA_SUB_EVENT_MIN = 1;
 
-export function spawnRandomSubEvents(solvedIds = [], existingActive = []) {
+export function getActivePlazaSubEvents(player) {
+  const solved = new Set(player?.solvedSubEventIds || []);
+  return (player?.plazaSubEvents || [])
+    .filter((entry) => !solved.has(entry.eventId))
+    .slice(0, PLAZA_SUB_EVENT_MAX);
+}
+
+export function spawnRandomSubEvents(solvedIds = [], existingActive = [], spawnCount = null) {
   const solved = new Set(solvedIds);
   const activeIds = new Set(existingActive.map((entry) => entry.eventId));
   const available = TYPING_SUB_EVENTS.filter(
@@ -70,7 +78,11 @@ export function spawnRandomSubEvents(solvedIds = [], existingActive = []) {
 
   if (available.length === 0) return [];
 
-  const slots = Math.min(available.length, PLAZA_SUB_EVENT_TARGET - existingActive.length);
+  const openSlots = Math.max(0, PLAZA_SUB_EVENT_MAX - existingActive.length);
+  const slots =
+    spawnCount !== null
+      ? Math.min(available.length, openSlots, spawnCount)
+      : Math.min(available.length, openSlots);
   if (slots <= 0) return [];
 
   const picked = shuffle(available).slice(0, slots);
@@ -84,8 +96,29 @@ export function spawnRandomSubEvents(solvedIds = [], existingActive = []) {
   }));
 }
 
+/** タイピングモードクリア時: 広場のサブクエストは同時に最大3件まで */
+export function spawnSubEventsAfterTypingClear(solvedIds = [], existingActive = []) {
+  const openSlots = Math.max(0, PLAZA_SUB_EVENT_MAX - existingActive.length);
+  if (openSlots <= 0) return [];
+
+  const desiredTotal =
+    PLAZA_SUB_EVENT_MIN + Math.floor(Math.random() * (PLAZA_SUB_EVENT_MAX - PLAZA_SUB_EVENT_MIN + 1));
+  const spawnCount = Math.min(openSlots, Math.max(0, desiredTotal - existingActive.length));
+  if (spawnCount <= 0) return [];
+
+  return spawnRandomSubEvents(solvedIds, existingActive, spawnCount);
+}
+
+export function appendSubEventsAfterTypingClear(player) {
+  const solvedIds = player?.solvedSubEventIds || [];
+  const active = getActivePlazaSubEvents(player);
+  const spawned = spawnSubEventsAfterTypingClear(solvedIds, active);
+  if (spawned.length === 0) return active;
+  return [...active, ...spawned].slice(0, PLAZA_SUB_EVENT_MAX);
+}
+
 export function calcSubEventReward() {
-  const points = 1000 + Math.floor(Math.random() * 2001);
+  const points = 500 + Math.floor(Math.random() * 501);
   const ticketRoll = Math.random();
 
   if (ticketRoll >= TICKET_DROP_RATE) {

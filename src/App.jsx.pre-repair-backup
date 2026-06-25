@@ -1,0 +1,6480 @@
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Sparkles, RefreshCcw, CheckCircle2, Keyboard, Star, Gift, Trophy, Settings, X, Upload, Music, Volume2, Book, User, Plus, Edit2, Cloud, CloudOff, Key, Trash2, Tag, Search } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import localforage from 'localforage';
+import { saveCloudData, loadCloudData, saveDeviceTransfer, loadDeviceTransfer, saveFullBackup, loadFullBackup, saveCloudPlayer, loadAllCloudPlayers, listenToAllCloudPlayers, deleteCloudPlayer, addWordRequest, getWordRequests, deleteWordRequest, addAdoptedWord, getAdoptedWords, deleteAdoptedWord } from './firebase';
+import { BACKGROUNDS, TITLES, GACHA_ITEMS, ROMAJI_TABLE, toHiragana, generateAllRomaji, WORDS, FINGER_MAP } from './constants';
+
+// 簡単なサウンドエフェクト (Web Audio API)
+let audioCtx = null;
+const initAudio = () => {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+};
+
+const playTone = (freq, type, duration, vol=0.1) => {
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (e) {
+    console.error("Audio error", e);
+  }
+};
+
+const playTypeSound = (vol=0.5) => { initAudio(); playTone(800, 'sine', 0.05, 0.1 * vol); };
+const playErrorSound = (vol=0.5) => { initAudio(); playTone(150, 'sawtooth', 0.2, 0.1 * vol); };
+const playWordClearSound = (vol=0.5) => {
+  initAudio();
+  playTone(523.25, 'sine', 0.1, 0.2 * vol);
+  setTimeout(() => playTone(659.25, 'sine', 0.2, 0.2 * vol), 100);
+  setTimeout(() => playTone(783.99, 'sine', 0.3, 0.2 * vol), 200);
+};
+const playAllClearSound = (vol=0.5) => {
+  initAudio();
+  playTone(523.25, 'triangle', 0.2, 0.3 * vol);
+  setTimeout(() => playTone(659.25, 'triangle', 0.2, 0.3 * vol), 200);
+  setTimeout(() => playTone(783.99, 'triangle', 0.2, 0.3 * vol), 400);
+  setTimeout(() => playTone(1046.50, 'triangle', 0.4, 0.3 * vol), 600);
+};
+const playGachaResultSound = (vol=0.5) => {
+  initAudio();
+  playTone(440, 'square', 0.1, 0.1 * vol);
+  setTimeout(() => playTone(554.37, 'square', 0.1, 0.1 * vol), 100);
+  setTimeout(() => playTone(659.25, 'square', 0.4, 0.1 * vol), 200);
+};
+
+const DEFAULT_SOUNDS = {
+  bgm:       '/sounds/BGM.mp3',
+  type:      '/sounds/入力.mp3',
+  error:     '/sounds/ミス.mp3',
+  wordClear: '/sounds/ワード正解.mp3',
+  allClear:  '/sounds/５問クリア時.mp3',
+  gacha:     '/sounds/ガチャ開封時.mp3',
+  points:    '/sounds/ポイント獲得時.mp3',
+  legend:    '/sounds/確定演出.mp3',
+};
+
+const playDefaultSE = (type, vol = 0.5) => {
+  const path = DEFAULT_SOUNDS[type];
+  if (!path) return;
+  const audio = new Audio(path);
+  audio.volume = vol;
+  audio.play().catch(() => {});
+};
+
+const playSE = (type, customAudio, volume) => {
+  if (customAudio && customAudio[type]) {
+    const audio = new Audio(customAudio[type]);
+    audio.volume = volume?.se ?? 0.5;
+    audio.play().catch(() => {});
+    return;
+  }
+  playDefaultSE(type, volume?.se ?? 0.5);
+};
+        if (updates.currentIcon !== undefined) nextP.currentIcon = updates.currentIcon;
+        if (updates.backgrounds !== undefined) nextP.backgrounds = updates.backgrounds;
+        if (updates.currentBackground !== undefined) nextP.currentBackground = updates.currentBackground;
+        if (updates.specialTickets !== undefined) nextP.specialTickets = updates.specialTickets;
+        if (updates.legendTickets !== undefined) nextP.legendTickets = updates.legendTickets;
+        if (updates.bgmTickets !== undefined) nextP.bgmTickets = updates.bgmTickets;
+        if (updates.seTickets !== undefined) nextP.seTickets = updates.seTickets;
+        if (updates.unlockedBgms !== undefined) nextP.unlockedBgms = updates.unlockedBgms;
+        if (updates.currentBgm !== undefined) nextP.currentBgm = updates.currentBgm;
+        if (updates.unlockedSes !== undefined) nextP.unlockedSes = updates.unlockedSes;
+        if (updates.currentSe !== undefined) nextP.currentSe = updates.currentSe;
+        if (updates.cloudId !== undefined) nextP.cloudId = updates.cloudId;
+        if (updates.playCount !== undefined) nextP.playCount = updates.playCount;
+        if (updates.specialWordTriggered !== undefined) nextP.specialWordTriggered = updates.specialWordTriggered;
+        if (updates.isArchived !== undefined) nextP.isArchived = updates.isArchived;
+        if (updates.recentPlays !== undefined) nextP.recentPlays = updates.recentPlays;
+        if (updates.totalPlayMs !== undefined) nextP.totalPlayMs = updates.totalPlayMs;
+        if (updates.sessionCount !== undefined) nextP.sessionCount = updates.sessionCount;
+        nextP.hasPassword = false;
+        nextP.isCloudSync = false;
+        return nextP;
+      }
+      return p;
+    });
+
+
+    setPlayers(updatedPlayers);
+
+    // 即時セーブを実行 (更新した対象の playerId を渡す)
+    await autoSaveToCloud(playerId);
+  };
+
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [clearStep, setClearStep] = useState(0); // 0:クリア! 1:テロップ 2:ポイント大表示
+
+  // プレイヤー管理用の状態
+  const [players, setPlayers] = useState([]);
+  const [currentPlayerId, setCurrentPlayerId] = useState(null);
+  const currentPlayer = players.find(p => p.id === currentPlayerId) || null;
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // セーブ中フラグ
+  const [cloudPlayers, setCloudPlayers] = useState({}); // 他端末プレイヤー監視用データ
+
+  // ワードリクエスト用の状態
+  const [playerModalTab, setPlayerModalTab] = useState('players'); // 'players' | 'requests'
+  const [wordRequests, setWordRequests] = useState([]); // 取得したワードリクエスト配列
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false); // リクエストモーダル開閉
+  const [requestKana, setRequestKana] = useState(''); // リクエスト入力のかな
+  const [requestRomaji, setRequestRomaji] = useState(''); // リクエスト入力のローマ字
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    });
+  }, []);
+
+  const updateAndSavePlayerData = async (playerId, updates) => {
+    if (!playerId) return;
+    const currentData = await localforage.getItem('player_data_' + playerId) || {};
+    const nowIso = new Date().toISOString();
+    const newData = { ...currentData, ...updates, lastUpdatedAt: nowIso };
+
+
+    let nextPlayersState = null;
+    setPlayers((prev) => {
+      const updated = prev.map((p) => {
+        if (p.id === playerId) {
+          const nextP = { ...p };
+          if (updates.points !== undefined) nextP.points = updates.points;
+          if (updates.collection !== undefined) {
+            nextP.collectionCount = Object.keys(updates.collection).length;
+            nextP.collection = updates.collection;
+          }
+          if (updates.newItems !== undefined) {
+            nextP.newItems = updates.newItems;
+          }
+          if (updates.achievements !== undefined) nextP.achievements = updates.achievements;
+          if (updates.currentTitle !== undefined) nextP.currentTitle = updates.currentTitle;
+          if (updates.currentIcon !== undefined) nextP.currentIcon = updates.currentIcon;
+          if (updates.backgrounds !== undefined) nextP.backgrounds = updates.backgrounds;
+          if (updates.currentBackground !== undefined) nextP.currentBackground = updates.currentBackground;
+          if (updates.specialTickets !== undefined) nextP.specialTickets = updates.specialTickets;
+          if (updates.legendTickets !== undefined) nextP.legendTickets = updates.legendTickets;
+          if (updates.bgmTickets !== undefined) nextP.bgmTickets = updates.bgmTickets;
+          if (updates.seTickets !== undefined) nextP.seTickets = updates.seTickets;
+          if (updates.unlockedBgms !== undefined) nextP.unlockedBgms = updates.unlockedBgms;
+          if (updates.currentBgm !== undefined) nextP.currentBgm = updates.currentBgm;
+          if (updates.unlockedSes !== undefined) nextP.unlockedSes = updates.unlockedSes;
+          if (updates.currentSe !== undefined) nextP.currentSe = updates.currentSe;
+          if (updates.cloudId !== undefined) nextP.cloudId = updates.cloudId;
+          if (updates.playCount !== undefined) nextP.playCount = updates.playCount;
+          if (updates.specialWordTriggered !== undefined) nextP.specialWordTriggered = updates.specialWordTriggered;
+          if (updates.isArchived !== undefined) nextP.isArchived = updates.isArchived;
+          if (updates.recentPlays !== undefined) nextP.recentPlays = updates.recentPlays;
+          if (updates.totalPlayMs !== undefined) nextP.totalPlayMs = updates.totalPlayMs;
+          if (updates.sessionCount !== undefined) nextP.sessionCount = updates.sessionCount;
+          if (updates.mallLayout !== undefined) nextP.mallLayout = updates.mallLayout;
+          if (updates.unlockedShops !== undefined) nextP.unlockedShops = updates.unlockedShops;
+          
+          nextP.isCloudSync = updates.isCloudSync !== undefined ? updates.isCloudSync : false;
+          nextP.hasPassword = false;
+          return nextP;
+        }
+        return p;
+      });
+      nextPlayersState = updated;
+      return updated;
+    });
+
+    // React ステート更新完了の値をローカルストレージへ同期
+    if (nextPlayersState) {
+
+    } else {
+      const pList = await localforage.getItem('players') || [];
+      const updatedList = pList.map(p => {
+        if (p.id === playerId) {
+          return {
+            ...p,
+            isCloudSync: updates.isCloudSync !== undefined ? updates.isCloudSync : false,
+            isArchived: updates.isArchived !== undefined ? updates.isArchived : (p.isArchived || false)
+          };
+        }
+        return p;
+      });
+
+    }
+
+    // 即時セーブを実行 (更新した対象の playerId を渡す)
+    await autoSaveToCloud(playerId);
+  };
+
+  // 未受け取りプレゼントのチェック
+  const checkPendingGifts = async (playerId) => {
+    if (!playerId) return;
+    try {
+      const pData = await localforage.getItem('player_data_' + playerId);
+      if (pData && Array.isArray(pData.pendingGifts) && pData.pendingGifts.length > 0) {
+        setActiveGift(pData.pendingGifts[0]);
+        setIsGiftRewardModalOpen(true);
+      }
+    } catch (e) {
+      console.error("checkPendingGifts failed", e);
+    }
+  };
+
+  // プレゼント受け取り処理（ポイント、チケットの加算）
+  const handleAcceptGift = async () => {
+    if (!currentPlayerId || !activeGift) return;
+    playGlobalDecideSound();
+          };
+    const pData = await localforage.getItem('player_data_' + currentPlayerId);
+    if (pData) {
+      const newPoints = (pData.points || 0) + (activeGift.points || 0);
+      const newSpecial = (pData.specialTickets || 0) + (activeGift.specialTickets || 0);
+      const newBgm = (pData.bgmTickets || 0) + (activeGift.bgmTickets || 0);
+      const newSe = (pData.seTickets || 0) + (activeGift.seTickets || 0);
+      const newLegend = (pData.legendTickets || 0) + (activeGift.legendTickets || 0);
+        setIsGiftRewardModalOpen(true);
+      // 加算したギフトを配列から削除
+      const remainingGifts = Array.isArray(pData.pendingGifts)
+        ? pData.pendingGifts.filter(g => g.id !== activeGift.id)
+        : [];
+  };
+      const updates = {
+        points: newPoints,
+        specialTickets: newSpecial,
+        bgmTickets: newBgm,
+        seTickets: newSe,
+        legendTickets: newLegend,
+        pendingGifts: remainingGifts
+      };
+      const newPoints = (pData.points || 0) + (activeGift.points || 0);
+      // ローカル＆クラウドへ即時保存
+      await updateAndSavePlayerData(currentPlayerId, updates);
+      const newSe = (pData.seTickets || 0) + (activeGift.seTickets || 0);
+      if (remainingGifts.length > 0) {
+        // 次のプレゼントを表示
+        setActiveGift(remainingGifts[0]);
+      } else {
+        // すべて受け取り完了
+        setActiveGift(null);
+        setIsGiftRewardModalOpen(false);
+      }
+    }
+  };
+        bgmTickets: newBgm,
+  // 管理者からのプレゼント送信処理
+        legendTickets: newLegend,
+        pendingGifts: remainingGifts
+      };
+    setIsSaving(true);
+      // ローカル＆クラウドへ即時保存
+      await updateAndSavePlayerData(currentPlayerId, updates);
+      const targetPlayerId = presentTargetPlayer.id;
+      if (remainingGifts.length > 0) {
+        // 次のプレゼントを表示
+        setActiveGift(remainingGifts[0]);
+      } else {
+        // すべて受け取り完了
+        setActiveGift(null);
+        setIsGiftRewardModalOpen(false);
+      }
+    }
+  };
+          bgmTickets: Number(giftBgmTickets) || 0,
+  // 管理者からのプレゼント送信処理
+  const handleSendGift = async () => {
+    if (!presentTargetPlayer) return;
+    playGlobalDecideSound();
+    setIsSaving(true);
+
+        setActiveGift(remainingGifts[0]);
+      } else {
+        // すべて受け取り完了
+        setActiveGift(null);
+        setIsGiftRewardModalOpen(false);
+      }
+    }
+  };
+
+  // 管理者からのプレゼント送信処理
+  const handleSendGift = async () => {
+    if (!presentTargetPlayer) return;
+    playGlobalDecideSound();
+    setIsSaving(true);
+        setGiftBgmTickets(0);
+    try {
+      const targetPlayerId = presentTargetPlayer.id;
+      const giftData = {
+        points: Number(giftPoints) || 0,
+        specialTickets: Number(giftSpecialTickets) || 0,
+        bgmTickets: Number(giftBgmTickets) || 0,
+        seTickets: Number(giftSeTickets) || 0,
+        legendTickets: Number(giftLegendTickets) || 0,
+        message: giftMessage.trim()
+      };
+      setIsSaving(false);
+      const success = await sendGiftToCloudPlayer(targetPlayerId, giftData);
+
+      if (success) {
+        alert(`🎁 ${presentTargetPlayer.name} さんにプレゼントをおくりました！`);
+        setIsPresentModalOpen(false);
+        // 入力値リセット
+        setGiftPoints(0);
+        setGiftSpecialTickets(0);
+        setGiftBgmTickets(0);
+        setGiftSeTickets(0);
+        setGiftLegendTickets(0);
+        setGiftMessage('');
+      } else {
+        alert("エラー: プレゼントの送信に失敗しました。クラウドデータが見つからないか、通信エラーが発生しました。");
+      }
+    } catch (error) {
+      console.error("Failed to send gift:", error);
+      alert("プレゼントの送信に失敗しました。");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const autoSaveTimeoutRef = useRef(null);
+  const sessionStartRef = useRef(null); // プレイセッション開始時刻の追跡用
+
+  const autoSaveToCloud = async (targetPlayerId = currentPlayerId) => {
+    if (!targetPlayerId) return;
+    setIsSaving(true);
+    try {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 管理者によるプレゼント送信の取り消し
+  const handleCancelGift = async (playerId, giftId) => {
+    if (!confirm("このプレゼントの送信を取り消しますか？")) return;
+    playGlobalDecideSound();
+    setIsSaving(true);
+      let pData = await localforage.getItem('player_data_' + p.id);
+    try {
+      // 1. ローカルデータの更新
+      const localData = await localforage.getItem('player_data_' + playerId) || {};
+      const localPendingGifts = Array.isArray(localData.pendingGifts) ? localData.pendingGifts : [];
+      const updatedGifts = localPendingGifts.filter(g => g.id !== giftId);
+          achievements: ['rookie'],
+          currentTitle: 'rookie',
+        ...localData,
+        pendingGifts: updatedGifts
+      });
+    } else {
+      // 2. players ステートの更新
+      setPlayers(prev => prev.map(p => {
+        if (p.id === playerId) {
+          return {
+            ...p,
+            pendingGifts: updatedGifts
+          };
+        }
+        return p;
+      }));
+      setNewItems(data.newItems || []);
+      // 3. クラウドデータの更新
+      const cloudData = await loadSingleCloudPlayer(playerId);
+      if (cloudData) {
+        const cloudPendingGifts = Array.isArray(cloudData.pendingGifts) ? cloudData.pendingGifts : [];
+        const nextCloudGifts = cloudPendingGifts.filter(g => g.id !== giftId);
+        
+        await saveCloudPlayer(playerId, {
+          ...cloudData,
+          pendingGifts: nextCloudGifts
+        });
+      }
+      setCurrentBgm(data.currentBgm || 'default');
+      alert("プレゼントの送信を取り消しました。");
+    } catch (error) {
+      console.error("Failed to cancel gift:", error);
+      alert("プレゼントの取り消しに失敗しました。");
+    } finally {
+      setIsSaving(false);
+      setSpecialWordTriggered(data.specialWordTriggered !== undefined ? data.specialWordTriggered : false);
+      setMallLayout(data.mallLayout || {});
+      setUnlockedShops(data.unlockedShops || ['shop_pizza', 'shop_sushi', 'shop_burger', 'shop_fashion']);
+
+      // サブイベントの復元
+      const activeEvts = await localforage.getItem('activeEvents');
+      if (activeEvts) {
+        setActiveEvents(activeEvts);
+      } else {
+        await spawnRandomSubEvents(data.solvedSubEventIds || []);
+      }
+
+      // 採用通知の検知
+      if (data.unreadAdoptions && data.unreadAdoptions.length > 0) {
+        setAdoptionNotification(data.unreadAdoptions);
+      }
+    }
+  };
+
+  const loadSettings = async () => {
+    const savedAudio = await localforage.getItem('customAudio');
+    if (savedAudio) setCustomAudio(savedAudio);
+    const savedVolume = await localforage.getItem('volume');
+    if (savedVolume) setVolume(savedVolume);
+
+    let loadedPlayers = await localforage.getItem('players');
+    let loadedCurrentPlayerId = await localforage.getItem('currentPlayerId');
+    const loadedTagMaster = await localforage.getItem('tagMaster') || [];
+    setTagMaster(loadedTagMaster);
+
+    if (!loadedPlayers || loadedPlayers.length === 0) {
+      // マイグレーション (既存データの引き継ぎ)
+      const oldPoints = await localforage.getItem('points');
+      const oldCollection = await localforage.getItem('collection');
+      const oldGameMode = await localforage.getItem('gameMode');
+      const oldDifficulty = await localforage.getItem('difficulty');
+      const oldAssist = await localforage.getItem('assistSettings');
+
+      const initialPlayer = {
+        id: 'player_' + Date.now(),
+        name: 'プレイヤー1',
+        isCloudSync: false
+      };
+
+      loadedPlayers = [initialPlayer];
+      loadedCurrentPlayerId = initialPlayer.id;
+
+      const pData = {
+        points: oldPoints !== null ? oldPoints : 0,
+        collection: oldCollection || {},
+        newItems: [],
+        achievements: ['rookie'],
+        currentTitle: 'rookie',
+        backgrounds: ['default'],
+        currentBackground: 'default',
+        specialTickets: 0,
+      solvedSubEventIds: [],
+        solvedSubEventIds: [],
+        legendTickets: 0,
+        bgmTickets: 0,
+        seTickets: 0,
+        unlockedBgms: ['default'],
+        currentBgm: 'default',
+        unlockedSes: ['default'],
+        currentSe: 'default',
+        gameMode: oldGameMode || 'classic',
+        difficulty: oldDifficulty || 'easy',
+        assistSettings: oldAssist || { keyboardHighlight: true, letterCase: 'lower', showRomajiHint: true, showFingerGuide: true },
+        cloudId: null,
+        isCloudSync: false
+      };
+
+      if (Array.isArray(pData.collection)) {
+        const counts = {};
+        pData.collection.forEach(item => {
+          counts[item.name] = (counts[item.name] || 0) + 1;
+        });
+        pData.collection = counts;
+      }
+
+
+
+
+    }
+
+    const enrichedPlayers = await Promise.all(loadedPlayers.map(async p => {
+      let pData = await localforage.getItem('player_data_' + p.id);
+      if (!pData) {
+        pData = {
+          points: 0,
+          collection: {},
+          newItems: [],
+          achievements: ['rookie'],
+          currentTitle: 'rookie',
+          backgrounds: ['default'],
+          currentBackground: 'default',
+          specialTickets: 0,
+          solvedSubEventIds: [],
+      solvedSubEventIds: [],
+        solvedSubEventIds: [],
+          legendTickets: 0,
+          bgmTickets: 0,
+          seTickets: 0,
+          unlockedBgms: ['default'],
+          currentBgm: 'default',
+          unlockedSes: ['default'],
+          currentSe: 'default',
+          gameMode: 'points',
+          difficulty: 'easy',
+          assistSettings: { keyboardHighlight: true, letterCase: 'lower', showRomajiHint: true, showFingerGuide: true },
+          cloudId: null,
+          isCloudSync: false
+        };
+
+      }
+
+      return {
+        ...p,
+        points: pData ? (pData.points || 0) : 0,
+        collectionCount: pData && pData.collection ? Object.keys(pData.collection).length : 0,
+        collection: pData ? (pData.collection || {}) : {},
+        newItems: pData ? (pData.newItems || []) : [],
+        achievements: pData && Array.isArray(pData.achievements) ? pData.achievements : ['rookie'],
+        currentTitle: pData ? (pData.currentTitle || 'rookie') : 'rookie',
+        currentIcon: pData ? (pData.currentIcon || null) : null,
+        backgrounds: pData && Array.isArray(pData.backgrounds) ? pData.backgrounds : ['default'],
+        currentBackground: pData ? (pData.currentBackground || 'default') : 'default',
+        specialTickets: pData && typeof pData.specialTickets === 'number' ? pData.specialTickets : 0,
+        legendTickets: pData && typeof pData.legendTickets === 'number' ? pData.legendTickets : 0,
+        bgmTickets: pData && typeof pData.bgmTickets === 'number' ? pData.bgmTickets : 0,
+        seTickets: pData && typeof pData.seTickets === 'number' ? pData.seTickets : 0,
+        unlockedBgms: pData && Array.isArray(pData.unlockedBgms) ? pData.unlockedBgms : ['default'],
+        currentBgm: pData ? (pData.currentBgm || 'default') : 'default',
+        unlockedSes: pData && Array.isArray(pData.unlockedSes) ? pData.unlockedSes : ['default'],
+        currentSe: pData ? (pData.currentSe || 'default') : 'default',
+        cloudId: pData ? (pData.cloudId || null) : null,
+        isCloudSync: pData ? (pData.isCloudSync || false) : false,
+        tags: pData && Array.isArray(pData.tags) ? pData.tags : [],
+        hasSeenTutorial: pData && pData.hasSeenTutorial !== undefined ? pData.hasSeenTutorial : true,
+        hasPassword: false,
+        totalPlayMs: pData && typeof pData.totalPlayMs === 'number' ? pData.totalPlayMs : 0,
+        sessionCount: pData && typeof pData.sessionCount === 'number' ? pData.sessionCount : 0,
+        isArchived: p.isArchived || (pData && pData.isArchived) || false,
+        recentPlays: pData && Array.isArray(pData.recentPlays) ? pData.recentPlays : [],
+        mallLayout: pData ? (pData.mallLayout || {}) : {},
+        unlockedShops: pData && Array.isArray(pData.unlockedShops) ? pData.unlockedShops : ['shop_pizza', 'shop_sushi', 'shop_burger', 'shop_fashion'],
+        pendingGifts: pData && Array.isArray(pData.pendingGifts) ? pData.pendingGifts : []
+      };
+    }));
+
+    setPlayers(enrichedPlayers);
+    setCurrentPlayerId(loadedCurrentPlayerId);
+    await loadPlayerData(loadedCurrentPlayerId);
+    if (loadedCurrentPlayerId) {
+      await checkPendingGifts(loadedCurrentPlayerId);
+    }
+  };
+
+  const loadAdoptedWords = async () => {
+    const list = await getAdoptedWords();
+    setAdoptedWords(list);
+  };
+
+  const handleAdoptWord = async (request, finalDifficulty) => {
+    if (!request) return;
+    
+    // 1. 採用されたワードを adopted_words コレクションに保存
+    const adoptedData = {
+      kana: request.kana,
+      romaji: request.romaji,
+            
+            const isExistInCloud = cloudPlayersMap[p.id] !== undefined || 
+                                   Object.values(cloudPlayersMap).some(cp => cp.name === p.name);
+
+            if (!p.isCloudSync || !isExistInCloud) {
+              const pData = await localforage.getItem('player_data_' + p.id);
+              if (pData) {
+                const success = await saveCloudPlayer(p.id, { 
+                  ...pData, 
+                  name: p.name, 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    } else {
+      setSubEventChoices([]);
+      setSubEventSelected(false);
+    }
+  }, [isSubEventModalOpen, activeSubEvent, currentRallyIndex]);
+
+
+
+  useEffect(() => {
+    if (isPasswordAuthenticated) {
+      const syncCloudData = async () => {
+        setIsSyncing(true);
+        try {
+          const cloudPlayersMap = await loadAllCloudPlayers();
+          let currentPlayers = await localforage.getItem('players') || [];
+          let playersChanged = false;
+
+          // アップロード済みプレイヤーIDのセット（ループ2でのクラウドデータ上書きを防ぐ）
+          const uploadedPlayerIds = new Set();
+
+          // 1. ローカルにあってクラウドにない、または未同期データをクラウドに反映
+          for (let i = 0; i < currentPlayers.length; i++) {
+            const p = currentPlayers[i];
+            
+            const isExistInCloud = cloudPlayersMap[p.id] !== undefined || 
+                                   Object.values(cloudPlayersMap).some(cp => cp.name === p.name);
+
+            if (!p.isCloudSync || !isExistInCloud) {
+              const pData = await localforage.getItem('player_data_' + p.id);
+              if (pData) {
+                const success = await saveCloudPlayer(p.id, { 
+                  ...pData, 
+                  name: p.name, 
+                  isCloudSync: true,
+                  isArchived: p.isArchived || false
+                });
+                if (success) {
+                  currentPlayers[i].isCloudSync = true;
+
+                  playersChanged = true;
+                  // アップロード成功したプレイヤーをマーク（ループ2での上書きを防ぐ）
+                  uploadedPlayerIds.add(p.id);
+                  // cloudPlayersMapも最新データで更新（ループ2での参照に対応）
+                  cloudPlayersMap[p.id] = { ...pData, name: p.name, isCloudSync: true, isArchived: p.isArchived || false };
+                }
+              }
+            }
+          }
+
+          // 2. クラウドにあってローカルにないデータをローカルに反映
+          //    （ループ1でアップロード済みのプレイヤーはスキップ）
+          for (const [docId, data] of Object.entries(cloudPlayersMap)) {
+            if (!data || !data.name) continue;
+            const playerName = data.name;
+            const existingPlayerIndex = currentPlayers.findIndex(p => p.name === playerName);
+            let playerId;
+            
+            if (existingPlayerIndex >= 0) {
+              playerId = currentPlayers[existingPlayerIndex].id;
+              // ループ1でアップロード済みのプレイヤーはクラウドデータで上書きしない
+              if (uploadedPlayerIds.has(playerId)) continue;
+              
+              const localData = await localforage.getItem('player_data_' + playerId) || {};
+              const localTime = localData.lastUpdatedAt ? new Date(localData.lastUpdatedAt).getTime() : 0;
+              const cloudTime = data.lastUpdatedAt ? new Date(data.lastUpdatedAt).getTime() : 0;
+
+              // クラウドのデータの方が新しい場合のみローカルを上書きする
+              // もしくは、クラウド側に新しい pendingGifts（未受け取りプレゼント）が存在する場合もローカルを更新する
+              const hasNewGifts = Array.isArray(data.pendingGifts) && 
+                (!Array.isArray(localData.pendingGifts) || 
+                 data.pendingGifts.length > localData.pendingGifts.length ||
+                 JSON.stringify(data.pendingGifts) !== JSON.stringify(localData.pendingGifts));
+
+              if (cloudTime > localTime || !currentPlayers[existingPlayerIndex].isCloudSync || hasNewGifts) {
+                // ローカルの方がゲーム進行が新しい場合は、進行状況はローカルを優先し、プレゼント情報のみクラウドのデータをマージする
+                let mergedData = { ...data, isCloudSync: true };
+                if (hasNewGifts && cloudTime <= localTime) {
+                  mergedData = {
+                    ...localData,
+                    pendingGifts: data.pendingGifts,
+                    isCloudSync: true
+                  };
+                }
+
+                
+                const localArchived = !!currentPlayers[existingPlayerIndex].isArchived;
+                const cloudArchived = !!data.isArchived;
+                if (localArchived !== cloudArchived || !currentPlayers[existingPlayerIndex].isCloudSync) {
+                  currentPlayers[existingPlayerIndex].isCloudSync = true;
+                  currentPlayers[existingPlayerIndex].isArchived = cloudArchived;
+                  playersChanged = true;
+                }
+              } else {
+                // ローカルの方が新しい、または同じ場合は上書きせず、isCloudSync を false にしてクラウドへのアップロード待ちにする
+                if (currentPlayers[existingPlayerIndex].isCloudSync) {
+                  currentPlayers[existingPlayerIndex].isCloudSync = false;
+                  playersChanged = true;
+                }
+              }
+            } else {
+              // クラウド側で既にアーカイブされているプレイヤーはローカルに新規追加しない
+              if (data.isArchived) continue;
+              playerId = docId.startsWith('player_') ? docId : 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+              currentPlayers.push({ id: playerId, name: playerName, isCloudSync: true, isArchived: false });
+              playersChanged = true;
+              
+              // 新規のプレイヤーデータなのでローカルに保存
+
+            }
+          }
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      }
+    };
+    sendHeartbeat();
+
+    const interval = setInterval(sendHeartbeat, 15000);
+    return () => clearInterval(interval);
+  }, [currentPlayerId, players]);
+
+  const doSelectPlayer = async (playerId) => {
+    sessionStartRef.current = Date.now(); // セッション開始時刻を記録
+          await saveCloudPlayer(currentPlayerId, {
+            ...pData,
+            name: cp.name,
+            isPlaying: true,
+            lastActiveTime: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.error("Heartbeat send failed:", e);
+      }
+    };
+    sendHeartbeat();
+      initAudio();
+    const interval = setInterval(sendHeartbeat, 15000);
+    return () => clearInterval(interval);
+  }, [currentPlayerId, players]);
+  };
+  const doSelectPlayer = async (playerId) => {
+    sessionStartRef.current = Date.now(); // セッション開始時刻を記録
+    setIsSaving(true);
+    await doSelectPlayer(playerId);
+    try {
+      // ログイン前にクラウドから最新のプレイヤーデータを単一取得し、プレゼント情報を同期
+      const cloudData = await loadSingleCloudPlayer(playerId);
+      if (cloudData) {
+        const localData = await localforage.getItem('player_data_' + playerId) || {};
+        const hasNewGifts = Array.isArray(cloudData.pendingGifts) && 
+          (!Array.isArray(localData.pendingGifts) || 
+           cloudData.pendingGifts.length > localData.pendingGifts.length ||
+           JSON.stringify(cloudData.pendingGifts) !== JSON.stringify(localData.pendingGifts));
+      hasSeenTutorial: false,
+        if (hasNewGifts) {
+          const mergedData = {
+            ...localData,
+            pendingGifts: cloudData.pendingGifts
+          };
+
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync player data on login:", e);
+    } finally {
+      setIsSaving(false);
+    }
+
+    setCurrentPlayerId(playerId);
+
+    await loadPlayerData(playerId);
+    
+    // ログイン状態をローカルおよびクラウドにセーブ
+    await updateAndSavePlayerData(playerId, { 
+      isPlaying: true, 
+      lastActiveTime: new Date().toISOString() 
+    });
+
+    setIsPlayerModalOpen(false);
+    if (appScreen === 'title') {
+      initAudio();
+      setAppScreen('home');
+    }
+    await checkPendingGifts(playerId);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+  }, [isPlayerModalOpen, playerModalTab, loadWordRequests]);
+
+  // かな入力時にローマ字を自動生成する
+  const handleRequestKanaChange = (val) => {
+    setRequestKana(val);
+    if (val.trim()) {
+      const list = generateAllRomaji(val);
+      if (list && list.length > 0) {
+        setRequestRomaji(list.join(' / '));
+      } else {
+        setRequestRomaji('');
+      }
+    } else {
+      setRequestRomaji('');
+    }
+  };
+
+  // リクエストをFirestoreに送信する
+  const handleSendRequest = async (e) => {
+    e.preventDefault();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // --- ワードリクエストの処理 ---
+
+  // リクエスト一覧をロード
+  const loadWordRequests = useCallback(async () => {
+    const data = await getWordRequests();
+    setWordRequests(data);
+  }, []);
+
+  // タブがリクエストに切り替わったときにロードする
+  useEffect(() => {
+    if (isPlayerModalOpen && playerModalTab === 'requests') {
+      loadWordRequests();
+    }
+  }, [isPlayerModalOpen, playerModalTab, loadWordRequests]);
+
+  // かな入力時にローマ字を自動生成する
+  const handleRequestKanaChange = (val) => {
+    setRequestKana(val);
+    if (val.trim()) {
+      const list = generateAllRomaji(val);
+      if (list && list.length > 0) {
+        setRequestRomaji(list.join(' / '));
+      } else {
+        setRequestRomaji('');
+      }
+    } else {
+      setRequestRomaji('');
+    }
+  };
+
+  // リクエストをFirestoreに送信する
+  const handleSendRequest = async (e) => {
+    e.preventDefault();
+    if (!requestKana.trim() || !requestRomaji.trim()) {
+      alert('「かな」と「ローマ字」は必ずいれてね！');
+      return;
+    }
+    setRequestSending(true);
+    const success = await addWordRequest({
+      kana: requestKana.trim(),
+      romaji: requestRomaji.split('/').map(r => r.trim()).filter(Boolean),
+      emoji: '',
+      playerName: currentPlayer?.name || 'ゲスト',
+      playerId: currentPlayer?.id || null
+    });
+    setRequestSending(false);
+    setTimeout(() => {
+      if (success) {
+        alert('リクエストをおくったよ！ありがとう！');
+        setRequestKana('');
+        setRequestRomaji('');
+            ゲームをはじめるにはパスワードがひつようです
+          </p>
+
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (inputPassword === '0001') {
+              setIsPasswordAuthenticated(true);
+            } else {
+              alert('パスワードがちがうよ！');
+  const activeBg = BACKGROUNDS.find(bg => bg.id === currentBackground) || BACKGROUNDS[0];
+
+  if (!isPasswordAuthenticated) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-sky-100 p-4 relative overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+          <Cloud className="w-96 h-96 text-sky-500 animate-pulse" />
+        </div>
+        
+        <div className="bg-white/90 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl border-4 border-sky-300 w-full max-w-md z-10 text-center animate-scale-in">
+          <div className="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border-2 border-sky-200">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+  // 現在の背景テーマ
+  const activeBg = BACKGROUNDS.find(bg => bg.id === currentBackground) || BACKGROUNDS[0];
+
+  if (!isPasswordAuthenticated) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-sky-100 p-4 relative overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+          <Cloud className="w-96 h-96 text-sky-500 animate-pulse" />
+      return;
+    }
+    
+    const updates = {};
+    if (usePoints) {
+      const nextPoints = points - 5000;
+      setPoints(nextPoints);
+      updates.points = nextPoints;
+    } else {
+      const nextTickets = seTickets - 1;
+      setSeTickets(nextTickets);
+      updates.seTickets = nextTickets;
+    }
+    
+    setGachaState('se_spinning');
+    setTimeout(() => {
+      const selectedSe = unobtained[Math.floor(Math.random() * unobtained.length)];
+      const nextSes = [...unlockedSes, selectedSe.id];
+      
+      setUnlockedSes(nextSes);
+      setCurrentReward(selectedSe);
+      setGachaState('se_result');
+      
+      updates.unlockedSes = nextSes;
+      updateAndSavePlayerData(currentPlayerId, updates);
+      
+      playSE('gacha');
+      triggerConfetti();
+    }, 1500);
+  };
+
+  const handleSpinBgmGacha = (usePoints = false) => {
+    if (usePoints) {
+      if (points < 5000) return;
+    } else {
+      if (bgmTickets < 1) return;
+    }
+    
+    const unobtained = BGM_LIST.filter(b => !unlockedBgms.includes(b.id));
+    if (unobtained.length === 0) {
+      alert("すべての おんがく を てにいれたよ！");
+      return;
+    }
+    
+    const updates = {};
+    if (usePoints) {
+      const nextPoints = points - 5000;
+      setPoints(nextPoints);
+      updates.points = nextPoints;
+    } else {
+      const nextTickets = bgmTickets - 1;
+      setBgmTickets(nextTickets);
+      updates.bgmTickets = nextTickets;
+    }
+    
+    setGachaState('bgm_spinning');
+    setTimeout(() => {
+      const selectedBgm = unobtained[Math.floor(Math.random() * unobtained.length)];
+      const nextBgms = [...unlockedBgms, selectedBgm.id];
+      
+      setUnlockedBgms(nextBgms);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <span>ずかん</span>
+              {newItems.length > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white animate-pulse" />
+              )}
+            </button>
+
+            {/* おんがく */}
+            <button 
+              onClick={() => { playGlobalDecideSound(); setIsMusicShopOpen(true); }} 
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-emerald-200 text-emerald-500 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[9px] sm:text-[10px] font-black gap-1 active:scale-95 transition-transform"
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="h-screen flex w-full relative bg-cover bg-center transition-all duration-1000 overflow-hidden"
+      style={{ backgroundImage: `url(${activeBg.url})` }}
+    >
+
+      {/* 左側縦型メニューサイドバー（タイトル画面では非表示） */}
+      {appScreen !== 'title' && (
+        <aside className="w-20 sm:w-24 bg-white/95 backdrop-blur-md border-r-4 border-yellow-300 flex flex-col items-center py-4 px-1 gap-4 shrink-0 shadow-2xl z-30 overflow-y-auto pointer-events-auto">
+          {/* プレイヤー情報（名前・ポイント・チケット） */}
+          <div className="w-full flex flex-col items-center gap-2">
+            {/* プレイヤー名 */}
+            <div className="bg-sky-500 text-white w-full py-1 text-center font-black text-[10px] sm:text-xs rounded-lg shadow-sm truncate px-1">
+              {players.find(p => p.id === currentPlayerId)?.name || 'ゲスト'}
+            </div>
+
+            {/* ポイント表示 */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+      ) : (
+        <main className="w-full max-w-4xl md:max-w-5xl lg:max-w-6xl flex-1 flex flex-col items-center justify-center min-h-0">
+        
+        {isAllClear ? (
+          <div 
+            className={`w-full flex flex-col items-center justify-center animate-fade-in transition-all duration-500 ${
+              gachaState === 'shop' 
+                ? 'p-4 sm:p-6 rounded-3xl border-4 border-amber-300 max-w-4xl md:max-w-5xl shadow-2xl relative min-h-[500px] max-h-[85vh] overflow-y-auto'
+                : 'glass-card p-8 text-center max-w-3xl shadow-xl rounded-3xl overflow-hidden'
+            }`}
+            style={gachaState === 'shop' ? { backgroundImage: 'url(/shop_bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+          >
+            
+            {gachaState === 'ready' && (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            )}
+
+            {gachaState === 'se_spinning' && (
+              <div className="flex flex-col items-center">
+                <div className="text-8xl animate-spin-shake drop-shadow-2xl">🔊</div>
+                <p className="text-xl sm:text-2xl font-black text-cyan-500 mt-8 animate-pulse">どんな 効果音 が でるかな...？</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* タイピング画面 - コンパクト化 */
+          <>
+            {currentWord?.isSpecial && !isTransitioning && (
+              <>
+                <div className="fixed inset-0 pointer-events-none z-50 animate-thunder-flash mix-blend-screen"></div>
+                <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 animate-thunder-strike">
+                  <div className="text-[150px] drop-shadow-2xl opacity-90">⚡</div>
+                </div>
+              </>
+            )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        >
+                          <span className="text-base sm:text-lg font-black">{displayKey}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* プレイヤー管理モーダル */}
+      {isPlayerModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-55 flex items-center justify-center p-4 animate-fade-in">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-card bg-white/80 backdrop-blur-md w-full max-w-sm p-6 max-h-[90vh] overflow-y-auto rounded-3xl border-4 border-orange-300 shadow-2xl relative">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl sm:text-2xl font-black text-orange-600 flex items-center gap-2">
+                <span>📮</span>
+                ワードリクエスト
+              </h2>
+              <button onClick={() => { playGlobalCancelSound(); setIsRequestModalOpen(false); }} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <p className="text-xs font-bold text-gray-500 mb-4 leading-relaxed">
+              追加してほしいタイピングの言葉を教えてね！<br/>
+              リクエストされた言葉は、管理者がチェックしてゲームに追加するよ。
+            </p>
+
+            <form onSubmit={handleSendRequest} className="space-y-4">
+              <div>
+                <label className="block text-xs font-black text-gray-700 mb-1">追加したい言葉 (かな) <span className="text-red-500 font-bold">*必須</span></label>
+                <input
+                  type="text"
+                  placeholder="ひらがなでいれてね (例: おとうさん)"
+                  value={requestKana}
+                  onChange={(e) => handleRequestKanaChange(e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-orange-100 focus:border-orange-400 rounded-xl text-sm font-bold text-gray-700 outline-none transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-gray-700 mb-1">ローマ字 <span className="text-red-500 font-bold">*必須</span></label>
+                <input
+                  type="text"
+                  placeholder="ひらがなを入れると自動で入るよ"
+                  value={requestRomaji}
+                  onChange={(e) => setRequestRomaji(e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-orange-100 focus:border-orange-400 rounded-xl text-sm font-bold text-gray-700 outline-none transition-colors"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={requestSending || !requestKana.trim() || !requestRomaji.trim()}
+                className="w-full py-3 bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-black text-lg rounded-xl shadow-md transition-all active:scale-95 border-b-4 border-orange-700 active:border-b-0 active:translate-y-1"
+              >
+                {requestSending ? 'おくっているよ...' : '📮 リクエストをおくる！'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 図鑑モーダル */}
+      {isZukanOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-card bg-white/95 w-full max-w-2xl p-6 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center mb-6 shrink-0">
+              <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
+                <Book className="w-6 h-6 text-orange-500" />
+                ずかん
+                <span className="text-sky-500 text-lg ml-2">{Object.keys(collection).length} / {GACHA_ITEMS.length}</span>
+              </h2>
+              <button onClick={() => { playGlobalCancelSound(); setIsZukanOpen(false); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pb-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
+                {GACHA_ITEMS.map((item, i) => {
+                  const count = collection[item.name] || 0;
+                  const isObtained = count > 0;
+                  return (
+                    <div 
+                      key={i} 
+                      className={`p-3 rounded-xl flex flex-col items-center justify-center transition-all ${
+                        isObtained 
+                          ? `bg-white shadow-md hover:scale-105${item.rarity === '✨レジェンド✨' ? ' legend-card' : ''}` 
+                          : 'bg-gray-100/50 border-2 border-gray-200 opacity-60 grayscale'
+                      }`}
+                      style={isObtained ? (item.rarity === '✨レジェンド✨' ? {
+                        boxShadow: `0 4px 20px #a855f780`
+                      } : {
+                        border: `4px solid ${item.color}`,
+                        boxShadow: `0 4px 14px ${item.color}60`
+                      }) : {}}
+                    >
+                      <div className="text-4xl sm:text-5xl mb-2 relative">
+                        {isObtained ? item.emoji : '❓'}
+                        {isObtained && newItems.includes(item.name) && (
+                          <span className="absolute -top-2 -left-3 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-sm leading-none border border-white animate-pulse">
+                            NEW!
+                          </span>
+                        )}
+                        {isObtained && count > 1 && (
+                          <span className="absolute -bottom-2 -right-3 bg-sky-500 text-white text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full shadow-sm leading-none border-2 border-white">
+                            x{count}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-bold text-gray-600 text-center leading-tight break-words w-full mt-2">
+                        {isObtained ? item.name : '？？？'}
+                      </div>
+                      <div
+                        className={`text-[8px] sm:text-[10px] mt-1 font-black drop-shadow-sm ${isObtained ? (item.foil ? 'foil-effect' : '') : 'text-gray-400'}`}
+                        style={isObtained && !item.foil ? { color: item.color } : {}}
+                      >
+                        {isObtained ? item.rarity.replace(/✨|🌟/g, '') : item.rarity.replace(/.*/, '？')}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+                  </div>
+                </div>
+
+                {/* 右手 */}
+                <div className={`relative w-16 h-10 flex items-end justify-center rounded-b-xl border transition-all ${
+                  isRight ? 'border-red-500 bg-red-50/30 shadow-sm scale-105' : 'border-gray-200 bg-gray-50/30 opacity-60'
+                }`}>
+                  <span className="absolute -top-3.5 text-[8px] font-black text-gray-500">みぎ手</span>
+                  <div className="absolute bottom-0 w-full flex justify-between px-1 items-end h-8 pointer-events-none">
+                    <div className={`w-1.5 rounded-full origin-bottom-left -rotate-12 transition-all ${isRight && subEventNextFinger.finger === 'thumb' ? 'h-4 bg-red-500 animate-pulse ring-1 ring-red-200' : 'h-3 bg-gray-300'}`} />
+                    <div className={`w-1.5 rounded-full transition-all ${isRight && subEventNextFinger.finger === 'index' ? 'h-7 bg-red-500 animate-pulse ring-1 ring-red-200' : 'h-4 bg-gray-300'}`} />
+                    <div className={`w-1.5 rounded-full transition-all ${isRight && subEventNextFinger.finger === 'middle' ? 'h-9 bg-red-500 animate-pulse ring-1 ring-red-200' : 'h-6 bg-gray-300'}`} />
+                    <div className={`w-1.5 rounded-full transition-all ${isRight && subEventNextFinger.finger === 'ring' ? 'h-8 bg-red-500 animate-pulse ring-1 ring-red-200' : 'h-5 bg-gray-300'}`} />
+                    <div className={`w-1.5 rounded-full transition-all ${isRight && subEventNextFinger.finger === 'pinky' ? 'h-6 bg-red-500 animate-pulse ring-1 ring-red-200' : 'h-3 bg-gray-300'}`} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const renderKeyboard = () => {
+          return (
+            <div className="mt-3 w-full max-w-md sm:max-w-xl shrink-0 mx-auto">
+              <div className="bg-white/60 backdrop-blur-md p-3 rounded-[1.2rem] shadow-inner border border-white/40">
+                {KEYBOARD_ROWS.map((row, rowIndex) => (
+                  <div key={rowIndex} className="flex justify-center mb-1" style={{ paddingLeft: rowIndex === 3 ? '0.2rem' : `${rowIndex * 0.8}rem` }}>
+                    {row.map((key) => {
+                      const isNextKey = assistSettings.keyboardHighlight && (
+                        key === subEventNextChar ||
+                        (key === '1' && subEventNextChar === '!') ||
+                        (key === '/' && subEventNextChar === '?') ||
+                        (key === 'Shift' && (subEventNextChar === '!' || subEventNextChar === '?'))
+                      );
+                      const isTypedKey = subEventTypedChars.includes(key); 
+                      const displayKey = key === 'Shift' ? 'Shift ⇧' : (assistSettings.letterCase === 'upper' ? key.toUpperCase() : key);
+                      
+                      const keyFinger = FINGER_MAP[key?.toLowerCase()];
+                      const isLeftHandKey = keyFinger?.hand === 'left';
+                      const isRightHandKey = keyFinger?.hand === 'right';
+                }`}>
+                      let highlightClass = "";
+                      if (isNextKey) {
+                        if (isLeftHandKey) {
+                          highlightClass = "bg-blue-500 text-white -translate-y-0.5 border-blue-700 scale-105 shadow-md shadow-blue-300/50 z-10 animate-pulse";
+                        } else if (isRightHandKey) {
+                          highlightClass = "bg-red-500 text-white -translate-y-0.5 border-red-700 scale-105 shadow-md shado                    <input
+                      type="text"
+                      placeholder="おなまえ検索..."
+                      value={searchNameInput}
+                      onChange={(e) => setSearchNameInput(e.target.value)}
+                      className="w-full pl-9 pr-8 py-1.5 bg-gray-50 border-2 border-indigo-100 focus:border-indigo-400 focus:bg-white rounded-xl text-xs font-bold text-gray-700 outline-none transition-all shadow-sm"
+                    />
+                    {searchNameInput && (
+                      <button
+                        onClick={() => setSearchNameInput('')}
+                        className="absolute right-2.5 p-0.5 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5 text-gray-400" />
+                      </button>
+          return (
+            <div className="mt-3 w-full max-w-md sm:max-w-xl shrink-0 mx-auto">
+              <div className="bg-white/60 backdrop-blur-md p-3 rounded-[1.2rem] shadow-inner border border-white/40">
+                {KEYBOARD_ROWS.map((row, rowIndex) => (
+                  <div key={rowIndex} className="flex justify-center mb-1" style={{ paddingLeft: rowIndex === 3 ? '0.2rem' : `${rowIndex * 0.8}rem` }}>
+                    {row.map((key) => {
+                      const isNextKey = assistSettings.keyboardHighlight && (
+                        key === subEventNextChar ||
+                        (key === '1' && subEventNextChar === '!') ||
+                        (key === '/' && subEventNextChar === '?') ||
+                        (key === 'Shift' && (subEventNextChar === '!' || subEventNextChar === '?'))
+                      );
+                      const isTypedKey = subEventTypedChars.includes(key); 
+                      const displayKey = key === 'Shift' ? 'Shift ⇧' : (assistSettings.letterCase === 'upper' ? key.toUpperCase() : key);
+                      
+                      const keyFinger = FINGER_MAP[key?.toLowerCase()];
+                      const isLeftHandKey = keyFinger?.hand === 'left';
+                      const isRightHandKey = keyFinger?.hand === 'right';
+                      </button>
+                      let highlightClass = "";
+                      if (isNextKey) {
+                        if (isLeftHandKey) {
+                          highlightClass = "bg-blue-500 text-white -translate-y-0.5 border-blue-700 scale-105 shadow-md shadow-blue-300/50 z-10 animate-pulse";
+                        } else if (isRightHandKey) {
+                          highlightClass = "bg-red-500 text-white -translate-y-0.5 border-red-700 scale-105 shadow-md shado                    <input
+                      type="text"
+                      placeholder="おなまえ検索..."
+                      value={searchNameInput}
+                      onChange={(e) => setSearchNameInput(e.target.value)}
+                      className="w-full pl-9 pr-8 py-1.5 bg-gray-50 border-2 border-indigo-100 focus:border-indigo-400 focus:bg-white rounded-xl text-xs font-bold text-gray-700 outline-none transition-all shadow-sm"
+                    />
+                    {searchNameInput && (
+                      <button
+                        onClick={() => setSearchNameInput('')}
+                        className="absolute right-2.5 p-0.5 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5 text-gray-400" />
+                      </button>
+                    )}
+                  </div>
+              {/* PC用の閉じるボタン */}
+                  {/* クイックタグ選択チップ */}
+                  {allTags.length > 0 && (
+                    <div className="flex items-center gap-1 overflow-x-auto max-w-full py-0.5 px-1 scroll-smooth shrink-0 no-scrollbar">
+                      <button
+                        onClick={() => {
+                          playGlobalDecideSound();
+                          setSelectedTag('');
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
+                          !selectedTag
+                            ? 'bg-indigo-500 text-white border-indigo-500'
+                            : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+                        }`}
+                      >
+                        すべて
+                      </button>
+                      {allTags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => {
+                            playGlobalDecideSound();
+                            setSelectedTag(selectedTag === tag ? '' : tag);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all shadow-sm border shrink-0 cursor-pointer ${
+                            selectedTag === tag
+                              ? 'bg-indigo-500 text-white border-indigo-500'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+                <div className="flex-1 bg-white border-2 border-yellow-300 p-3 rounded-2xl shadow-sm relative">
+              {/* PC用の閉じるボタン */}
+              <button onClick={() => { playGlobalCancelSound(); setIsPlayerModalOpen(false); setIsRequestTabAuthenticated(false); }} className="hidden lg:block p-1.5 hover:bg-gray-100 rounded-full transition-colors ml-2">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+                </div>
+            <div className="flex-1 min-h-0 flex flex-col relative pb-14">
+              {playerModalTab === 'players' ? (
+                /* セーブデータ一覧グリッド（画面いっぱい） */
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <div className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 pr-1 pb-4">
+                    {filteredPlayers.map((p) => {
+                      const isCurrent = p.id === currentPlayerId;
+                      const isSelected = bulkSelectedPlayerIds.includes(p.id);
+                      const cloudInfo = cloudPlayers[p.id];
+                      const diff = cloudInfo?.lastActiveTime ? (Date.now() - new Date(cloudInfo.lastActiveTime).getTime()) : 999999;
+                      const isActive = cloudInfo?.isPlaying && cloudInfo?.lastActiveTime && Math.abs(diff) < 45000;
+                      
+                      return (
+                        <div
+                          key={p.id}
+                          className={`relative border-3 p-5 rounded-3xl flex flex-col items-center text-center gap-3.5 transition-all cursor-pointer shadow-sm ${
+                            isActive
+                              ? 'border-gray-300 bg-gray-100 opacity-60 grayscale cursor-not-allowed'
+                              : isDeleteMode
+                                ? 'border-red-300 bg-red-50/20 hover:border-red-500 hover:scale-[1.02]'
+                                : isBulkTagMode 
+                                  ? (isSelected ? 'border-indigo-500 bg-indigo-50 shadow-md scale-[1.02]' : 'border-gray-200 bg-white opacity-80 hover:opacity-100')
+                                  : (isCurrent
+                                    ? 'border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50 shadow-md scale-[1.02]'
+                                    : 'border-indigo-100 bg-gradient-to-r from-sky-50 to-indigo-50 hover:border-sky-300 hover:shadow-md')
+                          }`}
+                          onClick={() => {
+                            if (isActive) {
+                              if (confirm("このプレイヤーは他の端末であそびちゅうの可能性があります。\nロックを強制解除して、この端末でログインしますか？")) {
+                                handleSelectPlayer(p.id);
+                              }
+                              return;
+                            }
+                            if (isBulkTagMode) {
+                              setBulkSelectedPlayerIds(prev => prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]);
+                            } else if (isDeleteMode) {
+                              if (p.id === currentPlayerId) {
+                                alert("あそびちゅうのプレイヤーは けせません！");
+                                return;
+                              }
+                              const pass = prompt("セーブデータをけすには、パスワード（あいことば）をいれてね");
+                              if (pass === null) return;
+                              if (pass === '0001') {
+                                handleDeletePlayer(p.id);
+                              } else {
+                                alert("パスワードがちがうよ！");
+                              }
+                            } else {
+                              handleSelectPlayer(p.id);
+                            }
+                          }}
+                        >
+                          {isActive && (
+                            <div className="absolute top-3 right-3 bg-indigo-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse flex items-center gap-1 z-20">
+                              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping" />
+                              あそびちゅう 💻
+                            </div>
+                          )}
+                            return `${item ? item.emoji : ''} ${selectedGivingItem} を あげよう！`;
+                          {isBulkTagMode && (
+                            <div className="absolute top-3 left-3 z-10">
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-gray-300'}`}>
+                                {isSelected && <CheckCircle2 className="w-5 h-5 text-white" />}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                          {/* 1. アイコン */}
+                          {(() => {
+                            const iconItem = p.currentIcon ? GACHA_ITEMS.find(i => i.name === p.currentIcon) : null;
+                            const borderStyle = iconItem ? (
+                              iconItem.rarity === '✨レジェンド✨'
+                                ? { boxShadow: '0 0 10px #a855f7, inset 0 0 6px #a855f7' }
+                                : { borderColor: iconItem.color, boxShadow: `0 0 6px ${iconItem.color}50` }
+                            ) : {};
+                            const legendClass = iconItem?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : 'border-indigo-200';
+                              const displayRomaji = assistSettings.letterCase === 'upper' ? bestRomaji.toUpperCase() : bestRomaji.toLowerCase();
+                            return (
+                              <div 
+                                className={`relative z-10 w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl border-4 shadow-md shrink-0 ${legendClass}`}
+                                style={borderStyle}
+                              >
+                                {iconItem ? iconItem.emoji : TITLES.find(t => t.id === p.currentTitle)?.emoji || '👦'}
+                              </div>
+                            );
+                          })()}
+                          </div>
+                          {/* 2. 称号 */}
+                          <div className="relative z-10 bg-indigo-500/10 text-indigo-700 border border-indigo-500/20 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-inner uppercase max-w-[120px] truncate leading-none">
+                            {(() => {
+                              const tItem = TITLES.find(t => t.id === p.currentTitle);
+                              return tItem ? tItem.name : 'しんまい';
+                            })()}
+                          </div>
+                        )}
+                          {/* 3. なまえ */}
+                          <div className="relative z-10 flex items-center gap-1.5">
+                            <h3 className="font-black text-gray-800 text-sm sm:text-base leading-none">
+                              {p.name}
+                            </h3>
+                          </div>
+                          }}
+                          {/* 4. 所持数、ポイント */}
+                          <div className="relative z-10 flex gap-2 text-[11px] font-black text-gray-700 justify-center">
+                            <span className="bg-white border border-gray-200 px-2.5 py-0.5 rounded-full shadow-sm">🪙 {p.points || 0}</span>
+                            <span className="bg-white border border-gray-200 px-2.5 py-0.5 rounded-full shadow-sm">🎁 {p.collectionCount || 0}</span>
+                          </div>
+
+                          {/* 5. 持ってるアイテム（コレクションプレビュー） */}
+                          {(() => {
+                            const getRarityWeight = (rarity) => {
+                              if (rarity === '✨レジェンド✨') return 5;
+                              if (rarity === '🌟超激レア🌟') return 4;
+                              if (rarity === '🔥激レア🔥') return 3;
+                              if (rarity === '⭐レア⭐') return 2;
+                              return 1;
+                            };
+                            const obtainedItems = GACHA_ITEMS.filter(item => p.collection && p.collection[item.name] > 0)
+                              .sort((a, b) => getRarityWeight(b.rarity) - getRarityWeight(a.rarity));
+                            const item = GACHA_ITEMS.find(g => g.name === itemName);
+                            if (obtainedItems.length === 0) {
+                              return <span className="relative z-10 text-[10px] text-gray-400 font-bold block min-h-[28px] leading-[28px]">アイテムなし</span>;
+                            }
+                              </span>
+                            const previewItems = obtainedItems.slice(0, 4);
+                            const hasMore = obtainedItems.length > 4;
+                        </div>
+                            return (
+                              <div className="relative z-10 flex flex-wrap gap-1 justify-center max-w-full min-h-[28px] items-center">
+                                {previewItems.map((item, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`w-7 h-7 rounded-full bg-white flex items-center justify-center text-base border shadow-sm relative ${item.foil ? 'foil-effect' : ''}`}
+                                    style={{ borderColor: item.color }}
+                                    title={`${item.name} (${item.rarity})`}
+                                  >
+                                    <span className="leading-none text-base">{item.emoji}</span>
+                                    {p.newItems && p.newItems.includes(item.name) && (
+                                      <span className="absolute -top-0.5 -right-0.5 bg-red-500 w-1.5 h-1.5 rounded-full border border-white animate-pulse" />
+                                    )}
+                                  </div>
+                                ))}
+                                {hasMore && (
+                                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-black text-gray-500 border border-gray-200 shadow-sm leading-none">
+                                    +{obtainedItems.length - 4}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                                        className="flex flex-col items-center justify-center p-3 bg-white hover:bg-green-50 border-2 border-green-200 hover:border-green-400 rounded-xl shadow-sm hover:scale-102 transition-all cursor-pointer text-center"
+                          {/* 6. タグ（右下に小さく、削除ボタンなし） */}
+                          {p.tags && p.tags.length > 0 && (
+                            <div className="absolute -bottom-1 -right-1 flex flex-wrap gap-1 max-w-[120px] justify-end">
+                              {p.tags.slice(0, 2).map(tag => (
+                                <span key={tag} className="text-[8px] font-black bg-indigo-50 border border-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded shadow-sm">
+                                  {tag}
+                                </span>
+                              ))}
+                              {p.tags.length > 2 && (
+                                <span className="text-[8px] font-black bg-gray-100 text-gray-500 px-1 py-0.5 rounded shadow-sm">
+                                  +{p.tags.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* リクエスト一覧テーブル (スプレッドシート風) または 認証画面 */
+                <div className="flex-1 min-h-0 flex flex-col pb-4">
+                  {!isRequestTabAuthenticated ? (
+                    /* 管理者認証画面 (白半透明) */
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white/80 backdrop-blur-md rounded-3xl border-4 border-orange-300 shadow-xl max-w-md mx-auto my-8 z-10 text-center animate-scale-in">
+                      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-orange-200">
+                        <Key className="w-8 h-8 text-orange-500" />
+                      </div>
+                      <h3 className="text-xl font-black text-orange-600 mb-2">かんりしゃメニュー</h3>
+                      <p className="text-xs font-bold text-gray-500 mb-6">
+                        ここから先は、管理者用の画面です。<br/>あいことばを入力してください。
+                      </p>
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        if (requestTabInputPassword === '0001') {
+                          setIsRequestTabAuthenticated(true);
+                          setRequestTabInputPassword('');
+                        } else {
+                          alert('パスワードがちがうよ！');
+                          setRequestTabInputPassword('');
+                        }
+                      }} className="flex flex-col gap-3 w-full max-w-[240px] mx-auto">
+                        <input
+                          type="password"
+                          placeholder="○○○○"
+                          maxLength={4}
+                          value={requestTabInputPassword}
+                          onChange={(e) => setRequestTabInputPassword(e.target.value)}
+                          className="w-full text-center text-2xl tracking-[0.5em] font-black p-3 rounded-xl border-4 border-orange-200 focus:border-orange-500 focus:outline-none bg-white transition-colors text-gray-700 animate-pulse"
+                          autoFocus
+                        />
+                        <button
+                          type="submit"
+                          disabled={requestTabInputPassword.length < 4}
+                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-black text-sm py-3 rounded-xl shadow-md active:scale-95 transition-all mt-1 cursor-pointer"
+                        >
+                          すすむ
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            playGlobalCancelSound();
+                            setPlayerModalTab('players');
+                          }}
+                          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-black text-sm py-2.5 rounded-xl transition-all cursor-pointer"
+                        >
+                          もどる
+                        </button>
+                      </form>
+                    </div>
+                  ) : (
+                    /* 認証済みの管理者画面：左右分割レイアウト（リクエスト ＋ プレイ時間 ＋ プレゼント） */
+                    <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+                      {/* 左側: リクエスト一覧テーブル (幅広) */}
+                      <div className="flex-[3] min-h-0 flex flex-col">
+                        <h4 className="text-sm font-black text-orange-600 mb-2 flex items-center gap-1.5 shrink-0">
+                          <span>📮</span> リクエストされた言葉（全 {wordRequests.length} 件）
+                        </h4>
+                        <div className="flex-1 overflow-auto border-2 border-orange-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 max-h-[45vh] lg:max-h-[50vh]">
+                          {wordRequests.length === 0 ? (
+                            <div className="h-full flex flex-col items-center justify-center text-sm font-bold text-gray-400 py-16 gap-2">
+                              <span className="text-4xl">📮</span>
+                              リクエストされた単語はまだありません。
+                            </div>
+                          ) : (
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-orange-50/50 border-b border-orange-100 sticky top-0 z-10">
+                                  <th className="p-3 font-black text-orange-700">リクエスト日時</th>
+                                  <th className="p-3 font-black text-orange-700">単語 (かな)</th>
+                                  <th className="p-3 font-black text-orange-700">ローマ字</th>
+                                  <th className="p-3 font-black text-orange-700">リクエストした人</th>
+                                  <th className="p-3 font-black text-orange-700 text-center w-36">操作</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-orange-50 bg-white/40">
+                                {wordRequests.map((req) => (
+                                  <tr key={req.id} className="hover:bg-orange-50/30 transition-colors">
+                                    <td className="p-3 text-gray-500 font-bold whitespace-nowrap">
+                                      {new Date(req.createdAt).toLocaleString('ja-JP')}
+                                    </td>
+                                    <td className="p-3 font-black text-gray-800 text-sm whitespace-nowrap">
+                                      {req.kana}
+                                    </td>
+                                    <td className="p-3 font-mono text-gray-600 whitespace-nowrap">
+                                      {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
+                                    </td>
+                                    <td className="p-3 font-bold text-gray-600 whitespace-nowrap">
+                                      {req.playerName || 'ゲスト'}
+                                    </td>
+                                    <td className="p-3 text-center whitespace-nowrap flex gap-1.5 justify-center">
+                                      <button
+                                        onClick={() => {
+                                          playGlobalDecideSound();
+                                          setAdoptingRequest(req);
+                                          const suggestedDiffLabel = determineDifficulty(req.kana);
+                                          const diffMap = {
+                                            'イージー': 'easy',
+                                            'ノーマル': 'normal',
+                                            'ハード': 'hard',
+                                            'ベリーハード': 'very_hard'
+                                          };
+                                          setAdoptingDifficulty(diffMap[suggestedDiffLabel] || 'easy');
+                                        }}
+                                        className="px-2 py-1 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse"
+                                      >
+                                        ✅ 採用
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteRequest(req.id)}
+                                        className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all cursor-pointer"
+                                      >
+                                        🗑️ 削除
+                                      </button>
+              <div className="flex items-center justify-between w-full lg:w-auto gap-4">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { playGlobalDecideSound(); setPlayerModalTab('players'); setIsRequestTabAuthenticated(false); }}
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                      playerModalTab === 'players'
+                        ? 'bg-sky-500 text-white shadow-md border-b-2 border-sky-700'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    }`}
+                  >
+                    👤 だれがあそぶ？
+                  </button>
+                  <button
+                    onClick={() => { playGlobalDecideSound(); setPlayerModalTab('requests'); }}
+                    className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                      playerModalTab === 'requests'
+                        ? 'bg-orange-500 text-white shadow-md border-b-2 border-orange-700'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    }`}
+                  >
+                    ⚙️ 管理者モード
+                  </button>
+                </div>
+                {/* モバイル・タブレット用の閉じるボタン */}
+                <button onClick={() => { playGlobalCancelSound(); setIsPlayerModalOpen(false); setIsRequestTabAuthenticated(false); }} className="lg:hidden p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+                                  const totalMs = p.totalPlayMs || 0;
+              {/* 検索とおなまえ・タグフィルタのコンテナ（プレイヤー管理タブの時だけ表示） */}
+              {playerModalTab === 'players' && (
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 lg:max-w-3xl justify-end">
+                  {/* おなまえ検索バー */}
+                  <div className="relative flex items-center w-full sm:max-w-xs shrink-0">
+                    <span className="absolute left-3 text-gray-400">
+                      <Search className="w-4 h-4" />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="おなまえ検索..."
+                      value={searchNameInput}
+                      onChange={(e) => setSearchNameInput(e.target.value)}
+                      classNa                      {/* 右側: セーブデータ管理 ＆ 未受け取りプレゼント一覧 */}
+                      <div className="flex-[2] min-h-0 flex flex-col lg:max-w-md gap-4">
+                        {/* 上段：平均プレイ時間 */}
+                        <div className="flex-1 min-h-0 flex flex-col">
+                          <h4 className="text-sm font-black text-sky-600 mb-1.5 flex items-center gap-1.5 shrink-0">
+                            <span>⏱️</span> セーブデータごとの平均プレイ時間
+                          </h4>
+                          <div className="flex-1 overflow-auto border-2 border-sky-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 max-h-[20vh] lg:max-h-[22vh]">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-sky-50/50 border-b border-sky-100 sticky top-0 z-10">
+                                  <th className="p-3 font-black text-sky-700">なまえ</th>
+                                  <th className="p-3 font-black text-sky-700">平均プレイ時間</th>
+                                  <th className="p-3 font-black text-sky-700 text-center">あそんだ回数</th>
+                                  <th className="p-3 font-black text-sky-700 text-center">操作</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-sky-50 bg-white/40">
+                                {players.filter(p => !p.isArchived).map((p) => {
+                                  const totalMs = p.totalPlayMs || 0;
+                                  const sessions = p.sessionCount || 0;
+                                  let avgStr = "プレイ記録なし";
+                                  if (sessions > 0) {
+                                    const avgMs = totalMs / sessions;
+                                    const avgMin = Math.floor(avgMs / 60000);
+                                    const avgHour = Math.floor(avgMin / 60);
+                                    const remMin = avgMin % 60;
+                                    avgStr = avgHour > 0 ? `${avgHour}時間${remMin}分` : `${avgMin}分`;
+                                  }
+                                  return (
+                                    <tr key={p.id} className="hover:bg-sky-50/30 transition-colors">
+                                      <td className="p-3 font-black text-gray-800 text-sm whitespace-nowrap">
+                                        {p.name}
+                                      </td>
+                                      <td className={`p-3 font-bold whitespace-nowrap ${sessions > 0 ? 'text-sky-600' : 'text-gray-400'}`}>
+                                        ⏱ {avgStr}
+                                      </td>
+                                      <td className="p-3 text-center font-bold text-gray-600 whitespace-nowrap">
+                                        {sessions} 回
+                                      </td>
+                                      <td className="p-3 text-center whitespace-nowrap flex gap-1 justify-center">
+                                        <button
+                                          onClick={() => {
+                                            playGlobalDecideSound();
+                                            setSelectedDetailPlayer(p);
+                                          }}
+                                          className="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 rounded-lg font-black text-[9px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-0.5"
+                                        >
+                                          📊
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            playGlobalDecideSound();
+                                            setPresentTargetPlayer(p);
+                                            setIsPresentModalOpen(true);
+                                          }}
+                                          className="px-2 py-0.5 bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-lg font-black text-[9px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-0.5"
+                                        >
+                                          🎁
+                                        </button>
+                                        <button
+                                          onClick={async () => {
+                                            playGlobalDecideSound();
+                                            if (p.id === currentPlayerId) {
+                                              alert("あそびちゅうのプレイヤーは アーカイブできません！");
+                                              return;
+                                            }
+                                            if (confirm(`本当にプレイヤー「${p.name}」をアーカイブしますか？\n（他の端末からも見えなくなります）`)) {
+                                              await updateAndSavePlayerData(p.id, { isArchived: true });
+                                              alert("アーカイブしました！");
+                                            }
+                                          }}
+                                          className="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 rounded-lg font-black text-[9px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-0.5"
+                                        >
+                                          📁
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                              return (
+                        {/* 下段：未受け取りのプレゼント一覧 */}
+                        <div className="flex-1 min-h-0 flex flex-col">
+                          <h4 className="text-sm font-black text-pink-600 mb-1.5 flex items-center gap-1.5 shrink-0">
+                            <span>🎁</span> 送信ずみの未受け取りプレゼント
+                          </h4>
+                          <div className="flex-1 overflow-auto border-2 border-pink-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-2 max-h-[20vh] lg:max-h-[22vh] text-[10px]">
+                            {(() => {
+                              const allPendingGifts = [];
+                              players.forEach(p => {
+                                if (Array.isArray(p.pendingGifts)) {
+                                  p.pendingGifts.forEach(g => {
+                                    allPendingGifts.push({
+                                      player: p,
+                                      gift: g
+                                    });
+                                  });
+                                }
+                              });
+                                          <button
+                              if (allPendingGifts.length === 0) {
+                                return (
+                                  <div className="h-full flex items-center justify-center font-bold text-gray-400 py-6">
+                                    未受け取りのプレゼントはありません。
+                                  </div>
+                                );
+                              }
+                                          {contents.join(' / ')}
+                              allPendingGifts.sort((a, b) => new Date(b.gift.createdAt || 0) - new Date(a.gift.createdAt || 0));
+                                        {gift.message && (
+                              return (
+                                <div className="space-y-2">
+                                  {allPendingGifts.map(({ player, gift }) => {
+                                    const contents = [];
+                                    if (gift.points) contents.push(`🪙${gift.points}`);
+                                    if (gift.specialTickets) contents.push(`🎨はいけい×${gift.specialTickets}`);
+                                    if (gift.legendTickets) contents.push(`🌟激レア以上×${gift.legendTickets}`);
+                                    if (gift.bgmTickets) contents.push(`🎵おんがく×${gift.bgmTickets}`);
+                                    if (gift.seTickets) contents.push(`🔊こうかおん×${gift.seTickets}`);
+                            })()}
+                                    return (
+                                      <div key={gift.id} className="bg-white/90 p-2 rounded-xl border border-pink-100 shadow-sm flex flex-col gap-1">
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <span className="font-black text-gray-800 text-xs">{player.name} さんあて</span>
+                                            <span className="text-gray-400 ml-2 text-[9px] font-bold">
+                                              {gift.createdAt ? new Date(gift.createdAt).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}
+                                            </span>
+                                          </div>
+                                          <button
+                                            onClick={() => handleCancelGift(player.id, gift.id)}
+                                            className="px-1.5 py-0.5 bg-red-50 hover:bg-red-100 text-red-500 rounded border border-red-200 font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer text-[9px]"
+                                          >
+                                            とりけし
+                                          </button>
+                                        </div>
+                                        <div className="font-bold text-indigo-600 flex flex-wrap gap-x-2 gap-y-0.5">
+                                          {contents.join(' / ')}
+                                        </div>
+                                        {gift.message && (
+                                          <div className="bg-gray-50 text-gray-500 p-1.5 rounded-lg font-bold border border-gray-100">
+                                            💬 {gift.message}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>turn;
+                              }
+                              const pass = prompt("セーブデータをけすには、パスワード（あいことば）をいれてね");
+                              if (pass === null) return;
+                              if (pass === '0001') {
+                                if (confirm(`本当にプレイヤー「${p.name}」のセーブデータを完全に削除しますか？\n（もとにはもどせません）`)) {
+                                  handleDeletePlayer(p.id);
+                                }
+                              } else {
+                                alert("パスワードがちがうよ！");
+                              }
+                            } else {
+                              handleSelectPlayer(p.id);
+                            }
+                          }}
+                        >
+                          {/* 背景画像と白半透明フィルターのレイヤー */}
+                          {(() => {
+                            const bgItem = BACKGROUNDS.find(b => b.id === (p.currentBackground || 'default')) || BACKGROUNDS[0];
+                            return (
+                              <div className="absolute inset-0 z-0 pointer-events-none rounded-3xl overflow-hidden">
+                                <div 
+                                  className="absolute inset-0 bg-cover bg-center opacity-70"
+                                  style={{ backgroundImage: `url(${bgItem.url})` }}
+                                />
+                                <div className="absolute inset-0 bg-white/50" />
+                              </div>
+                            );
+                          })()}
+                          </div>
+                          {/* あそびちゅうバッジ */}
+                          {isActive && (
+                            <span className="absolute top-3 right-3 z-10 text-[9px] font-black bg-rose-500 text-white px-2 py-0.5 rounded-full shadow animate-pulse flex items-center gap-1 pointer-events-none">
+                              <span>💻</span>
+                              <span>あそびちゅう</span>
+                            </span>
+                          )}
+                              if (rarity === '🔥激レア🔥') return 3;
+                          {/* 一括選択時のチェックマーク */}
+                          {isBulkTagMode && (
+                            <div className="absolute top-3 left-3 z-10">
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-gray-300'}`}>
+                                {isSelected && <CheckCircle2 className="w-5 h-5 text-white" />}
+                              </div>
+                            </div>
+                          )}
+                            }
+                          {/* 1. アイコン */}
+                          {(() => {
+                            const iconItem = p.currentIcon ? GACHA_ITEMS.find(i => i.name === p.currentIcon) : null;
+                            const borderStyle = iconItem ? (
+                              iconItem.rarity === '✨レジェンド✨'
+                                ? { boxShadow: '0 0 10px #a855f7, inset 0 0 6px #a855f7' }
+                                : { borderColor: iconItem.color, boxShadow: `0 0 6px ${iconItem.color}50` }
+                            ) : {};
+                            const legendClass = iconItem?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : 'border-indigo-200';
+                                    className={`w-7 h-7 rounded-full bg-white flex items-center justify-center text-base border shadow-sm relative ${item.foil ? 'foil-effect' : ''}`}
+                                    style={{ borderColor: item.color }}
+                                    title={`${item.name} (${item.rarity})`}
+                                  >
+                                    <span className="leading-none text-base">{item.emoji}</span>
+                                    {p.newItems && p.newItems.includes(item.name) && (
+                                      <span className="absolute -top-0.5 -right-0.5 bg-red-500 w-1.5 h-1.5 rounded-full border border-white animate-pulse" />
+                                    )}
+                                  </div>
+                                ))}
+                                {hasMore && (
+                                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-black text-gray-500 border border-gray-200 shadow-sm leading-none">
+                                    +{obtainedItems.length - 4}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                                  <th className="p-3 font-black text-orange-700">単語 (かな)</th>
+                          {/* 6. タグ（右下に小さく、削除ボタンなし） */}
+                          {p.tags && p.tags.length > 0 && (
+                            <div className="absolute -bottom-1 -right-1 flex flex-wrap gap-1 max-w-[120px] justify-end">
+                              {p.tags.slice(0, 2).map(tag => (
+                                <span key={tag} className="text-[8px] font-black bg-indigo-50 border border-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded shadow-sm">
+                                  {tag}
+                                </span>
+                              ))}
+                              {p.tags.length > 2 && (
+                                <span className="text-[8px] font-black bg-gray-100 text-gray-500 px-1 py-0.5 rounded shadow-sm">
+                                  +{p.tags.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                                      {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* リクエスト一覧テーブル (スプレッドシート風) または 認証画面 */
+                <div className="flex-1 min-h-0 flex flex-col pb-4">
+                  {!isRequestTabAuthenticated ? (
+                    /* 管理者認証画面 (白半透明) */
+                                    const avgHour = Math.floor(avgMin / 60);
+                                    const remMin = avgMin % 60;
+                                    avgStr = avgHour > 0 ? `${avgHour}時間${remMin}分` : `${avgMin}分`;
+                                  }
+                                  return (
+                                    <tr key={p.id} className="hover:bg-sky-50/30 transition-colors">
+                                      <td className="p-3 font-black text-gray-800 text-sm whitespace-nowrap">
+                                        {p.name}
+                                      </td>
+                                      <td className={`p-3 font-bold whitespace-nowrap ${sessions > 0 ? 'text-sky-600' : 'text-gray-400'}`}>
+                                        ⏱ {avgStr}
+                                      </td>
+                                      <td className="p-3 text-center font-bold text-gray-600 whitespace-nowrap">
+                                        {sessions} 回
+                                      </td>
+                                      <td className="p-3 text-center whitespace-nowrap flex gap-1 justify-center">
+                                        <button
+                                          onClick={() => {
+                                            playGlobalDecideSound();
+                                            setSelectedDetailPlayer(p);
+                                          }}
+                                          className="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 rounded-lg font-black text-[9px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-0.5"
+                                          title="詳細"
+                                        >
+                                          📊
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            playGlobalDecideSound();
+                                            setPresentTargetPlayer(p);
+                                            setIsPresentModalOpen(true);
+                                          }}
+                                          className="px-2 py-0.5 bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-lg font-black text-[9px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-0.5"
+                                          title="プレゼント"
+                                        >
+                                          🎁
+                                        </button>
+                                        <button
+                                          onClick={async () => {
+                                            playGlobalDecideSound();
+                                            if (p.id === currentPlayerId) {
+                                              alert("あそびちゅうのプレイヤーは アーカイブできません！");
+                                              return;
+                                            }
+                                            if (confirm(`本当にプレイヤー「${p.name}」をアーカイブしますか？\n（他の端末からも見えなくなります）`)) {
+                                              await updateAndSavePlayerData(p.id, { isArchived: true });
+                                              alert("アーカイブしました！");
+                                            }
+                                          }}
+                                          className="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 rounded-lg font-black text-[9px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-0.5"
+                                          title="アーカイブ"
+                                        >
+                                          📁
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                              <thead>
+                        {/* 下段：未受け取りのプレゼント一覧 */}
+                        <div className="flex-1 min-h-0 flex flex-col">
+                          <h4 className="text-sm font-black text-pink-600 mb-1.5 flex items-center gap-1.5 shrink-0">
+                            <span>🎁</span> 送信ずみの未受け取りプレゼント
+                          </h4>
+                          <div className="flex-1 overflow-auto border-2 border-pink-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-2 max-h-[20vh] lg:max-h-[22vh] text-[10px]">
+                            {(() => {
+                              const allPendingGifts = [];
+                              players.forEach(p => {
+                                if (Array.isArray(p.pendingGifts)) {
+                                  p.pendingGifts.forEach(g => {
+                                    allPendingGifts.push({
+                                      player: p,
+                                      gift: g
+                                    });
+                                  });
+                                }
+                              });
+                                      {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
+                              if (allPendingGifts.length === 0) {
+                                return (
+                                  <div className="h-full flex items-center justify-center font-bold text-gray-400 py-6">
+                                    未受け取りのプレゼントはありません。
+                                  </div>
+                                );
+                              }
+                                          playGlobalDecideSound();
+                              allPendingGifts.sort((a, b) => new Date(b.gift.createdAt || 0) - new Date(a.gift.createdAt || 0));
+                                          const suggestedDiffLabel = determineDifficulty(req.kana);
+                              return (
+                                <div className="space-y-2">
+                                  {allPendingGifts.map(({ player, gift }) => {
+                                    const contents = [];
+                                    if (gift.points) contents.push(`🪙${gift.points}`);
+                                    if (gift.specialTickets) contents.push(`🎨はいけい×${gift.specialTickets}`);
+                                    if (gift.legendTickets) contents.push(`🌟激レア以上×${gift.legendTickets}`);
+                                    if (gift.bgmTickets) contents.push(`🎵おんがく×${gift.bgmTickets}`);
+                                    if (gift.seTickets) contents.push(`🔊こうかおん×${gift.seTickets}`);
+                                      >
+                                    return (
+                                      <div key={gift.id} className="bg-white/90 p-2 rounded-xl border border-pink-100 shadow-sm flex flex-col gap-1">
+                                        <div className="flex justify-between items-start">
+                                          <div>
+                                            <span className="font-black text-gray-800 text-xs">{player.name} さんあて</span>
+                                            <span className="text-gray-400 ml-2 text-[9px] font-bold">
+                                              {gift.createdAt ? new Date(gift.createdAt).toLocaleString('ja-JP', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}
+                                            </span>
+                                          </div>
+                                          <button
+                                            onClick={() => handleCancelGift(player.id, gift.id)}
+                                            className="px-1.5 py-0.5 bg-red-50 hover:bg-red-100 text-red-500 rounded border border-red-200 font-bold hover:scale-105 active:scale-95 transition-all cursor-pointer text-[9px]"
+                                          >
+                                            とりけし
+                                          </button>
+                                        </div>
+                                        <div className="font-bold text-indigo-600 flex flex-wrap gap-x-2 gap-y-0.5">
+                                          {contents.join(' / ')}
+                                        </div>
+                                        {gift.message && (
+                                          <div className="bg-gray-50 text-gray-500 p-1.5 rounded-lg font-bold border border-gray-100">
+                                            💬 {gift.message}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}                                 })}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>turn;
+                              }
+                              const pass = prompt("セーブデータをけすには、パスワード（あいことば）をいれてね");
+                              if (pass === null) return;
+                              if (pass === '0001') {
+                                if (confirm(`本当にプレイヤー「${p.name}」のセーブデータを完全に削除しますか？\n（もとにはもどせません）`)) {
+                                  handleDeletePlayer(p.id);
+                                }
+                              } else {
+                                alert("パスワードがちがうよ！");
+                              }
+                            } else {
+                              handleSelectPlayer(p.id);
+                            }
+                          }}
+                        >
+                          {/* 背景画像と白半透明フィルターのレイヤー */}
+                          {(() => {
+                            const bgItem = BACKGROUNDS.find(b => b.id === (p.currentBackground || 'default')) || BACKGROUNDS[0];
+                            return (
+                              <div className="absolute inset-0 z-0 pointer-events-none rounded-3xl overflow-hidden">
+                                <div 
+                                  className="absolute inset-0 bg-cover bg-center opacity-70"
+                                  style={{ backgroundImage: `url(${bgItem.url})` }}
+                                />
+                                <div className="absolute inset-0 bg-white/50" />
+                              </div>
+                            );
+                          })()}
+                                      >
+                          {/* あそびちゅうバッジ */}
+                          {isActive && (
+                            <span className="absolute top-3 right-3 z-10 text-[9px] font-black bg-rose-500 text-white px-2 py-0.5 rounded-full shadow animate-pulse flex items-center gap-1 pointer-events-none">
+                              <span>💻</span>
+                              <span>あそびちゅう</span>
+                            </span>
+                          )}
+                                            return;
+                          {/* 一括選択時のチェックマーク */}
+                          {isBulkTagMode && (
+                            <div className="absolute top-3 left-3 z-10">
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-gray-300'}`}>
+                                {isSelected && <CheckCircle2 className="w-5 h-5 text-white" />}
+                              </div>
+                            </div>
+                          )}
+                                        📁 アーカイブ
+                          {/* 1. アイコン */}
+                          {(() => {
+                            const iconItem = p.currentIcon ? GACHA_ITEMS.find(i => i.name === p.currentIcon) : null;
+                            const borderStyle = iconItem ? (
+                              iconItem.rarity === '✨レジェンド✨'
+                                ? { boxShadow: '0 0 10px #a855f7, inset 0 0 6px #a855f7' }
+                                : { borderColor: iconItem.color, boxShadow: `0 0 6px ${iconItem.color}50` }
+                            ) : {};
+                            const legendClass = iconItem?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : 'border-indigo-200';
+                                  const remMin = avgMin % 60;
+                            return (
+                              <div 
+                                className={`relative z-10 w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl border-4 shadow-md shrink-0 ${legendClass}`}
+                                style={borderStyle}
+                              >
+                                {iconItem ? iconItem.emoji : TITLES.find(t => t.id === p.currentTitle)?.emoji || '👦'}
+                              </div>
+                            );
+                          })()}
+                                    </td>
+                          {/* 2. 称号 */}
+                          <div className="relative z-10 bg-indigo-500/10 text-indigo-700 border border-indigo-500/20 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider shadow-inner uppercase max-w-[120px] truncate leading-none">
+                            {(() => {
+                              const tItem = TITLES.find(t => t.id === p.currentTitle);
+                              return tItem ? tItem.name : 'しんまい';
+                            })()}
+                          </div>
+                                          setSelectedDetailPlayer(p);
+                          {/* 3. なまえ */}
+                          <div className="relative z-10 flex items-center gap-1.5">
+                            <h3 className="font-black text-gray-800 text-sm sm:text-base leading-none">
+                              {p.name}
+                            </h3>
+                                      <button
+                          </div>
+                                          playGlobalDecideSound();
+                          {/* 4. 所持数、ポイント */}
+                          <div className="relative z-10 flex gap-2 text-[11px] font-black text-gray-700 justify-center">
+                            <span className="bg-white border border-gray-200 px-2.5 py-0.5 rounded-full shadow-sm">🪙 {p.points || 0}</span>
+                            <span className="bg-white border border-gray-200 px-2.5 py-0.5 rounded-full shadow-sm">🎁 {p.collectionCount || 0}</span>
+                          </div>
+                                        🎁 プレゼント
+                                      </button>
+                          {/* 5. 持ってるアイテム（コレクションプレビュー） */}
+                          {(() => {
+                            const getRarityWeight = (rarity) => {
+                              if (rarity === '✨レジェンド✨') return 5;
+                              if (rarity === '🌟超激レア🌟') return 4;
+                              if (rarity === '🔥激レア🔥') return 3;
+                              if (rarity === '⭐レア⭐') return 2;
+                              return 1;
+                            };
+                            const obtainedItems = GACHA_ITEMS.filter(item => p.collection && p.collection[item.name] > 0)
+                              .sort((a, b) => getRarityWeight(b.rarity) - getRarityWeight(a.rarity));
+                                        }}
+                            if (obtainedItems.length === 0) {
+                              return <span className="relative z-10 text-[10px] text-gray-400 font-bold block min-h-[28px] leading-[28px]">アイテムなし</span>;
+                            }
+                                      </button>
+                            const previewItems = obtainedItems.slice(0, 4);
+                            const hasMore = obtainedItems.length > 4;
+                                );
+                            return (
+                              <div className="relative z-10 flex flex-wrap gap-1 justify-center max-w-full min-h-[28px] items-center">
+                                {previewItems.map((item, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`w-7 h-7 rounded-full bg-white flex items-center justify-center text-base border shadow-sm relative ${item.foil ? 'foil-effect' : ''}`}
+                                    style={{ borderColor: item.color }}
+                                    title={`${item.name} (${item.rarity})`}
+                                  >
+                                    <span className="leading-none text-base">{item.emoji}</span>
+                                    {p.newItems && p.newItems.includes(item.name) && (
+                                      <span className="absolute -top-0.5 -right-0.5 bg-red-500 w-1.5 h-1.5 rounded-full border border-white animate-pulse" />
+                                    )}
+                                  </div>
+                                ))}
+                                {hasMore && (
+                                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-black text-gray-500 border border-gray-200 shadow-sm leading-none">
+                                    +{obtainedItems.length - 4}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                    onClick={() => {
+                          {/* 6. タグ（右下に小さく、削除ボタンなし） */}
+                          {p.tags && p.tags.length > 0 && (
+                            <div className="absolute -bottom-1 -right-1 flex flex-wrap gap-1 max-w-[120px] justify-end">
+                              {p.tags.slice(0, 2).map(tag => (
+                                <span key={tag} className="text-[8px] font-black bg-indigo-50 border border-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded shadow-sm">
+                                  {tag}
+                                </span>
+                              ))}
+                              {p.tags.length > 2 && (
+                                <span className="text-[8px] font-black bg-gray-100 text-gray-500 px-1 py-0.5 rounded shadow-sm">
+                                  +{p.tags.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        setIsRequestTabAuthenticated(false);
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* リクエスト一覧テーブル (スプレッドシート風) または 認証画面 */
+                <div className="flex-1 min-h-0 flex flex-col pb-4">
+                  {!isRequestTabAuthenticated ? (
+                    /* 管理者認証画面 (白半透明) */
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white/80 backdrop-blur-md rounded-3xl border-4 border-orange-300 shadow-xl max-w-md mx-auto my-8 z-10 text-center animate-scale-in">
+                      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-orange-200">
+                        <Key className="w-8 h-8 text-orange-500" />
+                      </div>
+                      <h3 className="text-xl font-black text-orange-600 mb-2">かんりしゃメニュー</h3>
+                      <p className="text-xs font-bold text-gray-500 mb-6">
+                        ここから先は、管理者用の画面です。<br/>あいことばを入力してください。
+                      </p>
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        if (requestTabInputPassword === '0001') {
+                          setIsRequestTabAuthenticated(true);
+                          setRequestTabInputPassword('');
+                        } else {
+                          alert('パスワードがちがうよ！');
+                          setRequestTabInputPassword('');
+                        }
+                      }} className="flex flex-col gap-3 w-full max-w-[240px] mx-auto">
+                        <input
+                          type="password"
+                          placeholder="○○○○"
+                          maxLength={4}
+                          value={requestTabInputPassword}
+                          onChange={(e) => setRequestTabInputPassword(e.target.value)}
+                          className="w-full text-center text-2xl tracking-[0.5em] font-black p-3 rounded-xl border-4 border-orange-200 focus:border-orange-500 focus:outline-none bg-white transition-colors text-gray-700 animate-pulse"
+                          autoFocus
+                        />
+                        <button
+                          type="submit"
+                          disabled={requestTabInputPassword.length < 4}
+                          className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-black text-sm py-3 rounded-xl shadow-md active:scale-95 transition-all mt-1 cursor-pointer"
+                        >
+                          すすむ
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            playGlobalCancelSound();
+                            setPlayerModalTab('players');
+                          }}
+                          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-black text-sm py-2.5 rounded-xl transition-all cursor-pointer"
+                        >
+                          もどる
+                        </button>
+                      </form>
+                    </div>
+                  ) : (
+                    /* 認証済みの管理者画面：左右分割レイアウト（リクエスト ＋ プレイ時間） */
+                    <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+                      {/* 左側: リクエスト一覧テーブル (幅広) */}
+                      <div className="flex-[3] min-h-0 flex flex-col">
+                        <h4 className="text-sm font-black text-orange-600 mb-2 flex items-center gap-1.5 shrink-0">
+                          <span>📮</span> リクエストされた言葉（全 {wordRequests.length} 件）
+                        </h4>
+                        <div className="flex-1 overflow-auto border-2 border-orange-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 max-h-[45vh] lg:max-h-[50vh]">
+                          {wordRequests.length === 0 ? (
+                            <div className="h-full flex flex-col items-center justify-center text-sm font-bold text-gray-400 py-16 gap-2">
+                              <span className="text-4xl">📮</span>
+                              リクエストされた単語はまだありません。
+                            </div>
+                          ) : (
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-orange-50/50 border-b border-orange-100 sticky top-0 z-10">
+                                  <th className="p-3 font-black text-orange-700">リクエスト日時</th>
+                                  <th className="p-3 font-black text-orange-700">単語 (かな)</th>
+                                  <th className="p-3 font-black text-orange-700">ローマ字</th>
+                                  <th className="p-3 font-black text-orange-700">リクエストした人</th>
+                                  <th className="p-3 font-black text-orange-700 text-center w-36">操作</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-orange-50 bg-white/40">
+                                {wordRequests.map((req) => (
+                                  <tr key={req.id} className="hover:bg-orange-50/30 transition-colors">
+                                    <td className="p-3 text-gray-500 font-bold whitespace-nowrap">
+                                      {new Date(req.createdAt).toLocaleString('ja-JP')}
+                                    </td>
+                                    <td className="p-3 font-black text-gray-800 text-sm whitespace-nowrap">
+                                      {req.kana}
+                                    </td>
+                                    <td className="p-3 font-mono text-gray-600 whitespace-nowrap">
+                                      {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
+                                    </td>
+                                    <td className="p-3 font-bold text-gray-600 whitespace-nowrap">
+                                      {req.playerName || 'ゲスト'}
+                                    </td>
+                                    <td className="p-3 text-center whitespace-nowrap flex gap-1.5 justify-center">
+                                      <button
+                                        onClick={() => {
+                                          playGlobalDecideSound();
+                                          setAdoptingRequest(req);
+                                          const suggestedDiffLabel = determineDifficulty(req.kana);
+                                          const diffMap = {
+                                            'イージー': 'easy',
+                                            'ノーマル': 'normal',
+                                            'ハード': 'hard',
+                                            'ベリーハード': 'very_hard'
+                                          };
+                                          setAdoptingDifficulty(diffMap[suggestedDiffLabel] || 'easy');
+                                        }}
+                                        className="px-2 py-1 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse"
+                                      >
+                                        ✅ 採用
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteRequest(req.id)}
+                                        className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all cursor-pointer"
+                                      >
+                                        🗑️ 削除
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      </div>
+                            }}
+                      {/* 右側: セーブデータ管理（連続プレイ時間一覧） */}
+                      <div className="flex-[2] min-h-0 flex flex-col lg:max-w-md">
+                        <h4 className="text-sm font-black text-sky-600 mb-2 flex items-center gap-1.5 shrink-0">
+                          <span>⏱️</span> セーブデータごとの平均プレイ時間
+                        </h4>
+                        <div className="flex-1 overflow-auto border-2 border-sky-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 max-h-[35vh] lg:max-h-[50vh]">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-sky-50/50 border-b border-sky-100 sticky top-0 z-10">
+                                <th className="p-3 font-black text-sky-700">なまえ</th>
+                                <th className="p-3 font-black text-sky-700">平均プレイ時間</th>
+                                <th className="p-3 font-black text-sky-700 text-center">あそんだ回数</th>
+                                <th className="p-3 font-black text-sky-700 text-center">操作</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-sky-50 bg-white/40">
+                              {players.filter(p => !p.isArchived).map((p) => {
+                                const totalMs = p.totalPlayMs || 0;
+                                const sessions = p.sessionCount || 0;
+                                let avgStr = "プレイ記録なし";
+                                if (sessions > 0) {
+                                  const avgMs = totalMs / sessions;
+                                  const avgMin = Math.floor(avgMs / 60000);
+                                  const avgHour = Math.floor(avgMin / 60);
+                                  const remMin = avgMin % 60;
+                                  avgStr = avgHour > 0 ? `${avgHour}時間${remMin}分` : `${avgMin}分`;
+                                }
+                                return (
+                                  <tr key={p.id} className="hover:bg-sky-50/30 transition-colors">
+                                    <td className="p-3 font-black text-gray-800 text-sm whitespace-nowrap">
+                                      {p.name}
+                                    </td>
+                                    <td className={`p-3 font-bold whitespace-nowrap ${sessions > 0 ? 'text-sky-600' : 'text-gray-400'}`}>
+                                      ⏱ {avgStr}
+                                    </td>
+                                    <td className="p-3 text-center font-bold text-gray-600 whitespace-nowrap">
+                                      {sessions} 回
+                                    </td>
+                                    <td className="p-3 text-center whitespace-nowrap flex gap-1 justify-center">
+                                      <button
+                                        onClick={() => {
+                                          playGlobalDecideSound();
+                                          setSelectedDetailPlayer(p);
+                                        }}
+                                        className="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1"
+                                      >
+                                        📊 詳細
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          playGlobalDecideSound();
+                                          setPresentTargetPlayer(p);
+                                          setIsPresentModalOpen(true);
+                                        }}
+                                        className="px-2.5 py-1 bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1"
+                                      >
+                                        🎁 プレゼント
+                                      </button>
+                                      <button
+                                        onClick={async () => {
+                                          playGlobalDecideSound();
+                                          if (p.id === currentPlayerId) {
+                                            alert("あそびちゅうのプレイヤーは アーカイブできません！");
+                                            return;
+                                          }
+                                          if (confirm(`本当にプレイヤー「${p.name}」をアーカイブしますか？\n（他の端末からも見えなくなります）`)) {
+                                            await updateAndSavePlayerData(p.id, { isArchived: true });
+                                            alert("アーカイブしました！");
+                                          }
+                                        }}
+                                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1"
+                                      >
+                                        📁 アーカイブ
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+                        <span className="text-sm font-black text-gray-800">
+              {/* 左下フローティングコントロールボタン */}
+              {playerModalTab === 'players' ? (
+                <div className="absolute bottom-0 left-0 z-20 flex gap-2 shrink-0 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-gray-100 shadow-sm">
+                  <button
+                    onClick={() => {
+                      playGlobalDecideSound();
+                      setActiveManagePanel(activeManagePanel === 'tags' ? null : 'tags');
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-black text-sm rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Tag className="w-4 h-4" /> タグ
+                  </button>
+                  <button
+                    onClick={() => {
+                      playGlobalDecideSound();
+                      setActiveManagePanel(activeManagePanel === 'create' ? null : 'create');
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-black text-sm rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" /> 新規作成
+                  </button>
+                </div>
+              ) : (
+                isRequestTabAuthenticated && (
+                  <div className="absolute bottom-0 left-0 z-20 flex gap-2 shrink-0 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-gray-100 shadow-sm animate-fade-in">
+                    <button
+                      onClick={() => {
+                        playGlobalDecideSound();
+                        setPlayerModalTab('players');
+                        setIsRequestTabAuthenticated(false);
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-black text-sm rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer"
+                    >
+                      👤 プレイヤーえらびにもどる
+                    </button>
+                    <button
+                      onClick={handleDownloadRequestsCsv}
+                      disabled={wordRequests.length === 0}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-black text-sm rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer"
+                    >
+                      📥 CSVをダウンロード
+                    </button>
+                    <button
+                      onClick={loadWordRequests}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 font-black text-sm rounded-2xl shadow-md active:scale-95 transition-all cursor-pointer"
+                    >
+                      🔄 リロード
+                    </button>
+                  </div>
+                )
+              )}
+                        setSelectedDetailPlayer(null);
+              {/* 一括選択モード中の下部フローティングバー */}
+              {isBulkTagMode && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 bg-indigo-100 border-2 border-indigo-300 rounded-2xl p-3 flex items-center gap-4 animate-fade-in shadow-xl max-w-md w-full sm:w-auto">
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-xs sm:text-sm font-black text-indigo-800" translate="no">
+                      <span>{bulkSelectedPlayerIds.length}</span> 人えらんだよ
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          const allVisibleIds = filteredPlayers.map(p => p.id);
+                          setBulkSelectedPlayerIds(allVisibleIds);
+                        }}
+                        className="px-2 py-1 bg-white border border-indigo-200 rounded text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 shadow-sm cursor-pointer"
+                      >
+                        すべて
+                      </button>
+                      <button
+                        onClick={() => setBulkSelectedPlayerIds([])}
+                        className="px-2 py-1 bg-white border border-gray-200 rounded text-[10px] font-bold text-gray-500 hover:bg-gray-50 shadow-sm cursor-pointer"
+                      >
+                        はずす
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5 w-full sm:w-auto">
+                    <button
+                      onClick={() => {
+                        setIsBulkTagMode(false);
+                        setBulkSelectedPlayerIds([]);
+                      }}
+                      className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-black text-xs rounded-xl shadow-md transition-all shrink-0 cursor-pointer"
+                    >
+                      やめる
+                    </button>
+                    <button
+                      disabled={bulkSelectedPlayerIds.length === 0}
+                      onClick={() => {
+                        setEditingTags([]);
+                        setNewTagInput('');
+                        setIsBulkTagDialogOpen(true);
+                      }}
+                      className="flex-1 sm:flex-initial px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      タグを決定
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+                    pattern="[0-9]*"
+            {/* 新規作成パネルポップアップ */}
+            {activeManagePanel === 'create' && (
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-60 flex items-center justify-center p-4 animate-fade-in" onClick={() => setActiveManagePanel(null)}>
+                <div 
+                  className="bg-white p-5 rounded-3xl border-4 border-sky-400 shadow-2xl w-full max-w-xs animate-scale-in"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-base font-black text-sky-800 mb-4 flex items-center gap-1.5 justify-center">
+                    <Plus className="w-5 h-5 text-sky-500" /> あたらしくつくる
+                  </h3>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const nameInput = e.target.elements.playerName;
+                      handleAddPlayer(nameInput.value);
+                      nameInput.value = '';
+                      setActiveManagePanel(null);
+                    }}
+                    className="flex flex-col gap-3"
+                  >
+                    <input
+                      name="playerName"
+                      type="text"
+                      maxLength={8}
+                      placeholder="おなまえ（8もじまで）"
+                      className="w-full px-3.5 py-2.5 border-2 border-sky-200 rounded-xl text-sm font-black focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+                      required
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveManagePanel(null)}
+                        className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-black text-sm rounded-xl transition-all cursor-pointer"
+                      >
+                        とじる
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 py-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+                      >
+                        つくる
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+      {adoptingRequest && (
+            {/* タグ管理パネルポップアップ */}
+            {activeManagePanel === 'tags' && (
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-60 flex items-center justify-center p-4 animate-fade-in" onClick={() => setActiveManagePanel(null)}>
+                <div 
+                  className="bg-white p-5 rounded-3xl border-4 border-indigo-400 shadow-2xl w-full max-w-sm flex flex-col max-h-[80vh] animate-scale-in"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-base font-black text-indigo-800 mb-4 flex items-center gap-1.5 justify-center shrink-0">
+                    🏷️ タグかんり
+                  </h3>
+                  {(() => {
+                    const visiblePlayers = filteredPlayers;
+                    return (
+                      <div className="flex flex-col gap-4 overflow-y-auto pr-1">
+                        {allTags.length > 0 ? (
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-xs font-black text-gray-500 pl-0.5">タグでしぼりこむ</span>
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={selectedTag}
+                                onChange={(e) => setSelectedTag(e.target.value)}
+                                className="flex-1 px-3 py-2 border-2 border-indigo-200 rounded-xl text-xs font-black text-gray-700 bg-white focus:outline-none focus:border-indigo-400 cursor-pointer"
+                              >
+                                <option value="">すべて</option>
+                                {allTags.map(tag => (
+                                  <option key={tag} value={tag}>{tag}</option>
+                                ))}
+                              </select>
+                              {selectedTag && (
+                                <button
+                                  onClick={async () => {
+                                    if (confirm(`タグ「${selectedTag}」をすべてのプレイヤーから完全に削除しますか？`)) {
+                                      const updatedPlayers = players.map(p => ({
+                                        ...p,
+                                        tags: (p.tags || []).filter(t => t !== selectedTag)
+                                      }));
+                                      setPlayers(updatedPlayers);
+
+                                      
+                                      for (const p of updatedPlayers) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    onClick={async () => {
+                      playGlobalDecideSound();
+                      setCurrentIcon(null);
+                      await updateAndSavePlayerData(currentPlayerId, { currentIcon: null });
+                    }}
+                    className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 ${
+                      currentIcon === null
+                        ? 'bg-yellow-50 border-yellow-400 shadow-md scale-105 z-10'
+                        : 'bg-white border-gray-200 hover:border-yellow-300 hover:bg-yellow-50/30 active:scale-95'
+                    }`}
+                  >
+                    <span className="text-2xl sm:text-3xl">{TITLES.find(t => t.id === currentTitle)?.emoji || '👦'}</span>
+                  </button>
+                  {GACHA_ITEMS.filter(item => collection[item.name] > 0).map(item => {
+                    const isSelected = currentIcon === item.name;
+                    const isLegend = item.rarity === '✨レジェンド✨';
+                    const customStyle = !isLegend ? { borderColor: item.color } : {};
+                    const selectedClass = isSelected ? 'outline outline-4 outline-yellow-400 bg-yellow-50 scale-105 z-10' : 'hover:bg-yellow-50/30 active:scale-95';
+
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={async () => {
+                          playGlobalDecideSound();
+                          setCurrentIcon(item.name);
+                          await updateAndSavePlayerData(currentPlayerId, { currentIcon: item.name });
+                        }}
+                        className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-white ${selectedClass} ${isLegend ? 'legend-card border-none' : ''}`}
+                        style={customStyle}
+                        title={item.name}
+                      >
+                        <span className="text-2xl sm:text-3xl">{item.emoji}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 称号リスト */}
+              <div>
+                <h3 className="text-lg font-black text-gray-700 mb-3 flex items-center gap-2">
+                  <span>🏆</span> しょうごう を かえる
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {TITLES.map(t => {
+                    const hasTitle = achievements.includes(t.id);
+                    const isSelected = currentTitle === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        disabled={!hasTitle}
+                        onClick={async () => {
+                          playGlobalDecideSound();
+                          setCurrentTitle(t.id);
+                          await updateAndSavePlayerData(currentPlayerId, { currentTitle: t.id });
+                        }}
+                        className={`p-3 rounded-xl flex flex-col items-center justify-center border-2 transition-all text-center relative ${
+                          isSelected 
+                            ? 'bg-yellow-50 border-yellow-400 shadow-md scale-105 z-10' 
+                            : hasTitle 
+                              ? 'bg-white border-gray-200 hover:border-yellow-300 hover:bg-yellow-50/30 active:scale-95' 
+                              : 'bg-gray-100 border-gray-200 opacity-50 grayscale cursor-not-allowed'
+                        }`}
+                      >
+                        <span className="text-2xl mb-1">{hasTitle ? t.emoji : '🔒'}</span>
+                        <span className="font-black text-xs sm:text-sm text-gray-800 leading-tight mb-1">{hasTitle ? t.name : '？？？'}</span>
+                        {hasTitle && <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 leading-tight">{t.desc}</span>}
+                        {isSelected && <span className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">セット中</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+
+              {/* 背景リスト */}
+              <div>
+                <h3 className="text-lg font-black text-gray-700 mb-3 flex items-center gap-2">
+                  <span>🎨</span> はいけい を かえる
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {BACKGROUNDS.map(bg => {
+                    const hasBg = backgrounds.includes(bg.id);
+                    const isSelected = currentBackground === bg.id;
+                    return (
+                      <button
+                        key={bg.id}
+                        disabled={!hasBg}
+                        onClick={async () => {
+                          playGlobalDecideSound();
+                          setCurrentBackground(bg.id);
+                          await updateAndSavePlayerData(currentPlayerId, { currentBackground: bg.id });
+                        }}
+                        className={`relative aspect-video rounded-xl overflow-hidden border-4 transition-all group ${
+                          isSelected 
+                            ? 'border-sky-500 shadow-lg scale-105 z-10' 
+                            : hasBg 
+                              ? 'border-gray-200 hover:border-sky-300 hover:shadow-md active:scale-95' 
+                              : 'border-gray-200 opacity-50 grayscale cursor-not-allowed'
+                        }`}
+                      >
+                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${bg.url})` }} />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity group-hover:bg-black/20">
+                          <span className="font-black text-white text-sm sm:text-base drop-shadow-md">
+                            {hasBg ? bg.name : '🔒 ？？？'}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 bg-sky-500 text-white p-1 rounded-full shadow-md z-10">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 特別キーワード成功時・称号獲得時のチケット獲得ポップアップ */}
+      {ticketReward && ticketReward.show && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in pointer-events-auto">
+          <div className="bg-white border-8 border-yellow-400 p-8 rounded-3xl text-center max-w-sm w-full mx-4 shadow-2xl relative animate-pop-out">
+            <div className="absolute inset-0 bg-gradient-to-b from-yellow-100/50 to-transparent pointer-events-none rounded-2xl z-0" />
+            
+            <div className="relative z-10 space-y-6">
+              <div className="text-2xl font-black text-purple-600 animate-bounce">
+                {ticketReward.titleObj ? '🏆 称号ゲット！ 🏆' : '⚡ 激アツ！大せいこう ⚡'}
+              </div>
+
+              {/* 称号カード（称号獲得時のみ） */}
+              {ticketReward.titleObj && (
+                <div className="bg-yellow-50 border-4 border-yellow-300 px-4 py-3 rounded-2xl shadow-inner">
+                  <div className="text-xs font-bold text-gray-500 mb-0.5">🏆 あたらしいしょうごうを獲得！</div>
+                  <div className="text-lg font-black text-gray-800">{ticketReward.titleObj.name}</div>
+                  <div className="text-[10px] font-bold text-gray-400 mt-0.5">{ticketReward.titleObj.desc}</div>
+                </div>
+              )}
+              
+              {/* 特別チケット獲得バナー（称号獲得時のみ追加表示） */}
+              {ticketReward.titleObj && (
+                <div className="bg-gradient-to-r from-fuchsia-100 to-amber-100 border-2 border-fuchsia-300 px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 animate-pulse">
+                  <span className="text-base">🎟️</span>
+                  <span className="text-xs font-black text-fuchsia-700">特別チケット獲得！</span>
+                  <span className="text-base">🎟️</span>
+                </div>
+              )}
+              
+              {/* チケットのイラスト */}
+              <div className="flex justify-center my-4 relative">
+                {ticketReward.type === 'legend' ? (
+                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-white/10 animate-pulse" />
+                    <div className="text-5xl mb-2 animate-bounce">🌟🎟️🌟</div>
+                    <div className="text-xs tracking-wider">げきレアいじょう</div>
+                    <div className="text-base mt-1">かくていチケット</div>
+                  </div>
+                ) : ticketReward.type === 'se' ? (
+                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
+                    <div className="text-5xl mb-2 animate-bounce">🔊👾🔊</div>
+                    <div className="text-xs tracking-wider">こうかおんの</div>
+                    <div className="text-base mt-1">ガチャチケット</div>
+                  </div>
+                ) : ticketReward.type === 'bgm' ? (
+                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
+                    <div className="text-5xl mb-2 animate-bounce">🎵💿🎵</div>
+                    <div className="text-xs tracking-wider">おんがくの</div>
+                    <div className="text-base mt-1">ガチャチケット</div>
+                  </div>
+                ) : (
+                  <div className="w-48 py-8 rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-500 border-4 border-yellow-300 text-white font-black text-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300 relative overflow-hidden">
+                    <div className="text-5xl mb-2 animate-bounce">🎨🎟️🎨</div>
+                    <div className="text-xs tracking-wider">はいけいの</div>
+                    <div className="text-base mt-1">ガチャチケット</div>
+                  </div>
+                )}
+              </div>
+              
+              <p className="text-base font-black text-gray-700 leading-snug">
+                {ticketReward.type === 'legend' 
+                  ? '🌟 激レア以上確定チケット 🌟' 
+                  : ticketReward.type === 'se'
+                  ? '🔊 こうかおんガチャチケット 🔊'
+                  : ticketReward.type === 'bgm'
+                  ? '🎵 おんがくガチャチケット 🎵'
+                  : '🎨 はいけいガチャチケット 🎨'}
+                <br />
+                を {ticketReward.count || 1}まい ゲットしたよ！
+              </p>
+              
+              <button
+                onClick={() => {
+                  const onConfirm = ticketReward.onConfirm;
+                  setTicketReward(null);
+                  if (onConfirm) onConfirm();
+                }}
+                className="premium-button bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-black text-lg px-8 py-3 w-full shadow-lg"
+              >
+                {ticketReward.titleObj ? 'やったー！' : 'つぎへすすむ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    {/* 初回同期ローディング */}
+    {isSyncing && (
+      <div className="fixed inset-0 bg-sky-500 z-[100] flex flex-col items-center justify-center p-4">
+        <div className="text-white text-5xl mb-4 animate-bounce">☁️</div>
+        <h2 className="text-white text-xl md:text-2xl font-black mb-2">データをよみこみ中...</h2>
+        <div className="w-48 h-2 bg-sky-400 rounded-full overflow-hidden">
+          <div className="w-1/2 h-full bg-white animate-pulse" />
+        </div>
+      </div>
+    )}
+
+
+
+      {/* 画面右下のセーブ中インジケータ */}
+      {isSaving && (
+        <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-3.5 py-2 rounded-full shadow-lg border border-white/20 text-xs font-black text-gray-700 dark:text-gray-200 animate-fade-in pointer-events-none">
+          <RefreshCcw className="w-3.5 h-3.5 animate-spin text-green-500" />
+          <span>セーブ中...</span>
+        </div>
+      )}
+
+    </div>
+  );
+}

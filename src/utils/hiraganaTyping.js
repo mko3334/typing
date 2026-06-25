@@ -11,6 +11,8 @@ export function getDefaultHiraganaProgress() {
     charStats: {},
     allRowsRewardClaimed: false,
     shuffleClearCount: 0,
+    practiceFrameGachaClaimed: false,
+    testFrameGachaClaimed: false,
   };
 }
 
@@ -24,6 +26,8 @@ export function normalizeHiraganaProgress(raw) {
       Number.isFinite(Number(raw.shuffleClearCount)) && Number(raw.shuffleClearCount) >= 0
         ? Number(raw.shuffleClearCount)
         : 0,
+    practiceFrameGachaClaimed: raw.practiceFrameGachaClaimed === true,
+    testFrameGachaClaimed: raw.testFrameGachaClaimed === true,
   };
 }
 
@@ -108,6 +112,22 @@ export function buildPracticeQueue(rowIds, mode) {
   const items = rows.flatMap((row) => row.chars.map((kana) => ({ kana, rowId: row.id })));
   if (mode === 'shuffle') return shuffleArray(items);
   return items;
+}
+
+export function buildShuffledTestQueue(rowIds) {
+  const rows = HIRAGANA_ROWS.filter((row) => rowIds.includes(row.id));
+  const items = rows.flatMap((row) => row.chars.map((kana) => ({ kana, rowId: row.id })));
+  return shuffleArray(items);
+}
+
+export function shuffleRowIds(rowIds) {
+  return shuffleArray([...rowIds]);
+}
+
+export function buildShuffledRowChars(rowId) {
+  const row = HIRAGANA_ROWS.find((item) => item.id === rowId);
+  if (!row) return [];
+  return shuffleArray(row.chars.map((kana) => ({ kana, rowId: row.id })));
 }
 
 export function matchesRomajiInput(kana, typed) {

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ArrowLeft, BarChart3, Shuffle, ListOrdered } from 'lucide-react';
 import { FINGER_MAP, KEYBOARD_ROWS, resolveBackground } from '../constants';
 import { HIRAGANA_ROWS } from '../data/hiraganaRows';
 import {
-  buildPracticeQueue,
+  buildShuffledTestQueue,
   getCurrentStageRowIndex,
   getRomajiList,
   getRowSummary,
@@ -17,10 +17,21 @@ import {
 } from '../utils/hiraganaTyping';
 import {
   applyHiraganaRewardToPlayer,
-  buildOrderTestCompleteReward,
-  buildShuffleCompleteReward,
-  buildStageClearReward,
+  buildPracticeClearReward,
+  buildTestCompleteReward,
 } from '../utils/hiraganaRewards';
+import {
+  finalizeTestRowPoints,
+  getComboTier,
+  getStreakProgress,
+  getTestComboMultiplier,
+  HIRAGANA_TEST_BASE_POINTS,
+  HIRAGANA_TEST_MISS_PENALTY,
+  HIRAGANA_TEST_STREAK_BLOCK,
+  scoreTestCorrectHit,
+} from '../utils/hiraganaTestScoring';
+import { appendSubEventsAfterTypingClear } from '../utils/subEvents';
+import { isAllRowsTestSelection } from '../utils/saveFrameGacha';
 import GameSidebar from './GameSidebar';
 import HiraganaRewardModal from './HiraganaRewardModal';
 import {
@@ -30,9 +41,12 @@ import {
   HiraganaPopPanel,
   HiraganaPrimaryButton,
   HiraganaProgressPills,
+  HiraganaRowSelectCard,
   HiraganaSceneBackdrop,
   HiraganaStageCard,
   HiraganaTabButton,
+  HiraganaTestComboHud,
+  HiraganaTestRemainBadge,
 } from './hiragana/HiraganaVisuals';
 
 function VirtualKeyboard({ assistSettings, nextChar, shake }) {
@@ -101,11 +115,10 @@ export default function HiraganaTypingScreen({
     [player?.hiraganaProgress],
   );
 
-  const [menuTab, setMenuTab] = useState('stage');
+  const [menuTab, setMenuTab] = useState('practice');
   const [phase, setPhase] = useState('menu');
-  const [playMode, setPlayMode] = useState('stage');
+  const [playMode, setPlayMode] = useState('practice');
   const [selectedRowIds, setSelectedRowIds] = useState(['a']);
-  const [testMode, setTestMode] = useState('order');
   const [selectedStageRowId, setSelectedStageRowId] = useState(HIRAGANA_ROWS[0].id);
   const [activeStageRowId, setActiveStageRowId] = useState(null);
   const [queue, setQueue] = useState([]);
@@ -119,6 +132,12 @@ export default function HiraganaTypingScreen({
   const [rewardStats, setRewardStats] = useState(null);
   const [shake, setShake] = useState(false);
   const [isAssistOpen, setIsAssistOpen] = useState(false);
+  const [testSelectedRowIds, setTestSelectedRowIds] = useState([]);
+  const [testRowStats, setTestRowStats] = useState({});
+  const [testCombo, setTestCombo] = useState(0);
+  const [testMaxCombo, setTestMaxCombo] = useState(0);
+  const [scorePop, setScorePop] = useState(null);
+  const scorePopTimerRef = useRef(null);
 
   const stageRowIndex = getCurrentStageRowIndex(clearedRowIds);
   const stageRow = HIRAGANA_ROWS[Math.min(stageRowIndex, HIRAGANA_ROWS.length - 1)];
@@ -146,12 +165,12 @@ export default function HiraganaTypingScreen({
   }, [clearedRowIds, phase, stageRow.id]);
 
   const currentKana = useMemo(() => {
-    if (playMode === 'stage') return activeStageRow.chars[stageCharIndex];
+    if (playMode === 'practice') return activeStageRow.chars[stageCharIndex];
     return queue[queueIndex]?.kana || '';
   }, [activeStageRow.chars, playMode, queue, queueIndex, stageCharIndex]);
 
   const validRomaji = useMemo(() => getRomajiList(currentKana), [currentKana]);
-  const isTestPlay = playMode === 'order' || playMode === 'shuffle';
+  const isTestPlay = playMode === 'test';
   const playAssistSettings = useMemo(
     () =>
       isTestPlay
@@ -175,11 +194,19 @@ export default function HiraganaTypingScreen({
           charStats: nextStats,
           allRowsRewardClaimed: progress.allRowsRewardClaimed,
           shuffleClearCount: progress.shuffleClearCount,
+          practiceFrameGachaClaimed: progress.practiceFrameGachaClaimed,
+          testFrameGachaClaimed: progress.testFrameGachaClaimed,
           ...extraProgress,
         },
       });
     },
-    [onPlayerUpdate, progress.allRowsRewardClaimed, progress.shuffleClearCount],
+    [
+      onPlayerUpdate,
+      progress.allRowsRewardClaimed,
+      progress.practiceFrameGachaClaimed,
+      progress.shuffleClearCount,
+      progress.testFrameGachaClaimed,
+    ],
   );
 
   const grantReward = useCallback(
@@ -193,8 +220,10 @@ export default function HiraganaTypingScreen({
         bgmTickets: updated.bgmTickets,
         seTickets: updated.seTickets,
         legendTickets: updated.legendTickets,
+        frameTickets: updated.frameTickets,
         achievements: updated.achievements,
         hiraganaProgress: updated.hiraganaProgress,
+        plazaSubEvents: appendSubEventsAfterTypingClear(updated),
       });
       setRewardStats(stats);
       setPendingReward(reward);
@@ -202,11 +231,62 @@ export default function HiraganaTypingScreen({
     [onPlayerUpdate, player],
   );
 
-  const startStage = () => {
+  const showScorePop = useCallback((pop) => {
+    if (scorePopTimerRef.current) clearTimeout(scorePopTimerRef.current);
+    setScorePop({ ...pop, key: Date.now() });
+    scorePopTimerRef.current = setTimeout(() => setScorePop(null), 580);
+  }, []);
+
+  const finishRewardFlow = useCallback(
+    (reward, isFirstClear) => {
+      const kind = reward?.kind;
+      setPendingReward(null);
+      setRewardStats(null);
+      if (kind === 'practice') {
+        setStageCharIndex(0);
+        setTypedChars('');
+        setSessionMisses(0);
+        setActiveStageRowId(null);
+        const continueNext = isFirstClear && clearedRowIds.length < HIRAGANA_ROWS.length;
+        if (continueNext) {
+          const nextRow = HIRAGANA_ROWS[getCurrentStageRowIndex(clearedRowIds)];
+          setActiveStageRowId(nextRow.id);
+          setSelectedStageRowId(nextRow.id);
+        } else {
+          setPhase('menu');
+        }
+      } else {
+        setPhase('menu');
+      }
+    },
+    [clearedRowIds.length],
+  );
+
+  const buildRowResultsFromStats = useCallback((rowIds, rowStats) => {
+    return rowIds.map((rowId) => {
+      const row = HIRAGANA_ROWS.find((item) => item.id === rowId);
+      const stat = rowStats[rowId] || { points: 0, misses: 0 };
+      return {
+        rowId,
+        label: row?.label || rowId,
+        points: finalizeTestRowPoints(stat.points, stat.misses),
+        misses: stat.misses,
+      };
+    });
+  }, []);
+
+  const computeLiveTestPoints = useCallback((rowIds, rowStats) => {
+    return rowIds.reduce((sum, rowId) => {
+      const stat = rowStats[rowId] || { points: 0, misses: 0 };
+      return sum + finalizeTestRowPoints(stat.points, stat.misses);
+    }, 0);
+  }, []);
+
+  const startPractice = () => {
     if (!canStartSelectedStage) return;
     playDecideSound?.();
     setActiveStageRowId(selectedStageRow.id);
-    setPlayMode('stage');
+    setPlayMode('practice');
     setPhase('play');
     setStageCharIndex(0);
     setTypedChars('');
@@ -216,13 +296,17 @@ export default function HiraganaTypingScreen({
   const startTest = () => {
     if (selectedRowIds.length === 0) return;
     playDecideSound?.();
-    const built = buildPracticeQueue(selectedRowIds, testMode);
+    const built = buildShuffledTestQueue(selectedRowIds);
     if (built.length === 0) return;
-    setPlayMode(testMode === 'shuffle' ? 'shuffle' : 'order');
+    setPlayMode('test');
+    setTestSelectedRowIds([...selectedRowIds]);
     setQueue(built);
     setQueueIndex(0);
-    setTypedChars('');
+    setTestRowStats({});
+    setTestCombo(0);
+    setTestMaxCombo(0);
     setSessionMisses(0);
+    setTypedChars('');
     setPhase('play');
   };
 
@@ -230,18 +314,20 @@ export default function HiraganaTypingScreen({
     const nextStats = recordCharResult(charStats, currentKana, true);
     setCharStats(nextStats);
 
-    if (playMode === 'stage') {
+    if (playMode === 'practice') {
       const nextIndex = stageCharIndex + 1;
       if (nextIndex >= activeStageRow.chars.length) {
         const wasFirstClear = !clearedRowIds.includes(activeStageRow.id);
         const nextCleared = wasFirstClear ? [...clearedRowIds, activeStageRow.id] : clearedRowIds;
         const allRowsJustCompleted =
           nextCleared.length >= HIRAGANA_ROWS.length && clearedRowIds.length < HIRAGANA_ROWS.length;
-        const reward = buildStageClearReward({
+        const reward = buildPracticeClearReward({
           row: activeStageRow,
           isFirstClear: wasFirstClear,
           allRowsJustCompleted,
           allRowsRewardClaimed: progress.allRowsRewardClaimed,
+          practiceFrameTicketGranted: progress.practiceFrameGachaClaimed,
+          existingAchievements: player?.achievements,
         });
         const progressPatch = {
           clearedRowIds: nextCleared,
@@ -268,53 +354,105 @@ export default function HiraganaTypingScreen({
       return;
     }
 
-    const nextQueueIndex = queueIndex + 1;
-    if (nextQueueIndex >= queue.length) {
-      const accuracy =
-        queue.length + sessionMisses > 0
-          ? Math.round((queue.length / (queue.length + sessionMisses)) * 100)
-          : 100;
-      const progressPatch = {
-        clearedRowIds,
-        charStats: nextStats,
-        shuffleClearCount:
-          playMode === 'shuffle' ? progress.shuffleClearCount + 1 : progress.shuffleClearCount,
-        allRowsRewardClaimed: progress.allRowsRewardClaimed,
+    if (playMode === 'test') {
+      const currentRowId = queue[queueIndex]?.rowId;
+      const nextCombo = testCombo + 1;
+      const hit = scoreTestCorrectHit(nextCombo);
+      const newMaxCombo = Math.max(testMaxCombo, nextCombo);
+      const nextRowStats = {
+        ...testRowStats,
+        [currentRowId]: {
+          points: (testRowStats[currentRowId]?.points || 0) + hit.points,
+          misses: testRowStats[currentRowId]?.misses || 0,
+        },
       };
-      const reward =
-        playMode === 'shuffle' ? buildShuffleCompleteReward() : buildOrderTestCompleteReward();
-      grantReward(reward, progressPatch, { misses: sessionMisses, accuracy });
+
+      setTestCombo(nextCombo);
+      setTestRowStats(nextRowStats);
+      setTestMaxCombo(newMaxCombo);
+      showScorePop({ points: hit.points, multiplier: hit.multiplier, break: false });
+
+      const nextQueueIndex = queueIndex + 1;
+      if (nextQueueIndex >= queue.length) {
+        const rowResults = buildRowResultsFromStats(testSelectedRowIds, nextRowStats);
+        const totalPoints = rowResults.reduce((sum, row) => sum + row.points, 0);
+        const totalMisses = sessionMisses;
+        const accuracy =
+          queue.length + totalMisses > 0
+            ? Math.round((queue.length / (queue.length + totalMisses)) * 100)
+            : 100;
+        const progressPatch = {
+          clearedRowIds,
+          charStats: nextStats,
+          shuffleClearCount: progress.shuffleClearCount + 1,
+          allRowsRewardClaimed: progress.allRowsRewardClaimed,
+        };
+        const reward = buildTestCompleteReward({
+          totalPoints,
+          rowResults,
+          maxCombo: newMaxCombo,
+          isFirstShuffleClear: progress.shuffleClearCount === 0,
+          isAllRowsTest: isAllRowsTestSelection(testSelectedRowIds),
+          testFrameTicketGranted: progress.testFrameGachaClaimed,
+          existingAchievements: player?.achievements,
+        });
+        grantReward(reward, progressPatch, { misses: totalMisses, accuracy });
+        setTypedChars('');
+        playSE?.('clear');
+        return;
+      }
+
+      setQueueIndex(nextQueueIndex);
       setTypedChars('');
-      playSE?.('clear');
-      return;
+      playSE?.('type');
     }
-    setQueueIndex(nextQueueIndex);
-    setTypedChars('');
-    playSE?.('type');
   }, [
     charStats,
     clearedRowIds,
     currentKana,
     grantReward,
+    buildRowResultsFromStats,
     playMode,
     playSE,
     progress.allRowsRewardClaimed,
+    progress.practiceFrameGachaClaimed,
     progress.shuffleClearCount,
-    queue.length,
+    progress.testFrameGachaClaimed,
+    queue,
     queueIndex,
     sessionMisses,
+    showScorePop,
     stageCharIndex,
     activeStageRow,
+    testCombo,
+    testMaxCombo,
+    testRowStats,
+    testSelectedRowIds,
+    player?.achievements,
   ]);
 
   const handleMiss = useCallback(() => {
     setSessionMisses((prev) => prev + 1);
     setCharStats((prev) => recordCharResult(prev, currentKana, false));
+    if (playMode === 'test') {
+      const currentRowId = queue[queueIndex]?.rowId;
+      setTestCombo(0);
+      if (currentRowId) {
+        setTestRowStats((prev) => ({
+          ...prev,
+          [currentRowId]: {
+            points: prev[currentRowId]?.points || 0,
+            misses: (prev[currentRowId]?.misses || 0) + 1,
+          },
+        }));
+      }
+      showScorePop({ break: true });
+    }
     setTypedChars('');
     setShake(true);
     playSE?.('miss');
     setTimeout(() => setShake(false), 400);
-  }, [currentKana, playSE]);
+  }, [currentKana, playMode, playSE, queue, queueIndex, showScorePop]);
 
   useEffect(() => {
     if (phase !== 'play' || !currentKana) return undefined;
@@ -353,7 +491,15 @@ export default function HiraganaTypingScreen({
   const weakChars = getWeakChars(charStats);
 
   if (phase === 'play') {
-    const playRow = playMode === 'stage' ? activeStageRow : HIRAGANA_ROWS.find((r) => r.id === queue[queueIndex]?.rowId) || activeStageRow;
+    const playRow =
+      playMode === 'practice'
+        ? activeStageRow
+        : HIRAGANA_ROWS.find((r) => r.id === queue[queueIndex]?.rowId) || activeStageRow;
+    const testLivePoints = computeLiveTestPoints(testSelectedRowIds, testRowStats);
+    const testRemaining = queue.length - queueIndex;
+    const comboTier = getComboTier(testCombo);
+    const streakProgress = getStreakProgress(testCombo);
+    const comboMultiplierValue = getTestComboMultiplier(testCombo);
 
     return (
       <div
@@ -393,19 +539,32 @@ export default function HiraganaTypingScreen({
                 <ArrowLeft className="w-4 h-4" /> もどる
               </button>
               <span className={`text-xs font-black px-3 py-1.5 rounded-full border-2 border-white shadow-sm bg-gradient-to-r ${playRow.theme} text-white`}>
-                {playMode === 'stage'
+                {playMode === 'practice'
                   ? `${playRow.emoji} ${activeStageRow.label}`
-                  : testMode === 'shuffle'
-                    ? '🎲 シャッフルテスト'
-                    : '📝 じゅんばんテスト'}
+                  : '🎲 シャッフルテスト'}
               </span>
               <span className="text-xs font-black text-rose-600 bg-rose-50 border-2 border-rose-200 px-2.5 py-1 rounded-full">
                 ミス {sessionMisses}
               </span>
             </div>
 
-            {playMode === 'stage' && (
+            {playMode === 'practice' && (
               <HiraganaProgressPills chars={activeStageRow.chars} currentIndex={stageCharIndex} />
+            )}
+
+            {playMode === 'test' && (
+              <>
+                <HiraganaTestComboHud
+                  combo={testCombo}
+                  multiplierValue={comboMultiplierValue}
+                  livePoints={testLivePoints}
+                  totalMisses={sessionMisses}
+                  scorePop={scorePop}
+                  tier={comboTier}
+                  streakProgress={streakProgress}
+                />
+                <HiraganaTestRemainBadge remaining={testRemaining} />
+              </>
             )}
 
             <HiraganaKanaBubble
@@ -417,9 +576,9 @@ export default function HiraganaTypingScreen({
               shake={shake}
             />
 
-            {playMode !== 'stage' && (
-              <p className="text-center text-xs font-black text-indigo-500 mt-3 bg-indigo-50 border border-indigo-100 rounded-full py-1">
-                {queueIndex + 1} / {queue.length} もん
+            {playMode === 'test' && (
+              <p className="text-center text-[10px] font-black text-indigo-500 mt-2">
+                基本 {HIRAGANA_TEST_BASE_POINTS}pt · {HIRAGANA_TEST_STREAK_BLOCK}連続で倍率UP（×1.2→+0.2ずつ）· ミス1回 −{HIRAGANA_TEST_MISS_PENALTY}pt
               </p>
             )}
 
@@ -436,27 +595,7 @@ export default function HiraganaTypingScreen({
             stats={rewardStats}
             playDecideSound={playDecideSound}
             onClose={() => {
-              const kind = pendingReward.kind;
-              const isFirstClear = pendingReward.isFirstClear === true;
-              setPendingReward(null);
-              setRewardStats(null);
-              if (kind === 'stage') {
-                setStageCharIndex(0);
-                setTypedChars('');
-                setSessionMisses(0);
-                setActiveStageRowId(null);
-                const continueNext =
-                  isFirstClear && clearedRowIds.length < HIRAGANA_ROWS.length;
-                if (continueNext) {
-                  const nextRow = HIRAGANA_ROWS[getCurrentStageRowIndex(clearedRowIds)];
-                  setActiveStageRowId(nextRow.id);
-                  setSelectedStageRowId(nextRow.id);
-                } else {
-                  setPhase('menu');
-                }
-              } else {
-                setPhase('menu');
-              }
+              finishRewardFlow(pendingReward, pendingReward.isFirstClear === true);
             }}
           />
         )}
@@ -503,12 +642,12 @@ export default function HiraganaTypingScreen({
           <HiraganaPopPanel className="p-4 sm:p-6">
             <div className="flex gap-2 mb-5 flex-wrap">
               <HiraganaTabButton
-                active={menuTab === 'stage'}
+                active={menuTab === 'practice'}
                 icon={ListOrdered}
-                label="ステージ"
+                label="練習"
                 onClick={() => {
                   playDecideSound?.();
-                  setMenuTab('stage');
+                  setMenuTab('practice');
                 }}
               />
               <HiraganaTabButton
@@ -531,14 +670,14 @@ export default function HiraganaTypingScreen({
               />
             </div>
 
-          {menuTab === 'stage' && (
+          {menuTab === 'practice' && (
             <div className="space-y-4 animate-fade-in">
               <p className="text-sm font-black text-indigo-700 leading-relaxed">
                 🗺️ 上から {HIRAGANA_ROWS[0].chars.join('→')} の順で クリア！
                 つぎの行が どんどん あくよ。
               </p>
               <HiraganaInfoChip tone="amber">
-                🎁 各行クリア 500pt / 再チャレンジも 500pt / ぜん行クリアで チケット各1枚
+                🎁 各行クリア 100pt / 再チャレンジも 100pt / ぜん行クリアで チケット各1枚＋フレームガチャチケット
               </HiraganaInfoChip>
               {allStagesClear && (
                 <HiraganaInfoChip tone="green">
@@ -570,7 +709,7 @@ export default function HiraganaTypingScreen({
               </div>
               <HiraganaPrimaryButton
                 disabled={!canStartSelectedStage}
-                onClick={startStage}
+                onClick={startPractice}
               >
                 {isSelectedStageReplay
                   ? `${selectedStageRow.emoji} ${selectedStageRow.label} を 再チャレンジ！`
@@ -582,63 +721,41 @@ export default function HiraganaTypingScreen({
           {menuTab === 'test' && (
             <div className="space-y-4 animate-fade-in">
               <HiraganaInfoChip tone="rose">
-                ⚠️ テストは ローマ字ヒントも キーボードの光るアシストも なし！ ひらがなだけ見てね。
+                ⚠️ テストは ローマ字ヒントも キーボードの光るアシストも なし！ 選んだ行の文字を ぜんぶシャッフル。
+              </HiraganaInfoChip>
+              <HiraganaInfoChip tone="orange">
+                🔥 正解{HIRAGANA_TEST_BASE_POINTS}pt · {HIRAGANA_TEST_STREAK_BLOCK}連続ミスなしで×1.2、以降{HIRAGANA_TEST_STREAK_BLOCK}個ごとに+0.2 · ミスでコンボリセット
+              </HiraganaInfoChip>
+              <HiraganaInfoChip tone="indigo">
+                🖼️ 10行すべてを選んで テストクリアで フレームガチャチケット！
               </HiraganaInfoChip>
               <div>
-                <p className="text-xs font-black text-indigo-600 mb-2">🎯 テストする行</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="text-xs font-black text-indigo-600 mb-2">
+                  🎯 出題する行（タップで ON/OFF · 未選択はグレー）
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {HIRAGANA_ROWS.map((row) => (
-                    <button
+                    <HiraganaRowSelectCard
                       key={row.id}
-                      type="button"
-                      onClick={() => toggleRowSelection(row.id)}
-                      className={`px-3 py-2 rounded-2xl text-xs font-black border-3 transition-all ${
-                        selectedRowIds.includes(row.id)
-                          ? `bg-gradient-to-r ${row.theme} text-white border-white shadow-md scale-105`
-                          : `${row.badge} hover:scale-105`
-                      }`}
-                    >
-                      {row.emoji} {row.label}
-                    </button>
+                      row={row}
+                      selected={selectedRowIds.includes(row.id)}
+                      onToggle={() => {
+                        playDecideSound?.();
+                        toggleRowSelection(row.id);
+                      }}
+                    />
                   ))}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTestMode('order')}
-                  className={`flex-1 py-3 rounded-2xl text-xs font-black border-3 transition-all ${
-                    testMode === 'order'
-                      ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white border-white shadow-lg scale-[1.02]'
-                      : 'bg-white border-gray-200 text-gray-600'
-                  }`}
-                >
-                  📝 じゅんばん
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTestMode('shuffle')}
-                  className={`flex-1 py-3 rounded-2xl text-xs font-black border-3 transition-all ${
-                    testMode === 'shuffle'
-                      ? 'bg-gradient-to-r from-orange-400 to-rose-500 text-white border-white shadow-lg scale-[1.02]'
-                      : 'bg-white border-gray-200 text-gray-600'
-                  }`}
-                >
-                  🎲 シャッフル
-                </button>
-              </div>
-              {testMode === 'shuffle' && (
-                <HiraganaInfoChip tone="orange">🎲 シャッフルテスト クリアで 2000pt！</HiraganaInfoChip>
-              )}
-              {testMode === 'order' && (
-                <HiraganaInfoChip tone="sky">📝 じゅんばんテスト クリアで 1000pt！</HiraganaInfoChip>
-              )}
               <HiraganaPrimaryButton
                 variant="indigo"
                 disabled={selectedRowIds.length === 0}
                 onClick={startTest}
               >
-                🚀 テストスタート！
+                🚀 シャッフルテストスタート！（{selectedRowIds.reduce((sum, id) => {
+                  const row = HIRAGANA_ROWS.find((item) => item.id === id);
+                  return sum + (row?.chars.length || 0);
+                }, 0)}もん）
               </HiraganaPrimaryButton>
             </div>
           )}
@@ -650,7 +767,7 @@ export default function HiraganaTypingScreen({
                 {weakChars.length === 0 ? (
                   <p className="text-xs font-bold text-gray-400 bg-gradient-to-r from-gray-50 to-sky-50 rounded-2xl p-5 text-center border-2 border-dashed border-gray-200">
                     まだ データがありません。<br />
-                    ステージや テストで 記録されるよ！
+                    練習や テストで 記録されるよ！
                   </p>
                 ) : (
                   <div className="space-y-2">

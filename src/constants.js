@@ -24,7 +24,7 @@ export const TITLES = [
   { id: 'hiragana_starter', name: '🔤 ひらがなスターター', desc: 'あ行ステージを クリアする', emoji: '🔤', color: 'text-sky-600', bg: 'bg-sky-100' },
   { id: 'hiragana_challenger', name: '📝 ひらがなチャレンジャー', desc: 'ひらがな 5行 クリアする', emoji: '📝', color: 'text-indigo-600', bg: 'bg-indigo-100' },
   { id: 'hiragana_master', name: '🎌 ひらがなマスター', desc: 'ひらがな ぜん行 クリアする', emoji: '🎌', color: 'text-rose-600', bg: 'bg-rose-100' },
-  { id: 'shuffle_star', name: '🎲 シャッフルスター', desc: 'シャッフルテストを 1かい クリアする', emoji: '🎲', color: 'text-fuchsia-600', bg: 'bg-fuchsia-100' },
+  { id: 'shuffle_star', name: '🎲 シャッフルマスター', desc: 'シャッフルテストを 1かい クリアする', emoji: '🎲', color: 'text-fuchsia-600', bg: 'bg-fuchsia-100' },
   { id: 'collection_15', name: '✨ ガチャマスター', desc: 'ずかんを 15しゅるいいじょう あつめる', emoji: '✨', color: 'text-pink-600', bg: 'bg-pink-100' },
   { id: 'points_1000', name: '🪙 ポイントリッチ', desc: '1000ポイントいじょう ためる', emoji: '🪙', color: 'text-amber-600', bg: 'bg-amber-100' },
   { id: 'points_10000', name: '💰 ポイントキング', desc: '10000ポイントいじょう ためる', emoji: '💰', color: 'text-yellow-700', bg: 'bg-yellow-100' },

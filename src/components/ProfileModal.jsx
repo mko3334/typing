@@ -1,10 +1,54 @@
 import React, { useEffect, useRef } from 'react';
 import { User, X, CheckCircle2 } from 'lucide-react';
 import { BACKGROUNDS, TITLES, GACHA_ITEMS } from '../constants';
+import { SAVE_FRAMES } from '../constants/saveFrames';
+import PlayerCard from './PlayerCard';
 import { optimizedAssetUrl } from '../utils/assetImages';
 
 function countOwnedTypes(collection = {}) {
   return Object.keys(collection).filter((key) => collection[key] > 0).length;
+}
+
+function FramePreviewOption({ player, frameId, isSelected, disabled, onSelect, label }) {
+  const previewPlayer = {
+    ...player,
+    currentFrame: frameId,
+    collectionCount:
+      player.collectionCount ??
+      countOwnedTypes(player.collection || {}),
+  };
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSelect}
+      className={`relative w-full text-left transition-all rounded-xl ${
+        disabled
+          ? 'opacity-50 grayscale cursor-not-allowed'
+          : isSelected
+            ? 'ring-4 ring-yellow-400 scale-[1.01] z-10'
+            : 'hover:scale-[1.01] active:scale-[0.99]'
+      }`}
+    >
+      <PlayerCard readOnly compact player={previewPlayer} />
+      {label && (
+        <span className="absolute top-1.5 left-1.5 z-20 bg-white/95 text-[10px] font-black px-2 py-0.5 rounded-full border border-gray-200 shadow-sm">
+          {label}
+        </span>
+      )}
+      {isSelected && (
+        <span className="absolute top-1.5 right-1.5 z-20 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
+          セット中
+        </span>
+      )}
+      {disabled && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-black/25">
+          <span className="text-3xl drop-shadow">🔒</span>
+        </div>
+      )}
+    </button>
+  );
 }
 
 export default function ProfileModal({
@@ -32,6 +76,8 @@ export default function ProfileModal({
   const currentTitle = player.currentTitle || 'rookie';
   const currentIcon = player.currentIcon ?? null;
   const currentBackground = player.currentBackground || 'default';
+  const currentFrame = player.currentFrame || null;
+  const unlockedFrames = Array.isArray(player.unlockedFrames) ? player.unlockedFrames : [];
   const titleInfo = TITLES.find((t) => t.id === currentTitle) || TITLES[0];
   const iconItem = currentIcon ? GACHA_ITEMS.find((item) => item.name === currentIcon) : null;
 
@@ -71,27 +117,19 @@ export default function ProfileModal({
         </div>
 
         <div className="overflow-y-auto pr-2 space-y-6 flex-1">
-          <div className="bg-gradient-to-r from-sky-50 to-indigo-50 border-2 border-indigo-100 p-4 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4">
-            <div
-              className={`w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full flex items-center justify-center text-4xl sm:text-5xl border-4 shadow-sm shrink-0 ${
-                iconItem?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : 'border-indigo-200'
-              }`}
-              style={iconStyle}
-            >
-              {iconItem ? iconItem.emoji : titleInfo.emoji || '👦'}
-            </div>
-            <div className="flex-1 text-center sm:text-left flex flex-col justify-center">
-              <div className="text-xs sm:text-sm font-black text-indigo-500 mb-1">{titleInfo.name}</div>
-              <h3 className="text-2xl sm:text-3xl font-black text-gray-800 mb-2">{player.name}</h3>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-3 text-xs sm:text-sm font-bold text-gray-600">
-                <span className="bg-white px-3 py-1 rounded-full border shadow-sm">🪙 {player.points || 0} pt</span>
-                <span className="bg-white px-3 py-1 rounded-full border shadow-sm">
-                  🎁 {countOwnedTypes(collection)} しゅるい
-                </span>
-                <span className="bg-white px-3 py-1 rounded-full border shadow-sm">
-                  🎟️ {player.specialTickets || 0} まい
-                </span>
-              </div>
+          <div>
+            <p className="text-xs font-bold text-gray-500 mb-2 text-center">
+              タイトル画面の セーブカード（いまの 見た目）
+            </p>
+            <div className="max-w-sm mx-auto">
+              <PlayerCard
+                readOnly
+                player={{
+                  ...player,
+                  collectionCount:
+                    player.collectionCount ?? countOwnedTypes(collection),
+                }}
+              />
             </div>
           </div>
 
@@ -172,6 +210,37 @@ export default function ProfileModal({
                       </span>
                     )}
                   </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-black text-gray-700 mb-1 flex items-center gap-2">
+              <span>🖼️</span> セーブフレーム を かえる
+            </h3>
+            <p className="text-xs font-bold text-gray-500 mb-3">
+              背景・アイコン・称号つきの セーブカードに フレームが つくよ
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FramePreviewOption
+                player={player}
+                frameId={null}
+                label="なし"
+                isSelected={currentFrame === null}
+                onSelect={() => save({ currentFrame: null })}
+              />
+              {SAVE_FRAMES.map((frame) => {
+                const hasFrame = unlockedFrames.includes(frame.id);
+                return (
+                  <FramePreviewOption
+                    key={frame.id}
+                    player={player}
+                    frameId={frame.id}
+                    isSelected={currentFrame === frame.id}
+                    disabled={!hasFrame}
+                    onSelect={() => save({ currentFrame: frame.id })}
+                  />
                 );
               })}
             </div>

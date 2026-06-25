@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { formatTestMultiplier, getTestComboMultiplier } from '../../utils/hiraganaTestScoring';
 
 const FLOATERS = ['✨', '⭐', '💫', '🎀', '🌟', '💛', '💙', '💗'];
 
@@ -167,6 +168,47 @@ export function HiraganaKanaBubble({ kana, row, isTestPlay, displayRomaji, typed
   );
 }
 
+/** 値が増えたときだけ跳ねる（複数桁はウェイブ） */
+export function HiraganaBounceValue({ value, format = (v) => String(v), className = '' }) {
+  const prevRef = useRef(value);
+  const [animKey, setAnimKey] = useState(0);
+
+  useEffect(() => {
+    if (value > prevRef.current) setAnimKey((key) => key + 1);
+    prevRef.current = value;
+  }, [value]);
+
+  const text = format(value);
+  const chars = text.split('');
+  const wave = chars.length > 1;
+
+  return (
+    <span className={`inline-flex items-baseline justify-center ${className}`}>
+      {chars.map((char, index) => (
+        <span
+          key={`${animKey}-${index}`}
+          className="inline-block origin-bottom animate-hiragana-stat-bounce"
+          style={wave ? { animationDelay: `${index * 0.07}s` } : undefined}
+        >
+          {char}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+export function HiraganaTestRemainBadge({ remaining }) {
+  return (
+    <div className="mb-4 text-center">
+      <p className="text-sm sm:text-base font-black text-indigo-600">
+        残り{' '}
+        <span className="text-2xl sm:text-3xl text-indigo-900 tabular-nums align-middle mx-1">{remaining}</span>
+        もん
+      </p>
+    </div>
+  );
+}
+
 export function HiraganaProgressPills({ chars, currentIndex }) {
   return (
     <div className="flex justify-center gap-1.5 sm:gap-2 mb-4 flex-wrap">
@@ -202,5 +244,126 @@ export function HiraganaPrimaryButton({ children, onClick, disabled, variant = '
     >
       {children}
     </button>
+  );
+}
+
+/** テスト用：未選択=グレー、選択=行カラー */
+export function HiraganaRowSelectCard({ row, selected, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`relative overflow-hidden rounded-2xl border-3 p-3 text-left transition-all duration-200 ${
+        selected
+          ? `bg-gradient-to-br ${row.theme} border-white text-white shadow-lg scale-[1.03] ring-4 ${row.ring}`
+          : 'bg-gray-100 border-gray-300 text-gray-400 grayscale opacity-75 hover:opacity-90 hover:scale-[1.01]'
+      }`}
+    >
+      {selected && <div className="absolute inset-x-0 top-0 h-1 bg-white/50" />}
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <span className={`text-2xl leading-none ${selected ? 'drop-shadow-md' : ''}`}>{row.emoji}</span>
+        {selected ? (
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white/25 border border-white/40">
+            出題中
+          </span>
+        ) : (
+          <span className="text-[10px] font-black text-gray-400">タップで選択</span>
+        )}
+      </div>
+      <div className={`text-sm font-black ${selected ? 'text-white' : 'text-gray-500'}`}>{row.label}</div>
+      <p className={`text-[10px] font-bold mt-0.5 leading-snug ${selected ? 'text-white/90' : 'text-gray-400'}`}>
+        {row.chars.join(' ')}
+      </p>
+    </button>
+  );
+}
+
+export function HiraganaTestComboHud({
+  combo,
+  multiplierValue,
+  livePoints = 0,
+  totalMisses = 0,
+  scorePop,
+  tier,
+  streakProgress,
+}) {
+  const filled = streakProgress?.filled ?? 0;
+  const untilNext = streakProgress?.untilNext ?? 5;
+  const nextMultiplier = formatTestMultiplier(getTestComboMultiplier(streakProgress?.nextAt ?? 5));
+
+  return (
+    <div className="mb-4 space-y-3">
+      <div className="flex flex-wrap items-end justify-center gap-4 sm:gap-6">
+        <div className="text-center min-w-[5.5rem]">
+          <p className="text-sm sm:text-base font-black text-indigo-600 leading-none mb-1">コンボ！</p>
+          <HiraganaBounceValue
+            value={combo}
+            className={`text-4xl sm:text-5xl font-black leading-none tabular-nums drop-shadow-sm ${
+              combo >= 5 ? 'text-orange-500' : 'text-indigo-700'
+            }`}
+          />
+        </div>
+
+        <div className="text-center min-w-[5.5rem]">
+          <p className="text-xs sm:text-sm font-black text-sky-600 leading-none mb-1">倍率</p>
+          <HiraganaBounceValue
+            value={multiplierValue}
+            format={(v) => `×${formatTestMultiplier(v)}`}
+            className={`text-3xl sm:text-4xl font-black leading-none tabular-nums ${
+              combo >= 5 ? 'text-orange-500' : 'text-sky-700'
+            }`}
+          />
+        </div>
+
+        <div className="text-center min-w-[6.5rem]">
+          <p className="text-xs sm:text-sm font-black text-violet-600 leading-none mb-1">合計</p>
+          <div className="text-3xl sm:text-4xl font-black leading-none tabular-nums text-violet-700">
+            <HiraganaBounceValue value={livePoints} format={(v) => v.toLocaleString()} />
+            <span className="text-base sm:text-lg ml-0.5">pt</span>
+          </div>
+        </div>
+
+        <div className="text-center min-w-[3.5rem] pb-1">
+          <p className="text-[10px] font-black text-rose-500 leading-none mb-1">ミス</p>
+          <p className="text-xl sm:text-2xl font-black leading-none tabular-nums text-rose-600">{totalMisses}</p>
+        </div>
+      </div>
+
+      <div className="flex justify-center gap-1.5 px-2">
+        {Array.from({ length: 5 }, (_, index) => (
+          <div
+            key={index}
+            className={`h-2.5 sm:h-3 flex-1 max-w-12 rounded-full transition-all duration-300 ${
+              index < filled ? 'bg-gradient-to-r from-orange-400 to-rose-500 shadow-sm' : 'bg-gray-200'
+            }`}
+          />
+        ))}
+      </div>
+
+      <p className="text-center text-xs sm:text-sm font-black text-orange-600">
+        {combo < 5
+          ? `あと ${untilNext} 文字で 倍率 ×1.2！`
+          : `あと ${untilNext} 文字で 倍率 ×${nextMultiplier}！`}
+      </p>
+
+      {tier && (
+        <p className="text-center text-xs font-black text-orange-600 animate-[hiragana-combo-pop_0.55s_ease-out_forwards]">
+          {tier.emoji} 倍率 {tier.label} 達成！
+        </p>
+      )}
+
+      {scorePop && (
+        <div
+          key={scorePop.key}
+          className={`text-center font-black animate-[hiragana-combo-pop_0.55s_ease-out_forwards] ${
+            scorePop.break ? 'text-rose-500 text-lg' : 'text-amber-500 text-2xl sm:text-3xl'
+          }`}
+        >
+          {scorePop.break
+            ? 'コンボ リセット！'
+            : `+${scorePop.points} pt (×${formatTestMultiplier(scorePop.multiplier)})`}
+        </div>
+      )}
+    </div>
   );
 }

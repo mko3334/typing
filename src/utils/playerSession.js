@@ -13,11 +13,24 @@ export function getDeviceSessionId() {
   return id;
 }
 
-export function isPlayerLockedElsewhere(player, localSessionId = getDeviceSessionId()) {
-  if (!player?.isPlaying || !player?.lastActiveTime) return false;
+export function normalizePlayingSession(player) {
+  if (!player?.isPlaying) return player;
+  if (!player.lastActiveTime) {
+    return { ...player, ...buildClearPlayingSessionPatch() };
+  }
   const elapsed = Date.now() - new Date(player.lastActiveTime).getTime();
+  if (elapsed >= PLAYING_TIMEOUT_MS) {
+    return { ...player, ...buildClearPlayingSessionPatch() };
+  }
+  return player;
+}
+
+export function isPlayerLockedElsewhere(player, localSessionId = getDeviceSessionId()) {
+  const normalized = normalizePlayingSession(player);
+  if (!normalized?.isPlaying || !normalized?.lastActiveTime) return false;
+  const elapsed = Date.now() - new Date(normalized.lastActiveTime).getTime();
   if (elapsed >= PLAYING_TIMEOUT_MS) return false;
-  if (player.playingSessionId && player.playingSessionId === localSessionId) return false;
+  if (normalized.playingSessionId && normalized.playingSessionId === localSessionId) return false;
   return true;
 }
 

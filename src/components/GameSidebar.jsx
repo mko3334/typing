@@ -72,6 +72,12 @@ export default function GameSidebar({
               <span className="truncate">🌟 超激レア</span>
               <span className="text-fuchsia-600 shrink-0">✖{player?.legendTickets || 0}</span>
             </div>
+            <div className="flex justify-between items-center bg-violet-50 rounded px-1 py-0.5">
+              <span className="truncate">🖼️ フレーム</span>
+              <span className="text-violet-600 shrink-0">
+                ✖{player?.frameTickets || 0}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -128,7 +134,7 @@ export default function GameSidebar({
           className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-green-200 text-green-500 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[9px] sm:text-[10px] font-black gap-1 active:scale-95 transition-transform"
         >
           <User className="w-5 h-5 shrink-0" />
-          <span>へんこう</span>
+          <span>みためへんこう</span>
         </button>
 
         <button

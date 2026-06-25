@@ -9,6 +9,7 @@ import { pickGameWords, pickReplacementWord } from '../utils/typingWords';
 import { getAdoptedWords, submitTypingReport } from '../firebase';
 import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
 import { computeAchievements } from '../utils/gacha';
+import { appendSubEventsAfterTypingClear } from '../utils/subEvents';
 import GameSidebar from './GameSidebar';
 import CollectionSidebar from './CollectionSidebar';
 import AssistSettingsModal from './AssistSettingsModal';
@@ -124,8 +125,11 @@ function FingerGuide({ nextChar, assistSettings }) {
   );
 }
 
-function VirtualKeyboard({ assistSettings, nextCharForAssist, isTransitioning }) {
-  const formatChar = (c) => (assistSettings.letterCase === 'upper' ? c.toUpperCase() : c);
+function VirtualKeyboard({ assistSettings, nextCharForAssist, isTransitioning, isAlphabetQuiz = false }) {
+  const formatChar = (c) => {
+    if (isAlphabetQuiz) return c.toUpperCase();
+    return assistSettings.letterCase === 'upper' ? c.toUpperCase() : c;
+  };
 
   return (
     <div className="mt-2 w-full max-w-xl shrink-0">
@@ -265,10 +269,9 @@ export default function TypingScreen({
     return sorted[0];
   }, [validRomajiList]);
 
-  const nextValidChars = useMemo(
-    () => validRomajiList.map((r) => r[typedChars.length]).filter(Boolean),
-    [validRomajiList, typedChars],
-  );
+  const nextValidChars = useMemo(() => {
+    return validRomajiList.map((r) => r[typedChars.length]).filter(Boolean);
+  }, [typedChars, validRomajiList]);
 
   const nextCharForAssist = displayRomaji[typedChars.length] || '';
 
@@ -473,6 +476,11 @@ export default function TypingScreen({
         points: newPoints,
         difficultyClears,
         noMissClear: player?.noMissClear || earnedNoMiss,
+        plazaSubEvents: appendSubEventsAfterTypingClear({
+          ...player,
+          points: newPoints,
+          difficultyClears,
+        }),
       };
       updates.achievements = computeAchievements(
         { ...player, ...updates },
@@ -483,6 +491,62 @@ export default function TypingScreen({
     },
     [difficulty, localPoints, missCount, player, playSE],
   );
+
+  const completeCurrentWord = useCallback(() => {
+    setIsTransitioning(true);
+    const isSpecialWord = currentWord?.isSpecial;
+    const isLastWord = wordIndex + 1 >= gameWords.length;
+
+    const proceedToNext = () => {
+      setTicketReward(null);
+      if (isLastWord) {
+        const pts = calcClearPoints(difficulty, missCount, assistSettings);
+        finishClear(pts);
+      } else {
+        setWordIndex((prev) => prev + 1);
+        setTypedChars('');
+      }
+      setIsTransitioning(false);
+    };
+
+    if (isSpecialWord) {
+      const roll = Math.random();
+      let ticketType;
+      let ticketUpdates = {};
+
+      if (roll < 0.33) {
+        ticketType = 'bgm';
+        ticketUpdates = { bgmTickets: localTickets.bgmTickets + 1 };
+      } else if (roll < 0.66) {
+        ticketType = 'se';
+        ticketUpdates = { seTickets: localTickets.seTickets + 1 };
+      } else {
+        ticketType = 'legend';
+        ticketUpdates = { legendTickets: localTickets.legendTickets + 1 };
+      }
+
+      setLocalTickets((prev) => ({ ...prev, ...ticketUpdates }));
+      onPlayerUpdateRef.current?.(ticketUpdates);
+      setTicketReward({ show: true, type: ticketType, count: 1, onConfirm: proceedToNext });
+      playSE?.('legend');
+      return;
+    }
+
+    playSE?.(isLastWord ? 'allClear' : 'wordClear');
+    setTimeout(proceedToNext, 800);
+  }, [
+    assistSettings,
+    currentWord?.isSpecial,
+    difficulty,
+    finishClear,
+    gameWords.length,
+    localTickets.bgmTickets,
+    localTickets.legendTickets,
+    localTickets.seTickets,
+    missCount,
+    playSE,
+    wordIndex,
+  ]);
 
   const handleKeyDown = useCallback(
     (e) => {
@@ -498,6 +562,7 @@ export default function TypingScreen({
       ) {
         return;
       }
+
       if (e.key === 'Shift' || e.ctrlKey || e.metaKey || e.altKey) return;
       if (!/^[a-zA-Z0-9\-!?,.]$/.test(e.key)) return;
 
@@ -510,46 +575,7 @@ export default function TypingScreen({
         playSE?.('type');
 
         if (validRomajiList.some((r) => r === newTyped)) {
-          setIsTransitioning(true);
-          const isSpecialWord = currentWord?.isSpecial;
-          const isLastWord = wordIndex + 1 >= gameWords.length;
-
-          const proceedToNext = () => {
-            setTicketReward(null);
-            if (isLastWord) {
-              const pts = calcClearPoints(difficulty, missCount, assistSettings);
-              finishClear(pts);
-            } else {
-              setWordIndex((prev) => prev + 1);
-              setTypedChars('');
-            }
-            setIsTransitioning(false);
-          };
-
-          if (isSpecialWord) {
-            const roll = Math.random();
-            let ticketType;
-            let ticketUpdates = {};
-
-            if (roll < 0.33) {
-              ticketType = 'bgm';
-              ticketUpdates = { bgmTickets: localTickets.bgmTickets + 1 };
-            } else if (roll < 0.66) {
-              ticketType = 'se';
-              ticketUpdates = { seTickets: localTickets.seTickets + 1 };
-            } else {
-              ticketType = 'legend';
-              ticketUpdates = { legendTickets: localTickets.legendTickets + 1 };
-            }
-
-            setLocalTickets((prev) => ({ ...prev, ...ticketUpdates }));
-            onPlayerUpdateRef.current?.(ticketUpdates);
-            setTicketReward({ show: true, type: ticketType, count: 1, onConfirm: proceedToNext });
-            playSE?.('legend');
-          } else {
-            playSE?.(isLastWord ? 'allClear' : 'wordClear');
-            setTimeout(proceedToNext, 800);
-          }
+          completeCurrentWord();
         }
       } else {
         registerKeyPress(false);
@@ -565,9 +591,7 @@ export default function TypingScreen({
       typedChars,
       nextValidChars,
       validRomajiList,
-      currentWord,
-      wordIndex,
-      gameWords.length,
+      completeCurrentWord,
       isTransitioning,
       isAllClear,
       isAssistOpen,
@@ -576,10 +600,6 @@ export default function TypingScreen({
       leaveConfirm,
       typingWarning,
       difficulty,
-      missCount,
-      assistSettings,
-      localTickets,
-      finishClear,
       registerKeyPress,
       playSE,
     ],
@@ -590,11 +610,15 @@ export default function TypingScreen({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const formatTyped = (text) =>
-    assistSettings.letterCase === 'upper' ? text.toUpperCase() : text;
+  const formatTyped = (text) => {
+    if (isAlphabetQuiz) return text.toLowerCase();
+    return assistSettings.letterCase === 'upper' ? text.toUpperCase() : text;
+  };
 
-  const formatHint = (text) =>
-    assistSettings.letterCase === 'upper' ? text.toUpperCase() : text;
+  const formatHint = (text) => {
+    if (isAlphabetQuiz) return text.toLowerCase();
+    return assistSettings.letterCase === 'upper' ? text.toUpperCase() : text;
+  };
 
   const countdownOverlay = isCountdown && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm pointer-events-none">
@@ -752,7 +776,7 @@ export default function TypingScreen({
             {isAlphabetQuiz ? (
               <>
                 <div className="text-[100px] leading-none mb-3 font-black text-rose-500 drop-shadow-md">
-                  {formatHint(currentWord?.romaji[0] || '')}
+                  {(currentWord?.romaji[0] || '').toLowerCase()}
                 </div>
                 <div className="text-base sm:text-lg font-black text-gray-700 mb-4 bg-rose-50 py-2 px-4 rounded-xl border-2 border-rose-200">
                   {currentWord?.kana}
@@ -796,6 +820,7 @@ export default function TypingScreen({
             assistSettings={assistSettings}
             nextCharForAssist={nextCharForAssist}
             isTransitioning={isTransitioning}
+            isAlphabetQuiz={isAlphabetQuiz}
           />
 
           {!isCountdown && !isAllClear && !isTransitioning && currentWord && (

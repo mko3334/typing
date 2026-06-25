@@ -4,7 +4,7 @@ import { optimizedAssetUrl } from '../utils/assetImages';
 import {
   calcSubEventReward,
   getSubEventById,
-  spawnRandomSubEvents,
+  getActivePlazaSubEvents,
   ticketUpdatesFromReward,
 } from '../utils/subEvents';
 import { computeAchievements } from '../utils/gacha';
@@ -121,29 +121,8 @@ export default function HomeScreen({
 
   useEffect(() => {
     if (!player?.id) return;
-
-    const solved = new Set(player.solvedSubEventIds || []);
-    const stored = (player.plazaSubEvents || []).filter((entry) => !solved.has(entry.eventId));
-
-    if (stored.length > 0) {
-      const extra = spawnRandomSubEvents([...solved], stored);
-      const merged = extra.length > 0 ? [...stored, ...extra] : stored;
-      setActiveSubEvents(merged);
-      if (
-        extra.length > 0 ||
-        merged.length !== (player.plazaSubEvents || []).length
-      ) {
-        queueMicrotask(() => onPlayerUpdate?.({ plazaSubEvents: merged }));
-      }
-      return;
-    }
-
-    const spawned = spawnRandomSubEvents(player.solvedSubEventIds || [], []);
-    setActiveSubEvents(spawned);
-    if (spawned.length > 0) {
-      queueMicrotask(() => onPlayerUpdate?.({ plazaSubEvents: spawned }));
-    }
-  }, [player?.id]);
+    setActiveSubEvents(getActivePlazaSubEvents(player));
+  }, [player?.id, player?.plazaSubEvents, player?.solvedSubEventIds]);
 
   const openSubEvent = (spawned) => {
     const event = getSubEventById(spawned.eventId);
@@ -160,16 +139,7 @@ export default function HomeScreen({
     (event) => {
       const rewardRoll = calcSubEventReward();
       const solvedIds = [...new Set([...(player.solvedSubEventIds || []), event.id])];
-      let remaining = activeSubEvents.filter((entry) => entry.eventId !== event.id);
-
-      if (remaining.length === 0) {
-        remaining = spawnRandomSubEvents(solvedIds, []);
-      } else {
-        const extra = spawnRandomSubEvents(solvedIds, remaining);
-        if (extra.length > 0) {
-          remaining = [...remaining, ...extra];
-        }
-      }
+      const remaining = activeSubEvents.filter((entry) => entry.eventId !== event.id);
 
       const ticketDelta = ticketUpdatesFromReward(rewardRoll.ticket);
 
@@ -275,7 +245,7 @@ export default function HomeScreen({
           <MallPin
             top="52%"
             left="40%"
-            label="👗 へんこう"
+            label="👗 みためへんこう"
             variant="purple"
             delay="0.4s"
             onClick={onOpenProfile}

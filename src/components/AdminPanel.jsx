@@ -4,14 +4,13 @@ import localforage from 'localforage';
 import {
   addAdoptedWord,
   cancelGiftFromCloudPlayer,
-  deleteTypingReport,
-  deleteWordRequest,
   getTypingReports,
   getWordRequests,
   saveWordCorrection,
   sendGiftToCloudPlayer,
   setPlayerArchived,
   updateTypingReport,
+  updateWordRequest,
 } from '../firebase';
 import { ADMIN_PASSWORD, suggestDifficultyKey } from '../utils/admin';
 import AdminAnnouncementsSection from './AdminAnnouncementsSection';
@@ -301,6 +300,20 @@ const REPORT_REASON_LABELS = {
   other: 'その他',
 };
 
+const WORD_REQUEST_STATUS_LABELS = {
+  open: '未対応',
+  adopted: '採用済',
+  rejected: '却下',
+};
+
+function isWordRequestOpen(request) {
+  return !request?.status || request.status === 'open';
+}
+
+function isTypingReportOpen(report) {
+  return !report?.status || report.status === 'open';
+}
+
 function AdminTypingReportModal({ report, onClose, onSave, onResolveOnly, saving, playDecideSound }) {
   const [kana, setKana] = useState('');
   const [romajiText, setRomajiText] = useState('');
@@ -507,6 +520,7 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
   const [editingReport, setEditingReport] = useState(null);
   const [savingReport, setSavingReport] = useState(false);
   const [adminTab, setAdminTab] = useState('requests');
+  const [requestFilter, setRequestFilter] = useState('open');
   const [reportFilter, setReportFilter] = useState('open');
   const [reportsLoadError, setReportsLoadError] = useState(false);
   const [reportsCloudWarning, setReportsCloudWarning] = useState(false);
@@ -580,13 +594,16 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
     }
   };
 
-  const handleDeleteRequest = async (id) => {
-    if (!confirm('このリクエストを削除してもよろしいですか？')) return;
-    const success = await deleteWordRequest(id);
+  const handleRejectRequest = async (request) => {
+    if (!confirm(`「${request.kana}」のリクエストを 却下しますか？\n（履歴には 残ります）`)) return;
+    const success = await updateWordRequest(request.id, {
+      status: 'rejected',
+      rejectedAt: new Date().toISOString(),
+    });
     if (success) {
       loadRequests();
     } else {
-      alert('削除に失敗しました。');
+      alert('更新に失敗しました。');
     }
   };
 
@@ -610,7 +627,11 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
         alert('採用に失敗しました。接続を確認してください。');
         return;
       }
-      await deleteWordRequest(adoptingRequest.id);
+      await updateWordRequest(adoptingRequest.id, {
+        status: 'adopted',
+        adoptedAt: new Date().toISOString(),
+        adoptedDifficulty: fields.difficulty || adoptDifficulty,
+      });
       if (adoptingRequest.playerId) {
         await sendGiftToCloudPlayer(adoptingRequest.playerId, {
           points: 1000,
@@ -683,18 +704,31 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
     }
   };
 
-  const handleDeleteTypingReport = async (reportId) => {
-    if (!confirm('この報告を削除してもよろしいですか？')) return;
-    const success = await deleteTypingReport(reportId);
+  const handleArchiveTypingReport = async (report) => {
+    if (!confirm('この報告を アーカイブしますか？\n（履歴には 残ります）')) return;
+    const success = await updateTypingReport(report.id, {
+      status: 'archived',
+      archivedAt: new Date().toISOString(),
+    });
     if (success) {
       loadTypingReports();
     } else {
-      alert('削除に失敗しました。');
+      alert('更新に失敗しました。');
     }
   };
 
+  const openWordRequests = useMemo(
+    () => wordRequests.filter((request) => isWordRequestOpen(request)),
+    [wordRequests],
+  );
+
+  const filteredWordRequests = useMemo(() => {
+    if (requestFilter === 'all') return wordRequests;
+    return openWordRequests;
+  }, [openWordRequests, requestFilter, wordRequests]);
+
   const openTypingReports = useMemo(
-    () => typingReports.filter((report) => report.status !== 'resolved'),
+    () => typingReports.filter((report) => isTypingReportOpen(report)),
     [typingReports],
   );
 
@@ -819,9 +853,9 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
             }`}
           >
             📮 リクエスト
-            {wordRequests.length > 0 && (
+            {openWordRequests.length > 0 && (
               <span className="ml-1 bg-white/25 px-1.5 py-0.5 rounded-full text-[10px]">
-                {wordRequests.length}
+                {openWordRequests.length}
               </span>
             )}
           </button>
@@ -878,15 +912,43 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {adminTab === 'requests' && (
             <div className="min-h-0 flex flex-col h-full">
-              <h4 className="text-sm font-black text-orange-600 mb-2 flex items-center gap-1.5 shrink-0">
-                <span>📮</span> リクエストされた言葉（全 {wordRequests.length} 件）
-                {loadingRequests && <span className="text-[10px] text-gray-400">読込中...</span>}
-              </h4>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2 shrink-0">
+                <h4 className="text-sm font-black text-orange-600 flex items-center gap-1.5">
+                  <span>📮</span> リクエストされた言葉（全 {wordRequests.length} 件）
+                  {loadingRequests && <span className="text-[10px] text-gray-400">読込中...</span>}
+                </h4>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setRequestFilter('open')}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
+                      requestFilter === 'open'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    未対応 ({openWordRequests.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRequestFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
+                      requestFilter === 'all'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    履歴すべて
+                  </button>
+                </div>
+              </div>
               <div className="flex-1 overflow-auto border-2 border-orange-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 min-h-[40vh]">
-                {wordRequests.length === 0 ? (
+                {filteredWordRequests.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-sm font-bold text-gray-400 py-16 gap-2">
-                    <span className="text-4xl">📮</span>
-                    リクエストされた単語はまだありません。
+                    <span className="text-4xl">{requestFilter === 'open' ? '✅' : '📮'}</span>
+                    {requestFilter === 'open'
+                      ? '未対応の リクエストは ありません。'
+                      : 'リクエストされた 単語は まだありません。'}
                   </div>
                 ) : (
                   <table className="w-full text-left text-xs border-collapse">
@@ -896,44 +958,66 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                         <th className="p-2 font-black text-orange-700">かな</th>
                         <th className="p-2 font-black text-orange-700">ローマ字</th>
                         <th className="p-2 font-black text-orange-700">なまえ</th>
+                        <th className="p-2 font-black text-orange-700">状態</th>
                         <th className="p-2 font-black text-orange-700 text-center">操作</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-orange-50 bg-white/40">
-                      {wordRequests.map((req) => (
-                        <tr key={req.id} className="hover:bg-orange-50/30 transition-colors">
-                          <td className="p-2 text-gray-500 font-bold whitespace-nowrap">
-                            {req.createdAt ? new Date(req.createdAt).toLocaleString('ja-JP') : '-'}
-                          </td>
-                          <td className="p-2 font-black text-gray-800">{req.kana}</td>
-                          <td className="p-2 font-mono text-gray-600">
-                            {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
-                          </td>
-                          <td className="p-2 font-bold text-gray-600">{req.playerName || 'ゲスト'}</td>
-                          <td className="p-2 text-center whitespace-nowrap">
-                            <div className="flex gap-1 justify-center">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  playDecideSound?.();
-                                  setAdoptingRequest(req);
-                                  setAdoptDifficulty(suggestDifficultyKey(req.kana));
-                                }}
-                                className="px-2 py-1 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                      {filteredWordRequests.map((req) => {
+                        const requestOpen = isWordRequestOpen(req);
+                        const statusKey = req.status || 'open';
+                        return (
+                          <tr key={req.id} className="hover:bg-orange-50/30 transition-colors">
+                            <td className="p-2 text-gray-500 font-bold whitespace-nowrap">
+                              {req.createdAt ? new Date(req.createdAt).toLocaleString('ja-JP') : '-'}
+                            </td>
+                            <td className="p-2 font-black text-gray-800">{req.kana}</td>
+                            <td className="p-2 font-mono text-gray-600">
+                              {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
+                            </td>
+                            <td className="p-2 font-bold text-gray-600">{req.playerName || 'ゲスト'}</td>
+                            <td className="p-2">
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                  statusKey === 'adopted'
+                                    ? 'bg-green-100 text-green-700'
+                                    : statusKey === 'rejected'
+                                      ? 'bg-gray-100 text-gray-600'
+                                      : 'bg-red-100 text-red-700'
+                                }`}
                               >
-                                ✅ 採用
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteRequest(req.id)}
-                                className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                                {WORD_REQUEST_STATUS_LABELS[statusKey] || statusKey}
+                              </span>
+                            </td>
+                            <td className="p-2 text-center whitespace-nowrap">
+                              {requestOpen ? (
+                                <div className="flex gap-1 justify-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      playDecideSound?.();
+                                      setAdoptingRequest(req);
+                                      setAdoptDifficulty(suggestDifficultyKey(req.kana));
+                                    }}
+                                    className="px-2 py-1 bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                  >
+                                    ✅ 採用
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRejectRequest(req)}
+                                    className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-black text-[10px] shadow-sm active:scale-95 transition-all"
+                                  >
+                                    却下
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] font-bold text-gray-400">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}
@@ -1228,10 +1312,16 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                               className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${
                                 report.status === 'resolved'
                                   ? 'bg-green-100 text-green-700'
-                                  : 'bg-red-100 text-red-700'
+                                  : report.status === 'archived'
+                                    ? 'bg-gray-100 text-gray-600'
+                                    : 'bg-red-100 text-red-700'
                               }`}
                             >
-                              {report.status === 'resolved' ? '解決済' : '未対応'}
+                              {report.status === 'resolved'
+                                ? '解決済'
+                                : report.status === 'archived'
+                                  ? 'アーカイブ'
+                                  : '未対応'}
                             </span>
                           </td>
                           <td className="p-2 text-center whitespace-nowrap align-top">
@@ -1246,13 +1336,15 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                               >
                                 📝 確認
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteTypingReport(report.id)}
-                                className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-black text-[10px]"
-                              >
-                                🗑️
-                              </button>
+                              {isTypingReportOpen(report) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleArchiveTypingReport(report)}
+                                  className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 rounded-lg font-black text-[10px]"
+                                >
+                                  📦
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

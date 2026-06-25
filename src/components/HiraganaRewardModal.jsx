@@ -6,6 +6,7 @@ const TICKET_ENTRIES = [
   { key: 'bgmTickets', label: '🎵 おんがくガチャチケット' },
   { key: 'seTickets', label: '🔊 こうかおんガチャチケット' },
   { key: 'legendTickets', label: '🌟 超激レア以上チケット' },
+  { key: 'frameTickets', label: '🖼️ フレームガチャチケット' },
 ];
 
 export default function HiraganaRewardModal({ reward, stats, onClose, playDecideSound }) {
@@ -20,7 +21,7 @@ export default function HiraganaRewardModal({ reward, stats, onClose, playDecide
   };
 
   const heroEmoji =
-    reward.kind === 'shuffle' ? '🎲' : reward.kind === 'order' ? '📝' : '🎉';
+    reward.kind === 'test' ? '🎲' : reward.kind === 'practice' ? '✏️' : '🎉';
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[60] animate-fade-in p-4">
@@ -53,6 +54,24 @@ export default function HiraganaRewardModal({ reward, stats, onClose, playDecide
             {reward.points > 0 && (
               <div className="text-4xl font-black text-amber-500 animate-point-pop drop-shadow-sm">
                 +{reward.points.toLocaleString()} pt
+              </div>
+            )}
+
+            {reward.kind === 'test' && reward.rowResults?.length > 0 && (
+              <div className="bg-gradient-to-r from-sky-50 to-indigo-50 border-2 border-indigo-100 rounded-2xl px-3 py-2 text-left space-y-1 max-h-36 overflow-y-auto">
+                <div className="text-[10px] font-black text-indigo-600 mb-1">📋 行ごとの スコア</div>
+                {reward.rowResults.map((row) => (
+                  <div
+                    key={row.rowId}
+                    className="flex items-center justify-between text-[11px] font-black text-gray-700"
+                  >
+                    <span>{row.label}</span>
+                    <span className={row.misses === 0 ? 'text-emerald-600' : 'text-amber-700'}>
+                      {row.points.toLocaleString()} pt
+                      {row.misses === 0 ? ' 🌟' : ` (ミス${row.misses})`}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
 

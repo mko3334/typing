@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ANNOUNCEMENT_BANNERS } from '../constants/announcementBanners';
-import { cancelAnnouncement, createAnnouncement, getAnnouncements } from '../firebase';
+import { HIRAGANA_CHALLENGE_ANNOUNCEMENT } from '../constants/hiraganaChallengeAnnouncement';
+import { archiveAnnouncement, cancelAnnouncement, createAnnouncement, getAnnouncements } from '../firebase';
 import { formatAnnouncementTime } from '../utils/announcements';
 
 function parseGiftAmount(value) {
@@ -42,6 +43,16 @@ export default function AdminAnnouncementsSection({ players, playDecideSound }) 
       setLoading(false);
     }
   }, []);
+
+  const activeAnnouncements = useMemo(
+    () => list.filter((item) => item.status !== 'archived'),
+    [list],
+  );
+
+  const archivedAnnouncements = useMemo(
+    () => list.filter((item) => item.status === 'archived'),
+    [list],
+  );
 
   useEffect(() => {
     loadList();
@@ -134,10 +145,100 @@ export default function AdminAnnouncementsSection({ players, playDecideSound }) 
     if (ok) loadList();
   };
 
+  const handleArchive = async (item) => {
+    if (
+      !confirm(
+        `「${item.title}」を アーカイブしますか？\n\nプレイヤーには 通知も 履歴も 表示されなくなります。`,
+      )
+    ) {
+      return;
+    }
+    const ok = await archiveAnnouncement(item.id);
+    if (ok) loadList();
+  };
+
+  const renderAnnouncementRow = (item, { showArchive = false, showCancel = false } = {}) => (
+    <div
+      key={item.id}
+      className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold"
+    >
+      <div className="flex justify-between gap-2 items-start">
+        <div className="min-w-0">
+          <div className="flex gap-2 flex-wrap items-center mb-0.5">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+              {item.scope === 'personal' ? '個人' : '全体'}
+            </span>
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded ${
+                item.status === 'scheduled'
+                  ? 'bg-sky-100 text-sky-700'
+                  : item.status === 'archived'
+                    ? 'bg-gray-200 text-gray-600'
+                    : 'bg-amber-100 text-amber-700'
+              }`}
+            >
+              {item.status === 'scheduled'
+                ? '予約'
+                : item.status === 'archived'
+                  ? 'アーカイブ'
+                  : '送信済'}
+            </span>
+            <span className="text-[10px] text-gray-400">
+              {formatAnnouncementTime(item.publishedAt || item.scheduledAt || item.archivedAt)}
+            </span>
+          </div>
+          <p className="text-sm font-black text-gray-800 truncate">{item.title}</p>
+          {item.scope === 'personal' && (
+            <p className="text-[10px] text-gray-500">→ {item.targetPlayerName || item.targetPlayerId}</p>
+          )}
+        </div>
+        <div className="flex flex-col gap-1 shrink-0">
+          {showCancel && item.status === 'scheduled' && (
+            <button
+              type="button"
+              onClick={() => handleCancel(item)}
+              className="text-[10px] text-red-500 hover:underline"
+            >
+              取消
+            </button>
+          )}
+          {showArchive && item.status === 'published' && (
+            <button
+              type="button"
+              onClick={() => handleArchive(item)}
+              className="text-[10px] text-gray-600 hover:underline"
+            >
+              📦 アーカイブ
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border-2 border-indigo-100 p-4 space-y-4">
-        <h3 className="text-sm font-black text-indigo-800">📢 お知らせを 作成</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-black text-indigo-800">📢 お知らせを 作成</h3>
+          <button
+            type="button"
+            onClick={() => {
+              playDecideSound?.();
+              setForm((prev) => ({
+                ...prev,
+                kind: HIRAGANA_CHALLENGE_ANNOUNCEMENT.kind,
+                title: HIRAGANA_CHALLENGE_ANNOUNCEMENT.title,
+                message: HIRAGANA_CHALLENGE_ANNOUNCEMENT.message,
+                bannerUrl: HIRAGANA_CHALLENGE_ANNOUNCEMENT.bannerUrl,
+              }));
+              setStatus({ type: 'success', text: 'ひらがなチャレンジ告知の 文案を 入れたよ' });
+            }}
+            className="text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-full bg-pink-100 text-pink-700 border border-pink-200 hover:bg-pink-200 transition-colors"
+          >
+            🌸 ひらがなチャレンジ告知を 入力
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="text-xs font-bold text-gray-600">
@@ -248,7 +349,7 @@ export default function AdminAnnouncementsSection({ players, playDecideSound }) 
           <img
             src={form.bannerUrl}
             alt="プレビュー"
-            className="w-full max-h-32 object-cover rounded-xl border-2 border-gray-200"
+            className="w-full max-h-32 object-contain rounded-xl border-2 border-gray-200 bg-gradient-to-br from-sky-50 to-pink-50"
           />
         )}
 
@@ -310,47 +411,31 @@ export default function AdminAnnouncementsSection({ players, playDecideSound }) 
         </div>
         {loading ? (
           <p className="text-xs text-gray-400 font-bold">読み込み中…</p>
-        ) : list.length === 0 ? (
+        ) : activeAnnouncements.length === 0 ? (
           <p className="text-xs text-gray-400 font-bold">まだ お知らせは ありません</p>
         ) : (
           <div className="space-y-2 max-h-80 overflow-y-auto">
-            {list.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold"
-              >
-                <div className="flex justify-between gap-2 items-start">
-                  <div className="min-w-0">
-                    <div className="flex gap-2 flex-wrap items-center mb-0.5">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
-                        {item.scope === 'personal' ? '個人' : '全体'}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
-                        {item.status === 'scheduled' ? '予約' : '送信済'}
-                      </span>
-                      <span className="text-[10px] text-gray-400">
-                        {formatAnnouncementTime(item.publishedAt || item.scheduledAt)}
-                      </span>
-                    </div>
-                    <p className="text-sm font-black text-gray-800 truncate">{item.title}</p>
-                    {item.scope === 'personal' && (
-                      <p className="text-[10px] text-gray-500">→ {item.targetPlayerName || item.targetPlayerId}</p>
-                    )}
-                  </div>
-                  {item.status === 'scheduled' && (
-                    <button
-                      type="button"
-                      onClick={() => handleCancel(item)}
-                      className="shrink-0 text-[10px] text-red-500 hover:underline"
-                    >
-                      取消
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+            {activeAnnouncements.map((item) =>
+              renderAnnouncementRow(item, { showArchive: true, showCancel: true }),
+            )}
           </div>
         )}
+      </div>
+
+      <div className="bg-white rounded-2xl border-2 border-gray-100 p-4">
+        <h3 className="text-sm font-black text-gray-800 mb-3">📦 アーカイブ（管理者用履歴）</h3>
+        {loading ? (
+          <p className="text-xs text-gray-400 font-bold">読み込み中…</p>
+        ) : archivedAnnouncements.length === 0 ? (
+          <p className="text-xs text-gray-400 font-bold">アーカイブされた お知らせは ありません</p>
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {archivedAnnouncements.map((item) => renderAnnouncementRow(item))}
+          </div>
+        )}
+        <p className="text-[10px] font-bold text-gray-500 mt-2">
+          アーカイブしたお知らせは プレイヤーに 表示されません（未読・既読 どちらも）
+        </p>
       </div>
     </div>
   );

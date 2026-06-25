@@ -264,7 +264,8 @@ export const addWordRequest = async (requestData) => {
     const newDocRef = doc(collection(db, 'word_requests'));
     await setDoc(newDocRef, {
       ...requestData,
-      createdAt: new Date().toISOString()
+      status: 'open',
+      createdAt: new Date().toISOString(),
     });
     return true;
   } catch (error) {
@@ -281,12 +282,24 @@ export const getWordRequests = async () => {
     snapshot.forEach(doc => {
       requests.push({ id: doc.id, ...doc.data() });
     });
-    // 作成日時でソート（古い順）
-    requests.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    // 作成日時でソート（新しい順）
+    requests.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return requests;
   } catch (error) {
     console.error("Error getting word requests:", error);
     return [];
+  }
+};
+
+export const updateWordRequest = async (requestId, data) => {
+  if (!requestId) return false;
+  try {
+    const docRef = doc(db, 'word_requests', requestId);
+    await setDoc(docRef, data, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('Error updating word request:', error);
+    return false;
   }
 };
 
@@ -640,10 +653,25 @@ export async function cancelAnnouncement(announcementId) {
   try {
     await updateDoc(doc(db, 'announcements', announcementId), {
       status: 'cancelled',
+      cancelledAt: new Date().toISOString(),
     });
     return true;
   } catch (error) {
     console.error('Error cancelling announcement:', error);
+    return false;
+  }
+}
+
+export async function archiveAnnouncement(announcementId) {
+  if (!announcementId) return false;
+  try {
+    await updateDoc(doc(db, 'announcements', announcementId), {
+      status: 'archived',
+      archivedAt: new Date().toISOString(),
+    });
+    return true;
+  } catch (error) {
+    console.error('Error archiving announcement:', error);
     return false;
   }
 }

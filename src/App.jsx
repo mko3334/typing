@@ -222,6 +222,26 @@ export default function App() {
     return () => clearInterval(interval);
   }, [appScreen, currentPlayer?.id]);
 
+  useEffect(() => {
+    if (appScreen === 'title' || !currentPlayer?.id) return undefined;
+
+    const releaseSession = () => {
+      const prev = currentPlayerRef.current;
+      if (!prev?.id) return;
+      const next = {
+        ...prev,
+        ...buildClearPlayingSessionPatch(),
+        lastUpdatedAt: new Date().toISOString(),
+      };
+      currentPlayerRef.current = next;
+      persistPlayerLocally(prev.id, next).catch(() => {});
+      saveCloudPlayer(prev.id, next).catch(() => {});
+    };
+
+    window.addEventListener('pagehide', releaseSession);
+    return () => window.removeEventListener('pagehide', releaseSession);
+  }, [appScreen, currentPlayer?.id]);
+
   const handleAcceptGift = useCallback(async () => {
     const prev = currentPlayerRef.current;
     if (!prev?.id || !activeGift) return;

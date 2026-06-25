@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
-import { getAnnouncementBannerUrl } from '../constants/announcementBanners';
+import { resolveAnnouncementBannerUrl } from '../constants/announcementBanners';
 import {
   formatAnnouncementTime,
   getAnnouncementKindLabel,
@@ -28,7 +28,7 @@ function TabButton({ active, label, unread, onClick }) {
 }
 
 function AnnouncementListItem({ item, onOpen }) {
-  const bannerUrl = getAnnouncementBannerUrl(item.bannerUrl);
+  const bannerUrl = resolveAnnouncementBannerUrl(item);
 
   return (
     <button
@@ -45,7 +45,7 @@ function AnnouncementListItem({ item, onOpen }) {
           <img
             src={bannerUrl}
             alt=""
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border-3 border-white shrink-0 shadow-sm"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-contain border-3 border-white shrink-0 shadow-sm bg-white"
           />
         ) : (
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-br from-pink-200 to-sky-200 flex items-center justify-center text-3xl shrink-0 border-3 border-white shadow-sm">

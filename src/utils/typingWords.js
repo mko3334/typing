@@ -60,10 +60,11 @@ export function pickGameWords(
 
   const basePool = WORDS[difficulty] || WORDS.normal;
   const adoptedForDifficulty = extraWords.filter((w) => w.difficulty === difficulty || !w.difficulty);
-  const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji }) => ({
+  const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji, reading }) => ({
     kana,
     romaji: Array.isArray(romaji) ? romaji : [romaji],
     emoji: emoji || '✨',
+    ...(reading ? { reading } : {}),
   }))];
   const words = shuffle([...pool]).slice(0, Math.min(count, pool.length));
 

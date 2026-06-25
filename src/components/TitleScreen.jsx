@@ -57,16 +57,17 @@ export function sortPlayers(players, sortMode) {
     case 'recent-asc':
       return copy.sort((a, b) => getPlayerRecentTime(a) - getPlayerRecentTime(b));
     case 'name-asc':
-    default:
       return copy.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    default:
+      return copy.sort((a, b) => getPlayerRecentTime(b) - getPlayerRecentTime(a));
   }
 }
 
 export const PLAYER_SORT_OPTIONS = [
-  { value: 'name-asc', label: 'あいうえお順（昇順）' },
-  { value: 'name-desc', label: 'あいうえお順（降順）' },
   { value: 'recent-desc', label: '最近プレイ（新しい順）' },
   { value: 'recent-asc', label: '最近プレイ（古い順）' },
+  { value: 'name-asc', label: 'あいうえお順（昇順）' },
+  { value: 'name-desc', label: 'あいうえお順（降順）' },
 ];
 
 function playDecideSoundExternal(playDecideSound) {
@@ -94,9 +95,11 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
   const [selectedTag, setSelectedTag] = useState('');
   const [showNewPlayer, setShowNewPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
-  const [sortMode, setSortMode] = useState('name-asc');
+  const [sortMode, setSortMode] = useState('recent-desc');
   const [loadNotice, setLoadNotice] = useState('');
   const [pendingPlayer, setPendingPlayer] = useState(null);
+  const [pendingTakeover, setPendingTakeover] = useState(false);
+  const [lockTick, setLockTick] = useState(0);
   const [showTagManagePanel, setShowTagManagePanel] = useState(false);
   const [tagMaster, setTagMaster] = useState([]);
   const [newTagInput, setNewTagInput] = useState('');
@@ -159,6 +162,14 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
       loadPlayers({ showSpinner: false });
     }
   }, [showPlayerModal, modalTab, loadPlayers]);
+
+  useEffect(() => {
+    if (!showPlayerModal || modalTab !== 'players') return undefined;
+    const timer = setInterval(() => {
+      setLockTick((tick) => tick + 1);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [showPlayerModal, modalTab]);
 
   useEffect(() => {
     if (!showPlayerModal || modalTab !== 'players') return undefined;
@@ -307,6 +318,7 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
   }, []);
 
   const filteredPlayers = useMemo(() => {
+    void lockTick;
     const filtered = players.filter((p) => {
       if (p.isArchived) return false;
       const matchTag = !selectedTag || (p.tags && p.tags.includes(selectedTag));
@@ -316,7 +328,7 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
       return matchTag && matchName;
     });
     return sortPlayers(filtered, sortMode);
-  }, [players, selectedTag, searchNameInput, sortMode]);
+  }, [players, selectedTag, searchNameInput, sortMode, lockTick]);
 
   const handleStart = () => {
     playDecideSoundExternal(playDecideSound);
@@ -366,11 +378,8 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
       toggleBulkPlayer(player.id);
       return;
     }
-    if (isPlayerLockedElsewhere(player, getDeviceSessionId())) {
-      playDecideSoundExternal(playDecideSound);
-      return;
-    }
     playDecideSoundExternal(playDecideSound);
+    setPendingTakeover(isPlayerLockedElsewhere(player, getDeviceSessionId()));
     setPendingPlayer(player);
   };
 
@@ -379,6 +388,7 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
     playDecideSoundExternal(playDecideSound);
     const player = pendingPlayer;
     setPendingPlayer(null);
+    setPendingTakeover(false);
     onSelectPlayer(player);
     setShowPlayerModal(false);
   };
@@ -741,16 +751,21 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
 
       <ConfirmModal
         isOpen={!!pendingPlayer}
-        title="このデータではじめますか？"
+        title={pendingTakeover ? 'ほかの端末で あそんでいます' : 'このデータではじめますか？'}
         message={
           pendingPlayer
-            ? `「${pendingPlayer.name}」さんの\nセーブデータで あそびますか？`
+            ? pendingTakeover
+              ? `「${pendingPlayer.name}」さんは ほかの端末で あそんでいるみたい。\nこの端末に 切り替えて あそびますか？`
+              : `「${pendingPlayer.name}」さんの\nセーブデータで あそびますか？`
             : ''
         }
-        confirmLabel="はじめる！"
+        confirmLabel={pendingTakeover ? '切り替える！' : 'はじめる！'}
         cancelLabel="やめる"
         confirmClassName="bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600"
-        onCancel={() => setPendingPlayer(null)}
+        onCancel={() => {
+          setPendingPlayer(null);
+          setPendingTakeover(false);
+        }}
         onConfirm={handleConfirmSelect}
       />
     </>

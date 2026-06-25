@@ -16,10 +16,22 @@ import {
   pullRewardItems,
   pullSe,
 } from '../utils/gacha';
+import { applySaveFrameUnlock, pullSaveFrame } from '../utils/saveFrameGacha';
+import PlayerCard from './PlayerCard';
 import GameSidebar from './GameSidebar';
 import CollectionSidebar from './CollectionSidebar';
 
 const SPIN_MS = 1500;
+
+const GACHA_PRICE_BUTTON_STYLES = {
+  ticket: 'bg-gradient-to-r from-violet-500 to-purple-600 border-purple-800',
+  100: 'bg-gradient-to-r from-lime-500 to-green-500 border-green-700',
+  500: 'bg-gradient-to-r from-sky-400 to-cyan-500 border-cyan-700',
+  1000: 'bg-gradient-to-r from-blue-500 to-indigo-500 border-indigo-700',
+  5000: 'bg-gradient-to-r from-amber-500 to-orange-500 border-orange-700',
+  10000: 'bg-gradient-to-r from-rose-500 to-fuchsia-600 border-fuchsia-800',
+};
+
 function GachaOverlayText({ children, color = '#d97706', className = '' }) {
   return (
     <p
@@ -139,10 +151,11 @@ function ResultItemCard({ item, compact = false }) {
   return null;
 }
 
-function CosmeticGachaResult({ spinType, item, previewBgActive, onPreview, onOpenSettings }) {
+function CosmeticGachaResult({ spinType, item, player, previewBgActive, onPreview, onOpenSettings }) {
   const isBg = spinType === 'bg';
   const isBgm = spinType === 'bgm';
   const isSe = spinType === 'se';
+  const isFrame = spinType === 'frame';
 
   return (
     <div className="w-full max-w-md flex flex-col items-center gap-3">
@@ -175,9 +188,26 @@ function CosmeticGachaResult({ spinType, item, previewBgActive, onPreview, onOpe
             <div className="text-base sm:text-lg font-black text-gray-800 text-center">{item.name}</div>
           </div>
         )}
+        {isFrame && player && (
+          <div className="flex flex-col items-center py-3 px-3 w-full">
+            <p className="text-xs font-black text-emerald-600 mb-2">
+              タイトル画面の セーブカードに つけたよ！ 🎉
+            </p>
+            <PlayerCard
+              readOnly
+              compact
+              player={{
+                ...player,
+                currentFrame: item.id,
+                unlockedFrames: [...new Set([...(player.unlockedFrames || []), item.id])],
+              }}
+            />
+            <p className="text-[11px] font-bold text-gray-500 mt-2">{item.name}</p>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 w-full">
+      <div className={`grid gap-2 w-full ${isFrame ? 'hidden' : 'grid-cols-2'}`}>
         <button
           type="button"
           onClick={onPreview}
@@ -197,18 +227,18 @@ function CosmeticGachaResult({ spinType, item, previewBgActive, onPreview, onOpe
   );
 }
 
-function TicketButton({ disabled, onClick, children, variant = 'ticket' }) {
-  const enabled =
-    variant === 'ticket'
-      ? 'bg-gradient-to-r from-sky-500 to-blue-500 border-blue-700 active:scale-95 active:border-b-0 active:translate-y-[1px] cursor-pointer'
-      : 'bg-gradient-to-r from-orange-500 to-red-500 border-red-700 active:scale-95 active:border-b-0 active:translate-y-[1px] cursor-pointer';
+function TicketButton({ disabled, onClick, children, priceTier = 'ticket' }) {
+  const enabledStyle =
+    GACHA_PRICE_BUTTON_STYLES[priceTier] || GACHA_PRICE_BUTTON_STYLES.ticket;
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       className={`w-full py-1 rounded-lg text-[9px] lg:text-[10px] font-black text-white shadow border-b-2 ${
-        disabled ? 'bg-gray-400 opacity-40 cursor-not-allowed border-transparent' : enabled
+        disabled
+          ? 'bg-gray-400 opacity-40 cursor-not-allowed border-transparent'
+          : `${enabledStyle} active:scale-95 active:border-b-0 active:translate-y-[1px] cursor-pointer`
       }`}
     >
       {children}
@@ -463,6 +493,34 @@ export default function GachaShopScreen({
     spinTimerRef.current = setTimeout(() => finishSpin('legend', item, updates), SPIN_MS);
   };
 
+  const startFrameSpin = (usePoints) => {
+    if (usePoints) {
+      if (points < 10000) return;
+    } else if ((player?.frameTickets || 0) < 1) {
+      return;
+    }
+
+    const pull = pullSaveFrame('any', player?.unlockedFrames || []);
+    if (pull.allOwned) {
+      alert('すべての フレーム を てにいれたよ！');
+      return;
+    }
+
+    playDecideSound?.();
+    const frameUpdates = applySaveFrameUnlock(player, pull.frame);
+    const updates = usePoints
+      ? { points: points - 10000, ...frameUpdates }
+      : {
+          frameTickets: (player?.frameTickets || 0) - 1,
+          ...frameUpdates,
+        };
+
+    setPhase('spinning');
+    setSpinType('frame');
+    setPreviewBgActive(false);
+    spinTimerRef.current = setTimeout(() => finishSpin('frame', pull.frame, updates), SPIN_MS);
+  };
+
   const backToShop = () => {
     playDecideSound?.();
     setPhase('shop');
@@ -555,12 +613,20 @@ export default function GachaShopScreen({
         </GachaSpinPanel>
       );
     }
+    if (spinType === 'frame') {
+      return (
+        <GachaSpinPanel accentColor="#a855f7">
+          <div className="text-7xl sm:text-8xl animate-spin-shake drop-shadow-2xl">🖼️</div>
+          <GachaOverlayText color="#7c3aed">どんな フレーム が でるかな...？</GachaOverlayText>
+        </GachaSpinPanel>
+      );
+    }
     return null;
   };
 
   const renderResult = () => {
     const items = Array.isArray(results) ? results : [results];
-    const isCosmeticResult = spinType === 'bg' || spinType === 'bgm' || spinType === 'se';
+    const isCosmeticResult = spinType === 'bg' || spinType === 'bgm' || spinType === 'se' || spinType === 'frame';
     const cosmeticItem = isCosmeticResult ? items[0] : null;
     const compact = items.length > 1;
     const gridClass =
@@ -586,6 +652,7 @@ export default function GachaShopScreen({
             <CosmeticGachaResult
               spinType={spinType}
               item={cosmeticItem}
+              player={player}
               previewBgActive={previewBgActive}
               onPreview={handleCosmeticPreview}
               onOpenSettings={handleCosmeticOpenSettings}
@@ -661,7 +728,7 @@ export default function GachaShopScreen({
               </div>
 
               <div className="flex-1 overflow-x-auto pb-2">
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 sm:gap-3 min-w-[280px]">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 min-w-[280px]">
                   <GachaMachine
                     badge="ごほうび"
                     badgeClass="bg-red-500"
@@ -669,13 +736,13 @@ export default function GachaShopScreen({
                     title="ごほうびガチャ"
                     subtitle="コレクションアイテム"
                   >
-                    <TicketButton disabled={points < 100} onClick={() => startRewardSpin(1)} variant="points">
+                    <TicketButton disabled={points < 100} onClick={() => startRewardSpin(1)} priceTier={100}>
                       🪙 100 pt（1回）
                     </TicketButton>
-                    <TicketButton disabled={points < 500} onClick={() => startRewardSpin(6)} variant="points">
+                    <TicketButton disabled={points < 500} onClick={() => startRewardSpin(6)} priceTier={500}>
                       🪙 500 pt（6回）
                     </TicketButton>
-                    <TicketButton disabled={points < 1000} onClick={() => startRewardSpin(15)} variant="points">
+                    <TicketButton disabled={points < 1000} onClick={() => startRewardSpin(15)} priceTier={1000}>
                       🪙 1000 pt（15回）
                     </TicketButton>
                   </GachaMachine>
@@ -690,10 +757,11 @@ export default function GachaShopScreen({
                     <TicketButton
                       disabled={(player?.specialTickets || 0) < 1}
                       onClick={() => startBackgroundSpin(false)}
+                      priceTier="ticket"
                     >
                       🎟️ チケット 1枚
                     </TicketButton>
-                    <TicketButton disabled={points < 5000} onClick={() => startBackgroundSpin(true)} variant="points">
+                    <TicketButton disabled={points < 5000} onClick={() => startBackgroundSpin(true)} priceTier={5000}>
                       🪙 5000 pt
                     </TicketButton>
                   </GachaMachine>
@@ -705,10 +773,10 @@ export default function GachaShopScreen({
                     ticketCount={player?.bgmTickets || 0}
                     ticketLabel="🎵 もっている"
                   >
-                    <TicketButton disabled={(player?.bgmTickets || 0) < 1} onClick={() => startBgmSpin(false)}>
+                    <TicketButton disabled={(player?.bgmTickets || 0) < 1} onClick={() => startBgmSpin(false)} priceTier="ticket">
                       🎟️ チケット 1枚
                     </TicketButton>
-                    <TicketButton disabled={points < 5000} onClick={() => startBgmSpin(true)} variant="points">
+                    <TicketButton disabled={points < 5000} onClick={() => startBgmSpin(true)} priceTier={5000}>
                       🪙 5000 pt
                     </TicketButton>
                   </GachaMachine>
@@ -720,10 +788,10 @@ export default function GachaShopScreen({
                     ticketCount={player?.seTickets || 0}
                     ticketLabel="🔊 もっている"
                   >
-                    <TicketButton disabled={(player?.seTickets || 0) < 1} onClick={() => startSeSpin(false)}>
+                    <TicketButton disabled={(player?.seTickets || 0) < 1} onClick={() => startSeSpin(false)} priceTier="ticket">
                       🎟️ チケット 1枚
                     </TicketButton>
-                    <TicketButton disabled={points < 5000} onClick={() => startSeSpin(true)} variant="points">
+                    <TicketButton disabled={points < 5000} onClick={() => startSeSpin(true)} priceTier={5000}>
                       🪙 5000 pt
                     </TicketButton>
                   </GachaMachine>
@@ -740,11 +808,32 @@ export default function GachaShopScreen({
                     <TicketButton
                       disabled={(player?.legendTickets || 0) < 1}
                       onClick={() => startLegendSpin(false)}
-                      variant="ticket"
+                      priceTier="ticket"
                     >
                       🎟️ チケット 1枚
                     </TicketButton>
-                    <TicketButton disabled={points < 10000} onClick={() => startLegendSpin(true)} variant="points">
+                    <TicketButton disabled={points < 10000} onClick={() => startLegendSpin(true)} priceTier={10000}>
+                      🪙 10000 pt
+                    </TicketButton>
+                  </GachaMachine>
+
+                  <GachaMachine
+                    badge="NEW"
+                    badgeClass="bg-violet-500"
+                    image={optimizedAssetUrl('/gacha_normal.png')}
+                    title="フレームガチャ"
+                    subtitle="セーブデータ枠"
+                    ticketCount={player?.frameTickets || 0}
+                    ticketLabel="🖼️ もっている"
+                  >
+                    <TicketButton
+                      disabled={(player?.frameTickets || 0) < 1}
+                      onClick={() => startFrameSpin(false)}
+                      priceTier="ticket"
+                    >
+                      🎟️ チケット 1枚
+                    </TicketButton>
+                    <TicketButton disabled={points < 10000} onClick={() => startFrameSpin(true)} priceTier={10000}>
                       🪙 10000 pt
                     </TicketButton>
                   </GachaMachine>

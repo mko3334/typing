@@ -32,6 +32,7 @@ export function applyCorrectionToWord(word, difficulty) {
   return {
     ...word,
     kana: correction.kana || word.kana,
+    reading: correction.reading || word.reading,
     romaji: Array.isArray(correction.romaji) ? correction.romaji : word.romaji,
     emoji: correction.emoji ?? word.emoji,
   };

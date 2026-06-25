@@ -13,7 +13,9 @@ export function formatAnnouncementTime(iso) {
 }
 
 export function isAnnouncementVisible(announcement, now = Date.now()) {
-  if (!announcement || announcement.status !== 'published' || !announcement.publishedAt) return false;
+  if (!announcement) return false;
+  if (announcement.status === 'archived' || announcement.status === 'cancelled') return false;
+  if (announcement.status !== 'published' || !announcement.publishedAt) return false;
   return new Date(announcement.publishedAt).getTime() <= now;
 }
 

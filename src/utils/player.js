@@ -1,9 +1,12 @@
 import { normalizeHiraganaProgress } from './hiraganaTyping';
+import { getActivePlazaSubEvents } from './subEvents';
+import { normalizeUnlockedFrames } from './saveFrameGacha';
+import { normalizePlayingSession } from './playerSession';
 
 export function enrichPlayer(id, data) {
   const collection = data.collection || {};
   const ownedCount = Object.keys(collection).filter((k) => collection[k] > 0).length;
-  return {
+  return normalizePlayingSession({
     id,
     name: data.name,
     points: data.points || 0,
@@ -23,6 +26,10 @@ export function enrichPlayer(id, data) {
     legendTickets: data.legendTickets || 0,
     bgmTickets: data.bgmTickets || 0,
     seTickets: data.seTickets || 0,
+    frameTickets:
+      (data.frameTickets || 0) +
+      (data.practiceFrameTickets || 0) +
+      (data.testFrameTickets || 0),
     playCount:
       Number.isFinite(Number(data.playCount)) && Number(data.playCount) >= 0
         ? Number(data.playCount)
@@ -44,11 +51,16 @@ export function enrichPlayer(id, data) {
     pendingGifts: Array.isArray(data.pendingGifts) ? data.pendingGifts : [],
     readAnnouncementIds: Array.isArray(data.readAnnouncementIds) ? data.readAnnouncementIds : [],
     solvedSubEventIds: Array.isArray(data.solvedSubEventIds) ? data.solvedSubEventIds : [],
-    plazaSubEvents: Array.isArray(data.plazaSubEvents) ? data.plazaSubEvents : [],
+    plazaSubEvents: getActivePlazaSubEvents({
+      plazaSubEvents: Array.isArray(data.plazaSubEvents) ? data.plazaSubEvents : [],
+      solvedSubEventIds: Array.isArray(data.solvedSubEventIds) ? data.solvedSubEventIds : [],
+    }),
     isPlaying: data.isPlaying === true,
     lastActiveTime: data.lastActiveTime || null,
     playingSessionId: data.playingSessionId || null,
     hiraganaProgress: normalizeHiraganaProgress(data.hiraganaProgress),
+    unlockedFrames: normalizeUnlockedFrames(data.unlockedFrames),
+    currentFrame: data.currentFrame || null,
     difficultyClears:
       data.difficultyClears && typeof data.difficultyClears === 'object' ? data.difficultyClears : {},
     noMissClear: data.noMissClear === true,
@@ -56,5 +68,5 @@ export function enrichPlayer(id, data) {
       Number.isFinite(Number(data.gachaPullCount)) && Number(data.gachaPullCount) >= 0
         ? Number(data.gachaPullCount)
         : 0,
-  };
+  });
 }
