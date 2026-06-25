@@ -6,6 +6,7 @@ import {
   cancelGiftFromCloudPlayer,
   getTypingReports,
   getWordRequests,
+  saveCloudPlayer,
   saveWordCorrection,
   sendGiftToCloudPlayer,
   setPlayerArchived,
@@ -753,6 +754,61 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
     }
   };
 
+  const handleExportPlayers = () => {
+    try {
+      const dataStr = JSON.stringify(players, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kids-typing-game-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('エクスポートに失敗しました。');
+      console.error(err);
+    }
+  };
+
+  const handleImportPlayers = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!confirm('インポートを実行しますか？（現在のFirebase上の同名IDのデータは上書きされます）')) {
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const importedPlayers = JSON.parse(e.target.result);
+        if (!Array.isArray(importedPlayers)) {
+          throw new Error('配列形式ではありません');
+        }
+
+        let successCount = 0;
+        for (const p of importedPlayers) {
+          if (p && p.id) {
+            const ok = await saveCloudPlayer(p.id, p);
+            if (ok) successCount++;
+          }
+        }
+        
+        alert(`${successCount} 件のデータをインポートしました！`);
+        onReloadPlayers?.();
+      } catch (err) {
+        alert('インポートに失敗しました。ファイル形式が正しいか確認してください。');
+        console.error(err);
+      } finally {
+        event.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const syncLocalArchiveFlag = async (playerId, isArchived) => {
     const local = await localforage.getItem('player_data_' + playerId);
     if (local) {
@@ -1028,9 +1084,28 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
           {adminTab === 'saves' && (
             <div className="flex flex-col lg:flex-row gap-4 min-h-0">
               <div className="flex-1 min-h-0 flex flex-col">
-                <h4 className="text-sm font-black text-sky-600 mb-1.5 shrink-0">
-                  <span>👤</span> セーブデータ管理（{activePlayers.length}件）
-                </h4>
+                <div className="flex justify-between items-center mb-1.5 shrink-0">
+                  <h4 className="text-sm font-black text-sky-600">
+                    <span>👤</span> セーブデータ管理（{activePlayers.length}件）
+                  </h4>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleExportPlayers}
+                      className="px-2 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-black transition-colors shadow-sm active:scale-95"
+                    >
+                      全データ エクスポート
+                    </button>
+                    <label className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-black transition-colors shadow-sm active:scale-95 cursor-pointer">
+                      全データ インポート
+                      <input
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleImportPlayers}
+                      />
+                    </label>
+                  </div>
+                </div>
                 <div className="flex-1 overflow-auto border-2 border-sky-100 rounded-2xl bg-white/70 backdrop-blur-md shadow-inner p-1 min-h-[32vh]">
                   {activePlayers.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-xs font-bold text-gray-400 py-8">
