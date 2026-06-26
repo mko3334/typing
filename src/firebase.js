@@ -10,13 +10,13 @@ import {
 } from './utils/typingReportStorage';
 
 const firebaseConfig = {
-  projectId: "game-86071",
-  appId: "1:1442050997:web:f552405c41e8e991e51ffc",
-  storageBucket: "game-86071.firebasestorage.app",
-  apiKey: "AIzaSyCRJ9rTd3Ss3QxczGc1R0rwUJXccGSLMco",
-  authDomain: "game-86071.firebaseapp.com",
-  messagingSenderId: "1442050997",
-  measurementId: "G-RLYCHPSV8M"
+  projectId: "treegames-ac5db",
+  appId: "1:538793714749:web:037f7c9b6db2edb99d7654",
+  storageBucket: "treegames-ac5db.firebasestorage.app",
+  apiKey: "AIzaSyDu5F9Dlw4x7E1cDg2K41_mEzaEa0QGW6Q",
+  authDomain: "treegames-ac5db.firebaseapp.com",
+  messagingSenderId: "538793714749",
+  measurementId: "G-9J0H3DF4F7"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -698,3 +698,60 @@ export async function markAnnouncementReadForPlayer(playerId, announcementId, cu
     return false;
   }
 }
+
+// --- 全データ移行（エクスポート・インポート） ---
+export const exportAllFirestoreData = async () => {
+  const collectionsToExport = [
+    'global_players',
+    'shared_profiles',
+    'word_requests',
+    'adopted_words',
+    'typing_reports',
+    'word_corrections',
+    'announcements',
+    'users',
+    'deviceTransfers',
+    'deviceBackups'
+  ];
+
+  const exportData = {};
+
+  try {
+    for (const collName of collectionsToExport) {
+      const collRef = collection(db, collName);
+      const snapshot = await getDocs(collRef);
+      exportData[collName] = {};
+      snapshot.forEach(docSnap => {
+        exportData[collName][docSnap.id] = docSnap.data();
+      });
+    }
+    return exportData;
+  } catch (error) {
+    console.error('Error exporting Firestore data:', error);
+    throw error;
+  }
+};
+
+export const importAllFirestoreData = async (jsonData) => {
+  if (!jsonData || typeof jsonData !== 'object') {
+    throw new Error('Invalid JSON data format');
+  }
+
+  try {
+    for (const [collName, docs] of Object.entries(jsonData)) {
+      if (!docs || typeof docs !== 'object') continue;
+      
+      for (const [docId, docData] of Object.entries(docs)) {
+        if (!docId || !docData) continue;
+        const docRef = doc(db, collName, docId);
+        // undefined を防ぐため JSON 経由でクリーンアップ
+        const cleanData = JSON.parse(JSON.stringify(docData));
+        await setDoc(docRef, cleanData);
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error('Error importing Firestore data:', error);
+    throw error;
+  }
+};

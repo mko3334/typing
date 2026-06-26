@@ -12,6 +12,8 @@ import {
   setPlayerArchived,
   updateTypingReport,
   updateWordRequest,
+  exportAllFirestoreData,
+  importAllFirestoreData,
 } from '../firebase';
 import { ADMIN_PASSWORD, suggestDifficultyKey } from '../utils/admin';
 import AdminAnnouncementsSection from './AdminAnnouncementsSection';
@@ -754,14 +756,20 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
     }
   };
 
-  const handleExportPlayers = () => {
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleExportPlayers = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
     try {
-      const dataStr = JSON.stringify(players, null, 2);
+      const allData = await exportAllFirestoreData();
+      const dataStr = JSON.stringify(allData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `kids-typing-game-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `kids-typing-game-full-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -769,41 +777,45 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
     } catch (err) {
       alert('エクスポートに失敗しました。');
       console.error(err);
+    } finally {
+      setIsExporting(false);
     }
   };
 
   const handleImportPlayers = (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file || isImporting) return;
 
-    if (!confirm('インポートを実行しますか？（現在のFirebase上の同名IDのデータは上書きされます）')) {
+    if (!confirm('インポートを実行しますか？（現在のFirebase上の同名データは上書きされます）')) {
       event.target.value = '';
       return;
     }
 
+    setIsImporting(true);
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
-        const importedPlayers = JSON.parse(e.target.result);
-        if (!Array.isArray(importedPlayers)) {
-          throw new Error('配列形式ではありません');
+        const importedData = JSON.parse(e.target.result);
+        if (!importedData || typeof importedData !== 'object') {
+          throw new Error('JSON形式ではありません');
         }
 
-        let successCount = 0;
-        for (const p of importedPlayers) {
-          if (p && p.id) {
-            const ok = await saveCloudPlayer(p.id, p);
-            if (ok) successCount++;
-          }
+        // 旧形式 (Array) の場合はアラート
+        if (Array.isArray(importedData)) {
+          alert('古い形式のバックアップファイルです。新機能の「全データ一括バックアップ」ファイルを選択してください。');
+          return;
         }
+
+        await importAllFirestoreData(importedData);
         
-        alert(`${successCount} 件のデータをインポートしました！`);
+        alert('全データのインポートが完了しました！');
         onReloadPlayers?.();
       } catch (err) {
         alert('インポートに失敗しました。ファイル形式が正しいか確認してください。');
         console.error(err);
       } finally {
         event.target.value = '';
+        setIsImporting(false);
       }
     };
     reader.readAsText(file);
@@ -1091,17 +1103,19 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                   <div className="flex gap-2">
                     <button
                       onClick={handleExportPlayers}
-                      className="px-2 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-black transition-colors shadow-sm active:scale-95"
+                      disabled={isExporting}
+                      className="px-2 py-1 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white rounded-lg text-xs font-black transition-colors shadow-sm active:scale-95"
                     >
-                      全データ エクスポート
+                      {isExporting ? '出力中...' : '全データ エクスポート'}
                     </button>
-                    <label className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-black transition-colors shadow-sm active:scale-95 cursor-pointer">
-                      全データ インポート
+                    <label className={`px-2 py-1 bg-amber-500 hover:bg-amber-600 ${isImporting ? 'opacity-50' : ''} text-white rounded-lg text-xs font-black transition-colors shadow-sm active:scale-95 cursor-pointer`}>
+                      {isImporting ? '取込中...' : '全データ インポート'}
                       <input
                         type="file"
                         accept=".json"
                         className="hidden"
                         onChange={handleImportPlayers}
+                        disabled={isImporting}
                       />
                     </label>
                   </div>
