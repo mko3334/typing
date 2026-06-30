@@ -10,13 +10,13 @@ import {
 } from './utils/typingReportStorage';
 
 const firebaseConfig = {
-  projectId: "treegames-ac5db",
-  appId: "1:538793714749:web:037f7c9b6db2edb99d7654",
-  storageBucket: "treegames-ac5db.firebasestorage.app",
-  apiKey: "AIzaSyDu5F9Dlw4x7E1cDg2K41_mEzaEa0QGW6Q",
-  authDomain: "treegames-ac5db.firebaseapp.com",
-  messagingSenderId: "538793714749",
-  measurementId: "G-9J0H3DF4F7"
+  projectId: "game-86071",
+  appId: "1:1442050997:web:f552405c41e8e991e51ffc",
+  storageBucket: "game-86071.firebasestorage.app",
+  apiKey: "AIzaSyCRJ9rTd3Ss3QxczGc1R0rwUJXccGSLMco",
+  authDomain: "game-86071.firebaseapp.com",
+  messagingSenderId: "1442050997",
+  measurementId: "G-RLYCHPSV8M"
 };
 
 const app = initializeApp(firebaseConfig);

@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "gatyattotyping",
+    "site": "treetyping",
     "public": "dist",
     "ignore": [
       "firebase.json",
