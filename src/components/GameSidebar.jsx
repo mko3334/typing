@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { User, Book, Music, Sparkles, Bell } from 'lucide-react';
+import { TimerContext } from '../contexts/TimerContext';
 
 function playDecideSound() {
   try {
@@ -40,12 +41,24 @@ export default function GameSidebar({
     handler?.();
   };
 
+  const playTimerRemainingMs = useContext(TimerContext);
+
   return (
     <aside className="w-20 sm:w-24 bg-white/95 backdrop-blur-md border-r-4 border-yellow-300 flex flex-col items-center py-4 px-1 gap-4 shrink-0 shadow-2xl z-30 overflow-y-auto">
       <div className="w-full flex flex-col items-center gap-2">
         <div className="bg-sky-500 text-white w-full py-1 text-center font-black text-[10px] sm:text-xs rounded-lg shadow-sm truncate px-1">
           {player?.name || 'ゲスト'}
         </div>
+        {playTimerRemainingMs !== null && (
+          <div className={`w-full text-center font-black rounded-lg border-2 shadow-sm flex flex-col items-center justify-center py-1 ${
+            playTimerRemainingMs === 0 ? 'bg-red-500 text-white border-red-700 animate-pulse' : 'bg-white text-amber-600 border-amber-400'
+          }`}>
+            <span className="text-[10px] sm:text-xs text-amber-700/70 mb-0.5 leading-none">⏱️のこり</span>
+            <span className="text-lg sm:text-xl leading-none tracking-widest">
+              {Math.floor(playTimerRemainingMs / 60000)}:{(Math.floor(playTimerRemainingMs / 1000) % 60).toString().padStart(2, '0')}
+            </span>
+          </div>
+        )}
 
         <div className="bg-gradient-to-b from-orange-400 to-amber-500 text-white rounded-xl py-1.5 px-1 text-center w-full shadow-md flex flex-col items-center gap-0 border border-orange-300">
           <span className="text-base sm:text-lg">🪙</span>

@@ -440,8 +440,11 @@ export default function TitleScreen({ onSelectPlayer, playDecideSound }) {
             </button>
           </div>
         </div>
-      </main>
 
+        <div className="absolute bottom-2 right-2 text-[10px] font-bold text-sky-800/60 select-none pointer-events-none z-10">
+          v.{__APP_VERSION__}
+        </div>
+      </main>
       {showPlayerModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in">
           <div className="glass-card bg-white/95 w-full max-w-6xl p-3 sm:p-4 max-h-[95vh] flex flex-col shadow-2xl rounded-3xl relative overflow-hidden">

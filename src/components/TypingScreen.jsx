@@ -4,9 +4,10 @@ import {
   FINGER_MAP,
   KEYBOARD_ROWS,
   resolveBackground,
+  TITLES,
 } from '../constants';
 import { pickGameWords, pickReplacementWord } from '../utils/typingWords';
-import { getAdoptedWords, submitTypingReport } from '../firebase';
+import { submitTypingReport } from '../firebase';
 import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
 import { computeAchievements } from '../utils/gacha';
 import { appendSubEventsAfterTypingClear } from '../utils/subEvents';
@@ -189,6 +190,7 @@ export default function TypingScreen({
   player,
   difficulty = 'normal',
   assistSettings,
+  extraWords,
   onAssistChange,
   onPlayerUpdate,
   onBack,
@@ -205,7 +207,7 @@ export default function TypingScreen({
     playCount: Number(player?.playCount) >= 0 ? Number(player?.playCount) : 0,
     specialWordTriggered: player?.specialWordTriggered === true,
   });
-  const adoptedWordsRef = useRef([]);
+  const adoptedWordsRef = useRef(extraWords || []);
   const onPlayerUpdateRef = useRef(onPlayerUpdate);
 
   useEffect(() => {
@@ -214,10 +216,11 @@ export default function TypingScreen({
 
   useEffect(() => {
     refreshWordCorrections();
-    getAdoptedWords().then((words) => {
-      adoptedWordsRef.current = words || [];
-    });
   }, []);
+
+  useEffect(() => {
+    adoptedWordsRef.current = extraWords || [];
+  }, [extraWords]);
 
   const [gameWords, setGameWords] = useState([]);
   const [wordIndex, setWordIndex] = useState(0);
@@ -472,24 +475,65 @@ export default function TypingScreen({
       }
       const earnedNoMiss =
         missCount === 0 && difficulty !== 'easy' && difficulty !== 'alphabet_quiz';
+      const encounteredKeywords = { ...(player?.encounteredKeywords || {}) };
+      gameWords.forEach(w => {
+        if (!w.isAlphabetQuiz) {
+          encounteredKeywords[w.kana] = true;
+        }
+      });
+
       const updates = {
         points: newPoints,
         difficultyClears,
         noMissClear: player?.noMissClear || earnedNoMiss,
+        encounteredKeywords,
         plazaSubEvents: appendSubEventsAfterTypingClear({
           ...player,
           points: newPoints,
           difficultyClears,
         }),
       };
-      updates.achievements = computeAchievements(
+      const oldAchievements = player?.achievements || [];
+      const newAchievements = computeAchievements(
         { ...player, ...updates },
         player?.collection || {},
       );
+      updates.achievements = newAchievements;
+
+      const masterTitles = ['easy_master', 'normal_master', 'hard_master', 'very_hard_master'];
+      const newlyEarned = newAchievements.filter(a => !oldAchievements.includes(a) && masterTitles.includes(a));
+      
+      let earnedTicketType = null;
+      if (newlyEarned.length > 0) {
+        const ticketTypes = ['specialTickets', 'bgmTickets', 'seTickets', 'legendTickets'];
+        const randomType = ticketTypes[Math.floor(Math.random() * ticketTypes.length)];
+        updates[randomType] = (player?.[randomType] || 0) + 1;
+        
+        earnedTicketType = randomType.replace('Tickets', '');
+        if (earnedTicketType === 'special') earnedTicketType = 'special'; // wait, TicketRewardModal expects 'legend', 'se', 'bgm', 'special'
+      }
+
       onPlayerUpdateRef.current?.(updates);
-      setTimeout(() => playSE?.('points'), 300);
+
+      // If we earned a master title, show the reward modal for it instead of directly finishing.
+      if (newlyEarned.length > 0) {
+        const titleId = newlyEarned[0];
+        const titleObj = TITLES.find(t => t.id === titleId);
+        if (titleObj && earnedTicketType) {
+          setTicketReward({
+            show: true,
+            type: earnedTicketType,
+            titleObj: titleObj,
+            count: 1,
+            onConfirm: () => {}
+          });
+          playSE?.('legend');
+        }
+      } else {
+        setTimeout(() => playSE?.('points'), 300);
+      }
     },
-    [difficulty, localPoints, missCount, player, playSE],
+    [difficulty, localPoints, missCount, player, playSE, gameWords],
   );
 
   const completeCurrentWord = useCallback(() => {

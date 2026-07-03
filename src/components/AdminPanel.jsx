@@ -24,6 +24,13 @@ import {
   parseRomajiInput,
   refreshWordCorrections,
 } from '../utils/wordCorrections';
+import {
+  RARITY_SORT_RANK,
+  TITLES,
+  BACKGROUNDS,
+  GACHA_ITEMS,
+  WORDS,
+} from '../constants';
 
 function parseGiftAmount(value) {
   const trimmed = String(value ?? '').trim();
@@ -189,6 +196,54 @@ function AdminGiftModal({ player, onClose, onSent, playDecideSound }) {
             className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 disabled:opacity-60 text-white font-black text-sm rounded-2xl shadow-lg transition-all"
           >
             {sending ? '送信中...' : '🎁 おくる！'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminTimerModal({ player, onClose, onSaved, playDecideSound }) {
+  const [minutes, setMinutes] = useState(player?.playTimerLimitMinutes || 0);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!player) return;
+    playDecideSound?.();
+    setSaving(true);
+    try {
+      const success = await saveCloudPlayer(player.id, {
+        ...player,
+        playTimerLimitMinutes: Number(minutes) || 0
+      });
+      if (success) {
+        onSaved?.();
+        onClose();
+      } else {
+        alert('保存に失敗しました。');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+      <div className="glass-card bg-white/95 w-full max-w-sm p-6 shadow-2xl rounded-3xl border-4 border-amber-400 text-center animate-pop-out">
+        <span className="text-5xl block mb-2">⏱️</span>
+        <h3 className="text-lg sm:text-xl font-black text-gray-800 mb-1">「{player.name}」さんのタイマー</h3>
+        <p className="text-xs text-gray-500 font-bold mb-4">5分刻みで制限時間を設定できます（0で制限なし）</p>
+
+        <div className="flex items-center justify-center gap-3 my-6">
+          <button type="button" onClick={() => setMinutes(Math.max(0, minutes - 5))} className="w-12 h-12 bg-gray-200 hover:bg-gray-300 rounded-full font-black text-xl text-gray-600">-5</button>
+          <div className="text-3xl font-black w-24 text-amber-600">{minutes}<span className="text-sm">分</span></div>
+          <button type="button" onClick={() => setMinutes(minutes + 5)} className="w-12 h-12 bg-gray-200 hover:bg-gray-300 rounded-full font-black text-xl text-gray-600">+5</button>
+        </div>
+
+        <div className="flex gap-2 mt-2">
+          <button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-black text-sm rounded-2xl transition-all">やめる</button>
+          <button type="button" onClick={handleSave} disabled={saving} className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-black text-sm rounded-2xl shadow-lg transition-all">
+            {saving ? '保存中...' : '決定'}
           </button>
         </div>
       </div>
@@ -514,6 +569,7 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
   const [wordRequests, setWordRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [giftTarget, setGiftTarget] = useState(null);
+  const [timerTarget, setTimerTarget] = useState(null);
   const [detailPlayer, setDetailPlayer] = useState(null);
   const [adoptingRequest, setAdoptingRequest] = useState(null);
   const [adoptDifficulty, setAdoptDifficulty] = useState('easy');
@@ -1039,8 +1095,20 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                             <td className="p-2 text-gray-500 font-bold whitespace-nowrap">
                               {req.createdAt ? new Date(req.createdAt).toLocaleString('ja-JP') : '-'}
                             </td>
-                            <td className="p-2 font-black text-gray-800">{req.kana}</td>
-                            <td className="p-2 font-mono text-gray-600">
+                            <td className="p-2 font-black text-gray-800 break-all max-w-[150px]">
+                              {req.kana}
+                              {(() => {
+                                const exist = ['easy', 'normal', 'hard', 'very_hard'].some(diff => 
+                                  WORDS[diff]?.some(w => w.kana === req.kana)
+                                );
+                                return exist ? (
+                                  <span className="ml-2 inline-block px-1.5 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-700 whitespace-nowrap">
+                                    収録済
+                                  </span>
+                                ) : null;
+                              })()}
+                            </td>
+                            <td className="p-2 font-mono text-gray-600 break-all max-w-[200px]">
                               {Array.isArray(req.romaji) ? req.romaji.join(' / ') : req.romaji}
                             </td>
                             <td className="p-2 font-bold text-gray-600">{req.playerName || 'ゲスト'}</td>
@@ -1140,7 +1208,14 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                           const avgMs = getAveragePlayMs(p.totalPlayMs, p.sessionCount);
                           return (
                             <tr key={p.id} className="hover:bg-sky-50/30 transition-colors">
-                              <td className="p-2 font-black text-gray-800 whitespace-nowrap">{p.name}</td>
+                              <td className="p-2 font-black text-gray-800 whitespace-nowrap">
+                                {p.name}
+                                {p.playTimerLimitMinutes > 0 && (
+                                  <span className="ml-1 text-[10px] text-amber-600 font-black bg-amber-100 px-1 py-0.5 rounded" title={`制限時間: ${p.playTimerLimitMinutes}分`}>
+                                    ⏱️{p.playTimerLimitMinutes}分
+                                  </span>
+                                )}
+                              </td>
                               <td className="p-2 font-bold text-sky-600 whitespace-nowrap">
                                 {p.sessionCount > 0 ? formatDurationMs(p.totalPlayMs) : '-'}
                               </td>
@@ -1170,6 +1245,17 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                                     title="プレゼント"
                                   >
                                     🎁
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      playDecideSound?.();
+                                      setTimerTarget(p);
+                                    }}
+                                    className="px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 rounded-lg font-black text-[9px]"
+                                    title="タイマー"
+                                  >
+                                    ⏱️
                                   </button>
                                   <button
                                     type="button"
@@ -1463,7 +1549,15 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
         <AdminGiftModal
           player={giftTarget}
           onClose={() => setGiftTarget(null)}
-          onSent={onReloadPlayers}
+          onSent={() => onReloadPlayers?.()}
+          playDecideSound={playDecideSound}
+        />
+      )}
+      {timerTarget && (
+        <AdminTimerModal
+          player={timerTarget}
+          onClose={() => setTimerTarget(null)}
+          onSaved={() => onReloadPlayers?.()}
           playDecideSound={playDecideSound}
         />
       )}

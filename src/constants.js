@@ -31,6 +31,10 @@ export const TITLES = [
   { id: 'legend_hunter', name: '🦄 レジェンドハンター', desc: 'レジェンドレアの アイテムを あてる', emoji: '🦄', color: 'text-purple-600', bg: 'bg-purple-100' },
   { id: 'collection_complete', name: '👑 ずかんコンプリート', desc: 'ごほうびを すべてあつめる', emoji: '👑', color: 'text-orange-600', bg: 'bg-orange-100' },
   { id: 'gacha_spender', name: '🎰 ガチャ好き', desc: 'ガチャを 30かい まわす', emoji: '🎰', color: 'text-pink-700', bg: 'bg-pink-100' },
+  { id: 'easy_master', name: '🔰 イージーマスター', desc: 'イージーの ことばを すべてあつめる', emoji: '🔰', color: 'text-cyan-600', bg: 'bg-cyan-100' },
+  { id: 'normal_master', name: '⭐ ノーマルマスター', desc: 'ノーマルの ことばを すべてあつめる', emoji: '⭐', color: 'text-lime-600', bg: 'bg-lime-100' },
+  { id: 'hard_master', name: '🔥 ハードマスター', desc: 'ハードの ことばを すべてあつめる', emoji: '🔥', color: 'text-orange-600', bg: 'bg-orange-100' },
+  { id: 'very_hard_master', name: '👿 ベリーハードマスター', desc: 'ベリーハードの ことばを すべてあつめる', emoji: '👿', color: 'text-purple-600', bg: 'bg-purple-100' },
 ];
 
 export const RARITY_SORT_RANK = {
@@ -150,7 +154,7 @@ export const ROMAJI_TABLE = {
   'ま': ['ma'], 'み': ['mi'], 'む': ['mu'], 'め': ['me'], 'も': ['mo'],
   'や': ['ya'], 'ゆ': ['yu'], 'よ': ['yo'],
   'ら': ['ra'], 'り': ['ri'], 'る': ['ru'], 'れ': ['re'], 'ろ': ['ro'],
-  'わ': ['wa'], 'を': ['wo'], 'ん': ['nn', 'n'],
+  'わ': ['wa'], 'を': ['wo'], 'ん': ['nn'],
   'が': ['ga'], 'ぎ': ['gi'], 'ぐ': ['gu'], 'げ': ['ge'], 'ご': ['go'],
   'ざ': ['za'], 'じ': ['zi', 'ji'], 'ず': ['zu'], 'ぜ': ['ze'], 'ぞ': ['zo'],
   'だ': ['da'], 'ぢ': ['di'], 'づ': ['du'], 'で': ['de'], 'ど': ['do'],

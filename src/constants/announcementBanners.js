@@ -15,12 +15,15 @@ export const ANNOUNCEMENT_BANNERS = [
   { id: 'candy', url: '/candy_bg.webp', label: 'キャンディ' },
   { id: 'dino', url: '/dino_bg.webp', label: '恐竜' },
   { id: 'castle', url: '/castle_bg.webp', label: 'お城' },
+  { id: 'zukan', url: '/zukan_banner.png', label: 'キーワード図鑑追加' },
 ];
 
 const HIRAGANA_FRAME_BANNER_URL = '/announcement_hiragana_frame.webp';
+const ZUKAN_BANNER_URL = '/zukan_banner.png';
 
 const TITLE_BANNER_FALLBACKS = [
   { pattern: /ひらがなチャレンジ/, url: HIRAGANA_FRAME_BANNER_URL },
+  { pattern: /キーワード図鑑/, url: ZUKAN_BANNER_URL },
 ];
 
 function normalizeBannerPath(value) {

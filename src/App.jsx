@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_ASSIST_SETTINGS } from './constants';
-import { listenToAnnouncements, loadSingleCloudPlayer, markAnnouncementReadForPlayer, saveCloudPlayer } from './firebase';
+import { listenToAnnouncements, loadSingleCloudPlayer, markAnnouncementReadForPlayer, saveCloudPlayer, getAdoptedWords } from './firebase';
 import { enrichPlayer } from './utils/player';
 import { computeSessionUpdates } from './utils/playTime';
 import { persistPlayerLocally, withTimeout } from './utils/playerStorage';
@@ -30,6 +30,7 @@ import {
   getUnreadPopupQueue,
   partitionAnnouncementsForPlayer,
 } from './utils/announcements';
+import { TimerContext } from './contexts/TimerContext';
 
 export default function App() {
   const [appScreen, setAppScreen] = useState('title');
@@ -48,6 +49,8 @@ export default function App() {
   const [announcements, setAnnouncements] = useState([]);
   const [activeAnnouncement, setActiveAnnouncement] = useState(null);
   const [isAnnouncementPanelOpen, setIsAnnouncementPanelOpen] = useState(false);
+  const [playTimerRemainingMs, setPlayTimerRemainingMs] = useState(null);
+  const [extraWords, setExtraWords] = useState([]);
   const currentPlayerRef = useRef(currentPlayer);
   const assistSettingsRef = useRef(assistSettings);
   const sessionStartRef = useRef(null);
@@ -62,16 +65,29 @@ export default function App() {
 
   useEffect(() => {
     preloadImages(CRITICAL_IMAGE_URLS);
+    getAdoptedWords().then((words) => {
+      setExtraWords(words || []);
+    }).catch(() => {});
   }, []);
 
   const { playSE, playDecideSound, playCancelSound, resumeOnSelect, previewBgm, previewSe } =
     useGameAudio(currentPlayer, appScreen);
 
   const applySessionPlayTime = useCallback((player) => {
-    const updates = computeSessionUpdates(player, sessionStartRef.current);
+    if (!sessionStartRef.current) return player;
+    const sessionMs = Date.now() - sessionStartRef.current;
     sessionStartRef.current = null;
-    if (!updates) return player;
-    return { ...player, ...updates };
+    
+    const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+    const alreadyPlayedToday = player.dailyPlayDate === today ? (player.dailyPlayMs || 0) : 0;
+
+    return { 
+      ...player, 
+      totalPlayMs: (player.totalPlayMs || 0) + sessionMs,
+      sessionCount: (player.sessionCount || 0) + 1,
+      dailyPlayMs: alreadyPlayedToday + sessionMs,
+      dailyPlayDate: today,
+    };
   }, []);
 
   const syncPendingGifts = useCallback(async (player) => {
@@ -209,8 +225,21 @@ export default function App() {
     const sendHeartbeat = () => {
       const prev = currentPlayerRef.current;
       if (!prev?.id) return;
-      const patch = buildPlayingSessionPatch();
-      const next = { ...prev, ...patch };
+      
+      let next = { ...prev, ...buildPlayingSessionPatch() };
+      
+      if (sessionStartRef.current) {
+        const sessionMs = Date.now() - sessionStartRef.current;
+        sessionStartRef.current = Date.now();
+        
+        const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+        const alreadyPlayedToday = prev.dailyPlayDate === today ? (prev.dailyPlayMs || 0) : 0;
+        
+        next.totalPlayMs = (prev.totalPlayMs || 0) + sessionMs;
+        next.dailyPlayMs = alreadyPlayedToday + sessionMs;
+        next.dailyPlayDate = today;
+      }
+      
       currentPlayerRef.current = next;
       setCurrentPlayer(next);
       saveCloudPlayer(prev.id, next).catch(() => {});
@@ -223,16 +252,51 @@ export default function App() {
   }, [appScreen, currentPlayer?.id]);
 
   useEffect(() => {
+    if (appScreen === 'title' || !currentPlayer?.id || !currentPlayer.playTimerLimitMinutes) {
+      setPlayTimerRemainingMs(null);
+      return undefined;
+    }
+    const limitMs = currentPlayer.playTimerLimitMinutes * 60 * 1000;
+    
+    const updateTimer = () => {
+      const current = currentPlayerRef.current || currentPlayer;
+      const elapsed = Date.now() - (sessionStartRef.current || Date.now());
+      const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+      const alreadyPlayedToday = current.dailyPlayDate === today ? (current.dailyPlayMs || 0) : 0;
+      const remaining = Math.max(0, limitMs - alreadyPlayedToday - elapsed);
+      setPlayTimerRemainingMs(remaining);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [appScreen, currentPlayer?.id, currentPlayer?.playTimerLimitMinutes]);
+
+  useEffect(() => {
     if (appScreen === 'title' || !currentPlayer?.id) return undefined;
 
     const releaseSession = () => {
       const prev = currentPlayerRef.current;
       if (!prev?.id) return;
-      const next = {
+      
+      let next = {
         ...prev,
         ...buildClearPlayingSessionPatch(),
         lastUpdatedAt: new Date().toISOString(),
       };
+      
+      if (sessionStartRef.current) {
+        const sessionMs = Date.now() - sessionStartRef.current;
+        sessionStartRef.current = null;
+        
+        const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+        const alreadyPlayedToday = prev.dailyPlayDate === today ? (prev.dailyPlayMs || 0) : 0;
+        
+        next.totalPlayMs = (prev.totalPlayMs || 0) + sessionMs;
+        next.dailyPlayMs = alreadyPlayedToday + sessionMs;
+        next.dailyPlayDate = today;
+      }
+      
       currentPlayerRef.current = next;
       persistPlayerLocally(prev.id, next).catch(() => {});
       saveCloudPlayer(prev.id, next).catch(() => {});
@@ -374,7 +438,8 @@ export default function App() {
   };
 
   return (
-    <div className="w-full min-h-screen font-sans text-gray-800 overflow-hidden relative selection:bg-sky-200">
+    <TimerContext.Provider value={playTimerRemainingMs}>
+      <div className="w-full min-h-screen font-sans text-gray-800 overflow-hidden relative selection:bg-sky-200">
       {appScreen === 'title' && (
         <div className="w-full h-[100dvh] min-h-0 overflow-hidden">
           {isTitleUnlocked ? (
@@ -417,6 +482,7 @@ export default function App() {
           player={currentPlayer}
           difficulty={typingDifficulty}
           assistSettings={assistSettings}
+          extraWords={extraWords}
           onAssistChange={handleAssistChange}
           onPlayerUpdate={handlePlayerUpdate}
           onBack={() => setAppScreen('home')}
@@ -506,6 +572,7 @@ export default function App() {
       <ZukanModal
         isOpen={isZukanOpen}
         player={currentPlayer}
+        extraWords={extraWords}
         onClose={() => setIsZukanOpen(false)}
         playDecideSound={playDecideSound}
         playCancelSound={playCancelSound}
@@ -544,6 +611,7 @@ export default function App() {
           }}
         />
       )}
-    </div>
+      </div>
+    </TimerContext.Provider>
   );
 }

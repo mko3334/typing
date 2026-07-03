@@ -1,4 +1,4 @@
-import { BACKGROUNDS, GACHA_ITEMS } from '../constants';
+import { BACKGROUNDS, GACHA_ITEMS, WORDS } from '../constants';
 import { BGM_LIST, SE_LIST } from '../audio';
 import { HIRAGANA_ROWS } from '../data/hiraganaRows';
 
@@ -157,11 +157,9 @@ export function applyCollectionPulls(collection, items) {
   return { collection: next, newNames };
 }
 
-export function computeAchievements(player, collection) {
+export function computeAchievements(player, collection, extraWords = []) {
   const achievements = new Set(Array.isArray(player?.achievements) ? player.achievements : ['rookie']);
-  const ownedCount = Object.keys(collection).filter((key) => collection[key] > 0).length;
 
-  if (ownedCount >= 15) achievements.add('collection_15');
   if ((player?.points || 0) >= 1000) achievements.add('points_1000');
   if ((player?.points || 0) >= 10000) achievements.add('points_10000');
   if ((player?.playCount || 0) >= 20) achievements.add('typing_veteran');
@@ -183,6 +181,9 @@ export function computeAchievements(player, collection) {
   if (clearedRows.length >= HIRAGANA_ROWS.length) achievements.add('hiragana_master');
   if ((hiragana.shuffleClearCount || 0) >= 1) achievements.add('shuffle_star');
 
+  const ownedCount = Object.keys(collection).filter((key) => collection[key] > 0).length;
+  if (ownedCount >= 15) achievements.add('collection_15');
+
   const hasLegend = GACHA_ITEMS.some(
     (item) => item.rarity === '✨レジェンド✨' && (collection[item.name] || 0) > 0,
   );
@@ -190,6 +191,21 @@ export function computeAchievements(player, collection) {
 
   const allCollected = GACHA_ITEMS.every((item) => (collection[item.name] || 0) > 0);
   if (allCollected) achievements.add('collection_complete');
+
+  const encountered = player?.encounteredKeywords || {};
+  const checkMaster = (diffKey, titleId) => {
+    let diffWords = WORDS[diffKey] || [];
+    const adopted = extraWords.filter(w => w.difficulty === diffKey || (!w.difficulty && diffKey === 'normal'));
+    diffWords = [...diffWords, ...adopted];
+
+    if (diffWords.length > 0 && diffWords.every(w => encountered[w.kana])) {
+      achievements.add(titleId);
+    }
+  };
+  checkMaster('easy', 'easy_master');
+  checkMaster('normal', 'normal_master');
+  checkMaster('hard', 'hard_master');
+  checkMaster('very_hard', 'very_hard_master');
 
   return [...achievements];
 }
