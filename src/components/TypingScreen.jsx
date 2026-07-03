@@ -11,6 +11,7 @@ import { submitTypingReport } from '../firebase';
 import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
 import { computeAchievements } from '../utils/gacha';
 import { appendSubEventsAfterTypingClear } from '../utils/subEvents';
+import { generateAllRomaji } from '../constants';
 import GameSidebar from './GameSidebar';
 import CollectionSidebar from './CollectionSidebar';
 import AssistSettingsModal from './AssistSettingsModal';
@@ -255,6 +256,7 @@ export default function TypingScreen({
   const activeBg = resolveBackground(player?.currentBackground);
   const currentWord = gameWords[wordIndex];
   const isAlphabetQuiz = difficulty === 'alphabet_quiz';
+  const isCustomStage = typeof difficulty === 'object' && difficulty?.isCustomStage;
 
   const validRomajiList = useMemo(() => {
     if (!currentWord) return [];
@@ -279,6 +281,28 @@ export default function TypingScreen({
   const nextCharForAssist = displayRomaji[typedChars.length] || '';
 
   const restartRound = useCallback(() => {
+    if (typeof difficulty === 'object' && difficulty.isCustomStage) {
+      // カスタムステージの処理
+      const customWords = difficulty.words.map(w => ({
+        kana: w.kana,
+        text: w.text,
+        emoji: '✨',
+        romaji: generateAllRomaji(w.kana)
+      }));
+      setGameWords(customWords);
+      onPlayerUpdateRef.current?.({ playCount: playMetaRef.current.playCount + 1, specialWordTriggered: playMetaRef.current.specialWordTriggered });
+      setWordIndex(0);
+      setTypedChars('');
+      setMissCount(0);
+      setIsTransitioning(false);
+      setIsShaking(false);
+      setIsAllClear(false);
+      setEarnedPoints(0);
+      setTicketReward(null);
+      setCountdownStep(0);
+      return;
+    }
+
     const { words, newPlayCount, newTriggered } = pickGameWords(
       difficulty,
       false,
@@ -742,6 +766,34 @@ export default function TypingScreen({
       className="h-screen flex w-full relative bg-cover bg-center overflow-hidden"
       style={{ backgroundImage: `url(${activeBg.url})` }}
     >
+      {/* デコレーション（カスタムステージのみ） */}
+      {isCustomStage && difficulty.decorations?.map((deco, i) => (
+        <React.Fragment key={`deco-group-${i}`}>
+          {Array.from({ length: deco.count }).map((_, j) => {
+            const seed = i * 100 + j;
+            const size = 40 + (seed % 60); // 40-100px
+            const left = 5 + (seed * 17 % 90); // 5-95%
+            const top = 5 + (seed * 23 % 90); // 5-95%
+            const delay = (seed % 5) * 0.5;
+            return (
+              <div
+                key={`deco-${i}-${j}`}
+                className="absolute opacity-50 pointer-events-none z-0 animate-bounce"
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  fontSize: `${size}px`,
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${2 + (seed % 3)}s`
+                }}
+              >
+                {deco.emoji}
+              </div>
+            );
+          })}
+        </React.Fragment>
+      ))}
+
       <GameSidebar
         player={sidebarPlayer}
         onSaveAndTitle={requestLeaveTitle}
@@ -760,7 +812,7 @@ export default function TypingScreen({
         }
       />
 
-      <main className="flex-1 h-full flex flex-col items-center justify-center min-h-0 p-2 overflow-y-auto">
+      <main className="flex-1 h-full flex flex-col items-center justify-center min-h-0 p-2 overflow-y-auto z-10">
         <div className="w-full max-w-xl flex flex-col items-center gap-2 py-2">
           {currentWord?.isSpecial && !isTransitioning && (
             <>

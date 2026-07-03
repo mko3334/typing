@@ -14,6 +14,7 @@ import AssistSettingsModal from './AssistSettingsModal';
 import WordRequestModal from './WordRequestModal';
 import SubEventModal from './SubEventModal';
 import SubEventRewardModal from './SubEventRewardModal';
+import CustomAreaModal from './CustomAreaModal';
 
 function MallPin({ top, left, label, onClick, variant = 'pill', delay = '0s', large = false }) {
   const pillClass =
@@ -108,6 +109,7 @@ export default function HomeScreen({
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
   const [isAssistOpen, setIsAssistOpen] = useState(false);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [isCustomAreaOpen, setIsCustomAreaOpen] = useState(false);
   const [activeSubEvents, setActiveSubEvents] = useState([]);
   const [activeSubEvent, setActiveSubEvent] = useState(null);
   const [subEventReward, setSubEventReward] = useState(null);
@@ -227,7 +229,10 @@ export default function HomeScreen({
 
           <button
             type="button"
-            onClick={() => showComingSoon('新エリア')}
+            onClick={() => {
+              playDecideSound?.();
+              setIsCustomAreaOpen(true);
+            }}
             className="absolute top-4 right-4 z-30 px-4 py-2 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm rounded-full shadow-lg border-2 border-white flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse"
           >
             <span>🏬</span> 新エリアへ
@@ -339,6 +344,23 @@ export default function HomeScreen({
         reward={subEventReward}
         onClose={() => setSubEventReward(null)}
         playDecideSound={playDecideSound}
+      />
+
+      <CustomAreaModal
+        isOpen={isCustomAreaOpen}
+        onClose={() => setIsCustomAreaOpen(false)}
+        player={player}
+        playDecideSound={playDecideSound}
+        playCancelSound={playCancelSound}
+        onPlayCustomStage={(stage) => {
+          setIsCustomAreaOpen(false);
+          onStartTyping({
+            ...stage,
+            isCustomStage: true,
+            isEndless: false
+          });
+        }}
+        onPlayerUpdate={onPlayerUpdate}
       />
 
       {toast && (

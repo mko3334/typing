@@ -31,5 +31,8 @@ service cloud.firestore {
     match /announcements/{document} {
       allow read, write: if true;
     }
+    match /custom_stages/{document} {
+      allow read, write: if true;
+    }
   }
 }
