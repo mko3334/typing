@@ -76,6 +76,7 @@ function AnnouncementListItem({ item, onOpen }) {
 export default function AnnouncementPanel({
   player,
   announcements,
+  extraWords,
   onClose,
   onReadAnnouncement,
   playDecideSound,
@@ -85,8 +86,8 @@ export default function AnnouncementPanel({
   const [detail, setDetail] = useState(null);
 
   const partitioned = useMemo(
-    () => partitionAnnouncementsForPlayer(announcements, player),
-    [announcements, player],
+    () => partitionAnnouncementsForPlayer(announcements, player, extraWords),
+    [announcements, player, extraWords],
   );
 
   const list = tab === 'personal' ? partitioned.personal : partitioned.broadcast;

@@ -5,9 +5,11 @@ import {
   KEYBOARD_ROWS,
   resolveBackground,
   TITLES,
+  GACHA_ITEMS,
 } from '../constants';
-import { pickGameWords, pickReplacementWord } from '../utils/typingWords';
-import { submitTypingReport } from '../firebase';
+import { HiraganaBounceValue } from './hiragana/HiraganaVisuals';
+import { pickGameWords, pickReplacementWord, pickOfficialShowWords } from '../utils/typingWords';
+import { submitTypingReport, saveOfficialShowScore, getOfficialShowRankings, getOpenReportedKeywords } from '../firebase';
 import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
 import { computeAchievements } from '../utils/gacha';
 import { appendSubEventsAfterTypingClear } from '../utils/subEvents';
@@ -18,6 +20,9 @@ import AssistSettingsModal from './AssistSettingsModal';
 import TicketRewardModal from './TicketRewardModal';
 import ConfirmModal from './ConfirmModal';
 import TypingProblemReportModal from './TypingProblemReportModal';
+import GearEquipModal from './GearEquipModal';
+import PlayerCard from './PlayerCard';
+import { calculateGearPowers } from '../utils/gearPower';
 
 const COUNTDOWN_STEPS = ['3', '2', '1', 'GO!!'];
 const CHAOS_WINDOW_MS = 1500;
@@ -215,8 +220,16 @@ export default function TypingScreen({
     onPlayerUpdateRef.current = onPlayerUpdate;
   }, [onPlayerUpdate]);
 
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
   useEffect(() => {
-    refreshWordCorrections();
+    Promise.all([
+      getOpenReportedKeywords(),
+      refreshWordCorrections()
+    ]).then(([reports]) => {
+      setReportedKanas(reports);
+      setIsDataLoaded(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -239,6 +252,11 @@ export default function TypingScreen({
     seTickets: player?.seTickets || 0,
     legendTickets: player?.legendTickets || 0,
   });
+  
+  const [isGearModalOpen, setIsGearModalOpen] = useState(false);
+  const gearPowers = useMemo(() => calculateGearPowers(player?.typingShowGears, player?.itemLevels), [player?.typingShowGears, player?.itemLevels]);
+  const gearPowersRef = useRef(gearPowers);
+  useEffect(() => { gearPowersRef.current = gearPowers; }, [gearPowers]);
   const [ticketReward, setTicketReward] = useState(null);
   const [countdownStep, setCountdownStep] = useState(0);
   const [leaveConfirm, setLeaveConfirm] = useState(null);
@@ -246,9 +264,19 @@ export default function TypingScreen({
   const [reportOpen, setReportOpen] = useState(false);
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportToast, setReportToast] = useState('');
+  const [latestRankings, setLatestRankings] = useState([]);
+  const [reportedKanas, setReportedKanas] = useState([]);
   const keyPressWindowRef = useRef([]);
   const lastTypingWarningAtRef = useRef(0);
   const typingWarningTimerRef = useRef(null);
+
+  // --- 公式ショー（タイムアタック）用ステート ---
+  const isOfficialShow = typeof difficulty === 'object' && difficulty?.isOfficialShow;
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [officialScore, setOfficialScore] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  const [officialShowUploading, setOfficialShowUploading] = useState(false);
 
   const isCountdown = countdownStep < COUNTDOWN_STEPS.length;
   const countdownLabel = isCountdown ? COUNTDOWN_STEPS[countdownStep] : null;
@@ -303,6 +331,31 @@ export default function TypingScreen({
       return;
     }
 
+    if (typeof difficulty === 'object' && difficulty.isOfficialShow) {
+      const specialRate = 0.05 + gearPowersRef.current.specialRateUp;
+      const customWords = pickOfficialShowWords(adoptedWordsRef.current, reportedKanas).map(w => ({
+        ...w,
+        isSpecial: Math.random() < specialRate,
+        romaji: w.romaji || generateAllRomaji(w.kana)
+      }));
+      setGameWords(customWords);
+      onPlayerUpdateRef.current?.({ playCount: playMetaRef.current.playCount + 1, specialWordTriggered: playMetaRef.current.specialWordTriggered });
+      setWordIndex(0);
+      setTypedChars('');
+      setMissCount(0);
+      setIsTransitioning(false);
+      setIsShaking(false);
+      setIsAllClear(false);
+      setEarnedPoints(0);
+      setTicketReward(null);
+      setCountdownStep(0);
+      setTimeLeft(60 + Math.floor(gearPowersRef.current.timePlus));
+      setOfficialScore(0);
+      setCombo(0);
+      setIsTimeUp(false);
+      return;
+    }
+
     const { words, newPlayCount, newTriggered } = pickGameWords(
       difficulty,
       false,
@@ -310,6 +363,7 @@ export default function TypingScreen({
       playMetaRef.current.specialWordTriggered,
       undefined,
       adoptedWordsRef.current,
+      reportedKanas,
     );
     playMetaRef.current = { playCount: newPlayCount, specialWordTriggered: newTriggered };
     setGameWords(words.map((word) => applyCorrectionToWord(word, difficulty)));
@@ -344,8 +398,10 @@ export default function TypingScreen({
   }, [countdownStep, isCountdown, countdownLabel]);
 
   useEffect(() => {
-    restartRound();
-  }, [difficulty, restartRound]);
+    if (isDataLoaded) {
+      restartRound();
+    }
+  }, [difficulty, restartRound, isDataLoaded]);
 
   useEffect(() => {
     if (!currentWord?.isSpecial || isCountdown || isAllClear || isTransitioning) return undefined;
@@ -362,6 +418,68 @@ export default function TypingScreen({
     },
     [],
   );
+
+  // タイマーのカウントダウン
+  useEffect(() => {
+    if (isOfficialShow && !isCountdown && !isTimeUp && !isGearModalOpen && !reportOpen && timeLeft > 0) {
+      const timer = setTimeout(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOfficialShow, isCountdown, isTimeUp, timeLeft, isGearModalOpen, reportOpen]);
+
+  // のこり10秒のカウントダウン音
+  useEffect(() => {
+    if (isOfficialShow && !isCountdown && !isTimeUp && !isGearModalOpen && !reportOpen && timeLeft <= 10 && timeLeft > 0) {
+      playSE?.('countdown_10s');
+    }
+  }, [timeLeft, isOfficialShow, isCountdown, isTimeUp, playSE, isGearModalOpen, reportOpen]);
+
+  // タイムアップ時の処理
+  useEffect(() => {
+    if (isOfficialShow && timeLeft === 0 && !isTimeUp) {
+      setIsTimeUp(true);
+      playSE?.('timeup');
+      
+      const finalScore = Math.floor(officialScore * (1 + gearPowersRef.current.scoreBoost));
+      
+      (async () => {
+        setOfficialShowUploading(true);
+        try {
+          await saveOfficialShowScore(player, finalScore);
+        } catch (e) {
+          console.error("Score save failed", e);
+        }
+        
+        let rankings = await getOfficialShowRankings();
+        const myIndex = rankings.findIndex(r => r.playerId === (player?.id || 'guest') && r.score === finalScore);
+        if (myIndex === -1) {
+          rankings.push({
+            id: `local_run_${Date.now()}`,
+            playerId: player?.id || 'guest',
+            playerName: player?.name || 'ゲスト',
+            score: finalScore,
+            createdAt: new Date().toISOString(),
+            currentTitle: player?.currentTitle || 'rookie',
+            currentBackground: player?.currentBackground || 'default',
+            currentIcon: player?.currentIcon || null,
+            currentFrame: player?.currentFrame || null,
+            typingShowGears: player?.typingShowGears || null,
+          });
+          rankings = rankings.sort((a, b) => b.score - a.score);
+        }
+        
+        if (finalScore > (player?.officialShowHighScore || 0)) {
+          onPlayerUpdate?.({ officialShowHighScore: finalScore });
+        }
+        
+        setLatestRankings(rankings.slice(0, 5));
+        setOfficialShowUploading(false);
+        playSE?.('clear');
+      })();
+    }
+  }, [isOfficialShow, timeLeft, isTimeUp, player, officialScore, playSE]);
 
   const showTypingWarning = useCallback(() => {
     const now = Date.now();
@@ -448,26 +566,36 @@ export default function TypingScreen({
           reason,
         });
 
-        const excludeKanas = gameWords.map((word) => word.kana);
-        const replacement = pickReplacementWord(
-          difficulty,
-          excludeKanas,
-          adoptedWordsRef.current,
-        );
-        if (replacement) {
-          setGameWords((prev) =>
-            prev.map((word, index) =>
-              index === wordIndex
-                ? applyCorrectionToWord(replacement, difficulty)
-                : word,
-            ),
-          );
+        const newReportedKanas = [...reportedKanas, currentWord.kana];
+        setReportedKanas(newReportedKanas);
+
+        if (isOfficialShow) {
           setTypedChars('');
-          setReportToast(
-            reportId ? 'べつの 問題に かえたよ！' : '問題は かえたけど、ほうこくの 保存に 失敗したよ…',
-          );
+          setWordIndex(prev => prev + 1);
+          setReportToast(reportId ? '問題をほうこくして、次の問題にすすめたよ！' : 'ほうこくに失敗したけど、次の問題にすすむよ！');
         } else {
-          setReportToast(reportId ? 'ほうこくを うけつけたよ！' : 'ほうこくの 送信に 失敗したよ…');
+          const excludeKanas = gameWords.map((word) => word.kana);
+          const replacement = pickReplacementWord(
+            difficulty,
+            excludeKanas,
+            adoptedWordsRef.current,
+            newReportedKanas,
+          );
+          if (replacement) {
+            setGameWords((prev) =>
+              prev.map((word, index) =>
+                index === wordIndex
+                  ? applyCorrectionToWord(replacement, difficulty)
+                  : word,
+              ),
+            );
+            setTypedChars('');
+            setReportToast(
+              reportId ? 'べつの 問題に かえたよ！' : '問題は かえたけど、ほうこくの 保存に 失敗したよ…',
+            );
+          } else {
+            setReportToast(reportId ? 'ほうこくを うけつけたよ！' : 'ほうこくの 送信に 失敗したよ…');
+          }
         }
         setReportOpen(false);
       } finally {
@@ -568,14 +696,25 @@ export default function TypingScreen({
     const proceedToNext = () => {
       setTicketReward(null);
       if (isLastWord) {
-        const pts = calcClearPoints(difficulty, missCount, assistSettings);
-        finishClear(pts);
+        if (isOfficialShow) {
+          // 念のため単語ループ
+          setWordIndex(0);
+          setTypedChars('');
+        } else {
+          const pts = calcClearPoints(difficulty, missCount, assistSettings);
+          finishClear(pts);
+        }
       } else {
         setWordIndex((prev) => prev + 1);
         setTypedChars('');
       }
       setIsTransitioning(false);
     };
+
+    if (isOfficialShow) {
+      setTimeout(proceedToNext, 100);
+      return;
+    }
 
     if (isSpecialWord) {
       const roll = Math.random();
@@ -624,6 +763,7 @@ export default function TypingScreen({
         isAllClear ||
         isAssistOpen ||
         isCountdown ||
+        isTimeUp ||
         ticketReward ||
         leaveConfirm ||
         typingWarning
@@ -642,13 +782,39 @@ export default function TypingScreen({
         setTypedChars(newTyped);
         playSE?.('type');
 
+        if (isOfficialShow) {
+          const nextCombo = combo + 1;
+          setCombo(nextCombo);
+          
+          const comboLimit = 3 + gearPowersRef.current.comboBoost;
+          const comboMultiplier = Math.min(comboLimit, 1 + Math.floor(nextCombo / 5) * 0.2);
+          const pts = currentWord?.isSpecial ? 500 : 100;
+          setOfficialScore(prev => prev + Math.floor(pts * comboMultiplier));
+        }
+
         if (validRomajiList.some((r) => r === newTyped)) {
           completeCurrentWord();
         }
       } else {
         registerKeyPress(false);
-        if (difficulty !== 'easy') {
-          setMissCount((prev) => prev + 1);
+        if (
+          e.key !== 'Shift' &&
+          e.key !== 'CapsLock' &&
+          e.key !== 'Control' &&
+          e.key !== 'Alt' &&
+          e.key !== 'Meta'
+        ) {
+          if (isOfficialShow) {
+            const guarded = Math.random() < (gearPowersRef.current.missGuardProb / 100);
+            if (guarded) {
+              playSE?.('legend'); // Shield effect sound
+            } else {
+              setCombo(0);
+              setMissCount((prev) => prev + 1);
+            }
+          } else {
+            setMissCount((prev) => prev + 1);
+          }
           setIsShaking(true);
           playSE?.('error');
           setTimeout(() => setIsShaking(false), 300);
@@ -667,7 +833,8 @@ export default function TypingScreen({
       ticketReward,
       leaveConfirm,
       typingWarning,
-      difficulty,
+      isTimeUp,
+      combo,
       registerKeyPress,
       playSE,
     ],
@@ -703,6 +870,126 @@ export default function TypingScreen({
       </div>
     </div>
   );
+
+  if (isTimeUp) {
+    const sidebarPlayer = { ...player, points: localPoints, ...localTickets };
+    return (
+      <div
+        className="h-screen flex w-full relative bg-cover bg-center overflow-hidden"
+        style={{ backgroundImage: `url(${activeBg.url})` }}
+      >
+        <GameSidebar
+          player={sidebarPlayer}
+          onSaveAndTitle={() =>
+            onSaveAndTitle?.({
+              points: localPoints,
+              ...localTickets,
+              playCount: playMetaRef.current.playCount,
+              specialWordTriggered: playMetaRef.current.specialWordTriggered,
+            })
+          }
+          onGoHome={onBack}
+          onShop={onOpenShop}
+          onProfile={onOpenProfile}
+          onMusic={onOpenMusic}
+          onZukan={onOpenZukan}
+          onAnnouncements={onOpenAnnouncements}
+          announcementUnread={announcementUnread}
+        />
+        <main className="flex-1 flex flex-col items-center justify-center p-4">
+          <div className="bg-white/95 border-4 border-yellow-300 rounded-3xl p-8 sm:p-10 text-center max-w-md shadow-2xl animate-fade-in relative">
+            {officialShowUploading && (
+              <div className="absolute inset-0 bg-white/80 rounded-3xl flex flex-col items-center justify-center z-10">
+                <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                <p className="font-bold text-sky-700">スコア送信中...</p>
+              </div>
+            )}
+            <div className="text-6xl mb-4">⏱️</div>
+            <h2 className="text-3xl font-black text-rose-600 mb-2">タイムアップ！</h2>
+            <div className="bg-gray-50 rounded-2xl p-4 mb-6 border-2 border-gray-200">
+              <p className="text-gray-500 font-bold mb-1">あなたのスコア</p>
+              <p className="text-6xl font-black text-rose-500 drop-shadow-sm">
+                {officialScore}
+              </p>
+            </div>
+            
+            {(() => {
+              const myRankIndex = latestRankings.findIndex(r => r.playerId === (player?.id || 'guest') && r.score === officialScore);
+              const isRankIn = myRankIndex !== -1 && myRankIndex < 5;
+              
+              return (
+                <>
+                  {isRankIn && (
+                    <div className="w-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-300 rounded-2xl p-3 mb-6 shadow-xl animate-bounce border-4 border-white transform hover:scale-105 transition-transform">
+                      <p className="text-xl font-black text-amber-900 drop-shadow-sm">
+                        🎊 {myRankIndex + 1}位に ランクイン！ 🎊
+                      </p>
+                    </div>
+                  )}
+                  {latestRankings.length > 0 && (
+                    <div className="w-full bg-rose-50 rounded-xl p-4 mb-6 border border-rose-100">
+                      <h5 className="text-sm font-black text-rose-800 mb-2 text-center">🏆 トップ5ランキング</h5>
+                      <div className="flex flex-col gap-1 text-left">
+                        {latestRankings.map((r, i) => (
+                          <div key={r.id} className={`relative flex items-center mb-2 ${isRankIn && i === myRankIndex ? 'ring-4 ring-yellow-400 rounded-2xl animate-pulse' : ''}`}>
+                            <div className={`absolute -left-2 sm:-left-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-white shadow-md border-2 border-white ${i === 0 ? 'bg-yellow-400 text-lg sm:text-xl scale-110' : i === 1 ? 'bg-gray-400 text-base sm:text-lg' : i === 2 ? 'bg-amber-600 text-base sm:text-lg' : 'bg-rose-300 text-sm sm:text-base'}`}>
+                              {i + 1}
+                            </div>
+                            <div className={`flex items-center w-full pl-6 sm:pl-8 gap-2 pr-24 sm:pr-32 ${i === 0 ? 'transform scale-[1.02] origin-left' : ''}`}>
+                              <div className="flex-1 min-w-0">
+                                <PlayerCard 
+                                  player={{ ...r, name: r.playerName, points: r.score }} 
+                                  readOnly 
+                                  compact={i !== 0}
+                                />
+                              </div>
+                              {r.typingShowGears && (
+                                <div className="flex gap-1 shrink-0 bg-amber-50/90 p-1.5 rounded-lg shadow-inner border border-amber-200">
+                                  {r.typingShowGears.main?.map((gearName, idx) => {
+                                    const item = gearName ? GACHA_ITEMS.find(i => i.name === gearName) : null;
+                                    return (
+                                      <div key={`main-${idx}`} className={`${i === 0 ? 'w-10 h-10' : 'w-7 h-7'} shrink-0 rounded-md bg-white flex items-center justify-center border shadow-sm ${item?.foil ? 'foil-icon-chip' : ''}`} style={item ? { borderColor: item.color } : { borderColor: '#e5e7eb', borderStyle: 'dashed' }} title={item?.name || '空き'}>
+                                        <span className={`${i === 0 ? 'text-[26px]' : 'text-[18px]'}`}>{item ? item.emoji : ''}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                            <div className="absolute right-2 sm:right-4 z-10 bg-white/90 px-2 sm:px-3 py-1 rounded-full font-black text-rose-500 shadow-sm border-2 border-rose-100 text-sm sm:text-lg">
+                              {r.score}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+            
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={onBack}
+                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-black text-lg py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform"
+              >
+                タイピングショーにもどる
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isDataLoaded) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-gray-50/90 z-50">
+        <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (isAllClear) {
     const sidebarPlayer = { ...player, points: localPoints, ...localTickets };
@@ -841,33 +1128,83 @@ export default function TypingScreen({
               </div>
             )}
 
-            <div className="flex flex-col items-center gap-1 mb-4 pb-3 border-b border-gray-100 shrink-0">
-              <div className="flex gap-2 justify-center">
-                {gameWords.map((word, index) => {
-                  const isActive = index === wordIndex;
-                  const isCleared = index < wordIndex;
-                  const isSpecial = word?.isSpecial;
-                  let starClass = 'text-white fill-gray-200 opacity-50';
-                  if (isCleared) {
-                    starClass = isSpecial
-                      ? 'text-fuchsia-500 fill-fuchsia-500 scale-110 drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]'
-                      : 'text-yellow-400 fill-yellow-400 scale-110';
-                  } else if (isActive) {
-                    starClass = isSpecial
-                      ? 'text-fuchsia-400 fill-fuchsia-100 scale-125 animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.6)]'
-                      : 'text-yellow-400 fill-yellow-100 scale-125 animate-pulse';
-                  } else if (isSpecial) {
-                    starClass = 'text-fuchsia-300 fill-fuchsia-100 opacity-80';
-                  }
-                  return <Star key={index} className={`w-6 h-6 transition-all duration-500 ${starClass}`} />;
-                })}
-              </div>
-              {difficulty !== 'easy' && (
-                <div className="text-xs font-black bg-red-100 text-red-600 px-3 py-0.5 rounded-full border border-red-200 shadow-sm">
-                  ミス：<span className="text-sm">{missCount}</span> かい
+            {isOfficialShow ? (
+              <>
+                <div className="absolute -top-12 sm:-top-16 right-0">
+                  <button
+                    onClick={() => {
+                      playSE?.('decide');
+                      setIsGearModalOpen(true);
+                    }}
+                    className="flex flex-col items-center bg-white border-2 border-indigo-200 rounded-xl p-1.5 shadow hover:shadow-md transition-all active:scale-95 text-indigo-600 hover:text-indigo-700 hover:border-indigo-300 group"
+                  >
+                    <span className="text-xl sm:text-2xl group-hover:rotate-12 transition-transform">⚙️</span>
+                    <span className="text-[10px] sm:text-xs font-black leading-tight">スキル装備</span>
+                  </button>
                 </div>
-              )}
-            </div>
+                <div className="flex justify-between items-center w-full mb-4 px-2 sm:px-4 pb-3 border-b border-gray-100">
+                <div className="flex flex-col items-center w-24">
+                  <span className="text-xs font-black text-gray-500">のこり時間</span>
+                  <span className={`font-black transition-all ${timeLeft <= 10 ? 'text-red-500 text-5xl animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'text-sky-500 text-3xl'}`}>
+                    {timeLeft}
+                  </span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-xs font-black text-gray-500">スコア</span>
+                  <HiraganaBounceValue 
+                    value={officialScore}
+                    className={`text-4xl font-black ${
+                      combo >= 20 ? 'text-fuchsia-500 drop-shadow-[0_0_8px_rgba(217,70,239,0.8)] scale-125' : 
+                      combo >= 10 ? 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] scale-110' : 
+                      'text-rose-500'
+                    }`}
+                  />
+                </div>
+                <div className="flex flex-col items-center w-24">
+                  <span className="text-xs font-black text-gray-500">コンボ倍率</span>
+                  <div className="flex items-baseline gap-1">
+                    <HiraganaBounceValue
+                      value={combo}
+                      className={`text-2xl font-black ${
+                        combo >= 20 ? 'text-fuchsia-500' : 
+                        combo >= 10 ? 'text-red-500' : 
+                        'text-amber-500'
+                      }`}
+                    />
+                    <span className="text-xs font-bold text-amber-600">({Math.min(3, 1 + Math.floor(combo / 5) * 0.2).toFixed(1)}x)</span>
+                  </div>
+                </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-1 mb-4 pb-3 border-b border-gray-100 shrink-0">
+                <div className="flex gap-2 justify-center">
+                  {gameWords.map((word, index) => {
+                    const isActive = index === wordIndex;
+                    const isCleared = index < wordIndex;
+                    const isSpecial = word?.isSpecial;
+                    let starClass = 'text-white fill-gray-200 opacity-50';
+                    if (isCleared) {
+                      starClass = isSpecial
+                        ? 'text-fuchsia-500 fill-fuchsia-500 scale-110 drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]'
+                        : 'text-yellow-400 fill-yellow-400 scale-110';
+                    } else if (isActive) {
+                      starClass = isSpecial
+                        ? 'text-fuchsia-400 fill-fuchsia-100 scale-125 animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.6)]'
+                        : 'text-yellow-400 fill-yellow-100 scale-125 animate-pulse';
+                    } else if (isSpecial) {
+                      starClass = 'text-fuchsia-300 fill-fuchsia-100 opacity-80';
+                    }
+                    return <Star key={index} className={`w-6 h-6 transition-all duration-500 ${starClass}`} />;
+                  })}
+                </div>
+                {difficulty !== 'easy' && (
+                  <div className="text-xs font-black bg-red-100 text-red-600 px-3 py-0.5 rounded-full border border-red-200 shadow-sm">
+                    ミス：<span className="text-sm">{missCount}</span> かい
+                  </div>
+                )}
+              </div>
+            )}
 
             {isAlphabetQuiz ? (
               <>
@@ -985,6 +1322,15 @@ export default function TypingScreen({
       )}
 
       {countdownOverlay}
+
+      <GearEquipModal
+        isOpen={isGearModalOpen}
+        player={player}
+        onClose={() => setIsGearModalOpen(false)}
+        onPlayerUpdate={onPlayerUpdate}
+        playDecideSound={() => playSE?.('decide')}
+        playCancelSound={() => playSE?.('cancel')}
+      />
     </div>
   );
 }

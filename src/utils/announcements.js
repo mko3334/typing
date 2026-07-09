@@ -29,7 +29,7 @@ export function getReadAnnouncementIds(player) {
   return Array.isArray(player?.readAnnouncementIds) ? player.readAnnouncementIds : [];
 }
 
-export function partitionAnnouncementsForPlayer(announcements, player) {
+export function partitionAnnouncementsForPlayer(announcements, player, extraWords = []) {
   const readIds = new Set(getReadAnnouncementIds(player));
   const personal = [];
   const broadcast = [];
@@ -41,6 +41,39 @@ export function partitionAnnouncementsForPlayer(announcements, player) {
       personal.push({ ...item, isRead: readIds.has(item.id) });
     } else if (item.scope === 'broadcast') {
       broadcast.push({ ...item, isRead: readIds.has(item.id) });
+    }
+  }
+
+  const receivedGifts = Array.isArray(player?.receivedGifts) ? player.receivedGifts : [];
+  const existingGiftTitles = new Set(receivedGifts.map(g => g.title));
+  
+  for (const gift of receivedGifts) {
+    personal.push({
+      ...gift,
+      id: gift.id || `gift-${gift.acceptedAt}`,
+      scope: 'personal',
+      kind: 'gift',
+      isRead: true,
+      publishedAt: gift.acceptedAt || gift.createdAt || new Date().toISOString()
+    });
+  }
+
+  // 過去のリクエスト採用履歴を仮想プレゼントとして復元
+  const adopted = extraWords.filter((w) => w.playerId === player?.id);
+  for (const w of adopted) {
+    const title = `「${w.kana}」が 採用されたよ！`;
+    if (!existingGiftTitles.has(title)) {
+      personal.push({
+        id: `adopted-${w.id || w.kana}`,
+        scope: 'personal',
+        kind: 'gift',
+        isRead: true,
+        title,
+        message: 'お題のリクエスト ありがとう！ プレゼントを おくるね。',
+        points: 1000,
+        specialTickets: 2,
+        publishedAt: w.adoptedAt || w.createdAt || new Date(0).toISOString(),
+      });
     }
   }
 

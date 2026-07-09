@@ -51,6 +51,7 @@ export default function App() {
   const [isAnnouncementPanelOpen, setIsAnnouncementPanelOpen] = useState(false);
   const [playTimerRemainingMs, setPlayTimerRemainingMs] = useState(null);
   const [extraWords, setExtraWords] = useState([]);
+  const [homeInitialModal, setHomeInitialModal] = useState(null);
   const currentPlayerRef = useRef(currentPlayer);
   const assistSettingsRef = useRef(assistSettings);
   const sessionStartRef = useRef(null);
@@ -311,6 +312,10 @@ export default function App() {
     if (!prev?.id || !activeGift) return;
 
     const remainingGifts = (prev.pendingGifts || []).filter((g) => g.id !== activeGift.id);
+    const receivedGiftRecord = {
+      ...activeGift,
+      acceptedAt: new Date().toISOString()
+    };
     const next = {
       ...prev,
       points: (prev.points || 0) + (activeGift.points || 0),
@@ -319,6 +324,7 @@ export default function App() {
       seTickets: (prev.seTickets || 0) + (activeGift.seTickets || 0),
       legendTickets: (prev.legendTickets || 0) + (activeGift.legendTickets || 0),
       pendingGifts: remainingGifts,
+      receivedGifts: [...(prev.receivedGifts || []), receivedGiftRecord]
     };
     currentPlayerRef.current = next;
     setCurrentPlayer(next);
@@ -355,10 +361,11 @@ export default function App() {
   const handlePlayerUpdate = useCallback((updates) => {
     const prev = currentPlayerRef.current;
     if (!prev?.id) return;
-    const next = { ...prev, ...updates };
+    const next = { ...prev, ...updates, lastUpdatedAt: new Date().toISOString() };
     currentPlayerRef.current = next;
     setCurrentPlayer(next);
     saveCloudPlayer(next.id, next).catch(() => {});
+    persistPlayerLocally(next.id, next).catch(() => {});
   }, []);
 
   const handleSaveAndTitle = useCallback(async (updates = {}) => {
@@ -458,6 +465,8 @@ export default function App() {
 
       {appScreen === 'home' && (
         <HomeScreen
+          initialModal={homeInitialModal}
+          onClearInitialModal={() => setHomeInitialModal(null)}
           player={currentPlayer}
           assistSettings={assistSettings}
           onAssistChange={handleAssistChange}
@@ -485,7 +494,12 @@ export default function App() {
           extraWords={extraWords}
           onAssistChange={handleAssistChange}
           onPlayerUpdate={handlePlayerUpdate}
-          onBack={() => setAppScreen('home')}
+          onBack={() => {
+            if (typingDifficulty?.isOfficialShow || typingDifficulty?.isCustomStage) {
+              setHomeInitialModal('custom_area');
+            }
+            setAppScreen('home');
+          }}
           onSaveAndTitle={handleSaveAndTitle}
           onOpenProfile={openProfile}
           onOpenMusic={openMusic}
@@ -602,6 +616,7 @@ export default function App() {
         <AnnouncementPanel
           player={currentPlayer}
           announcements={announcements}
+          extraWords={extraWords}
           playDecideSound={playDecideSound}
           playCancelSound={playCancelSound}
           onReadAnnouncement={handleReadAnnouncement}
@@ -611,6 +626,24 @@ export default function App() {
           }}
         />
       )}
+      
+      {playTimerRemainingMs === 0 && appScreen !== 'title' && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+          <div className="bg-white/95 px-8 py-6 rounded-3xl shadow-2xl border-4 border-rose-400 animate-pop-out flex flex-col items-center gap-4">
+            <span className="text-6xl animate-bounce">⏰</span>
+            <div className="relative">
+              <div className="bg-rose-100 text-rose-600 font-black px-6 py-4 rounded-2xl text-3xl sm:text-4xl shadow-inner border-2 border-rose-200 whitespace-nowrap">
+                時間になったよ！
+              </div>
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-rose-100 border-r-2 border-b-2 border-rose-200 rotate-45"></div>
+            </div>
+            <p className="mt-4 text-rose-500 font-black text-lg bg-white/80 px-4 py-2 rounded-full border border-rose-200">
+              👈 ひだりのメニューから セーブして おわってね！
+            </p>
+          </div>
+        </div>
+      )}
+
       </div>
     </TimerContext.Provider>
   );

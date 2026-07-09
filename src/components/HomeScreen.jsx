@@ -104,6 +104,8 @@ export default function HomeScreen({
   playDecideSound,
   playCancelSound,
   playSE,
+  initialModal,
+  onClearInitialModal,
 }) {
   const [toast, setToast] = useState('');
   const [isDifficultyOpen, setIsDifficultyOpen] = useState(false);
@@ -125,6 +127,13 @@ export default function HomeScreen({
     if (!player?.id) return;
     setActiveSubEvents(getActivePlazaSubEvents(player));
   }, [player?.id, player?.plazaSubEvents, player?.solvedSubEventIds]);
+
+  useEffect(() => {
+    if (initialModal === 'custom_area') {
+      setIsCustomAreaOpen(true);
+      onClearInitialModal?.();
+    }
+  }, [initialModal, onClearInitialModal]);
 
   const openSubEvent = (spawned) => {
     const event = getSubEventById(spawned.eventId);
@@ -303,6 +312,29 @@ export default function HomeScreen({
               />
             );
           })}
+
+          {isCustomAreaOpen && (
+            <CustomAreaModal
+              isOpen={isCustomAreaOpen}
+              onClose={() => setIsCustomAreaOpen(false)}
+              player={player}
+              playDecideSound={playDecideSound}
+              playCancelSound={playCancelSound}
+              onPlayCustomStage={(stage) => {
+                setIsCustomAreaOpen(false);
+                if (stage.isOfficialShow) {
+                  onStartTyping(stage);
+                } else {
+                  onStartTyping({
+                    ...stage,
+                    isCustomStage: true,
+                    isEndless: false
+                  });
+                }
+              }}
+              onPlayerUpdate={onPlayerUpdate}
+            />
+          )}
         </div>
       </main>
 
@@ -346,22 +378,6 @@ export default function HomeScreen({
         playDecideSound={playDecideSound}
       />
 
-      <CustomAreaModal
-        isOpen={isCustomAreaOpen}
-        onClose={() => setIsCustomAreaOpen(false)}
-        player={player}
-        playDecideSound={playDecideSound}
-        playCancelSound={playCancelSound}
-        onPlayCustomStage={(stage) => {
-          setIsCustomAreaOpen(false);
-          onStartTyping({
-            ...stage,
-            isCustomStage: true,
-            isEndless: false
-          });
-        }}
-        onPlayerUpdate={onPlayerUpdate}
-      />
 
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 text-white px-5 py-3 rounded-2xl font-black text-sm shadow-xl animate-fade-in">

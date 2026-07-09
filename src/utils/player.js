@@ -49,6 +49,7 @@ export function enrichPlayer(id, data) {
         ? Number(data.sessionCount)
         : 0,
     pendingGifts: Array.isArray(data.pendingGifts) ? data.pendingGifts : [],
+    receivedGifts: Array.isArray(data.receivedGifts) ? data.receivedGifts : [],
     readAnnouncementIds: Array.isArray(data.readAnnouncementIds) ? data.readAnnouncementIds : [],
     solvedSubEventIds: Array.isArray(data.solvedSubEventIds) ? data.solvedSubEventIds : [],
     plazaSubEvents: getActivePlazaSubEvents({
@@ -71,5 +72,9 @@ export function enrichPlayer(id, data) {
       Number.isFinite(Number(data.gachaPullCount)) && Number(data.gachaPullCount) >= 0
         ? Number(data.gachaPullCount)
         : 0,
+    encounteredKeywords: data.encounteredKeywords || {},
+    officialShowHighScore: Number(data.officialShowHighScore) || 0,
+    typingShowGears: data.typingShowGears || { main: [null, null, null], sub: [null, null, null, null, null, null, null, null, null] },
+    itemLevels: data.itemLevels || {},
   });
 }

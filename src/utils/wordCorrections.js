@@ -11,7 +11,12 @@ export function buildSubEventWordKey(eventId, kana) {
 }
 
 export async function refreshWordCorrections() {
-  correctionsCache = await getWordCorrections();
+  const rawCorrections = await getWordCorrections();
+  correctionsCache = rawCorrections.sort((a, b) => {
+    const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return timeB - timeA;
+  });
   return correctionsCache;
 }
 

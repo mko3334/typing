@@ -17,6 +17,7 @@ import {
 } from '../firebase';
 import { ADMIN_PASSWORD, suggestDifficultyKey } from '../utils/admin';
 import AdminAnnouncementsSection from './AdminAnnouncementsSection';
+import AdminKeywordsSection from './AdminKeywordsSection';
 import { formatDurationMs, getAveragePlayMs } from '../utils/playTime';
 import {
   buildMainWordKey,
@@ -232,7 +233,17 @@ function AdminTimerModal({ player, onClose, onSaved, playDecideSound }) {
       <div className="glass-card bg-white/95 w-full max-w-sm p-6 shadow-2xl rounded-3xl border-4 border-amber-400 text-center animate-pop-out">
         <span className="text-5xl block mb-2">⏱️</span>
         <h3 className="text-lg sm:text-xl font-black text-gray-800 mb-1">「{player.name}」さんのタイマー</h3>
-        <p className="text-xs text-gray-500 font-bold mb-4">5分刻みで制限時間を設定できます（0で制限なし）</p>
+        <p className="text-xs text-gray-500 font-bold mb-4">5分刻みで制限時間を設定できます</p>
+
+        {minutes > 0 && (
+          <button
+            type="button"
+            onClick={() => setMinutes(0)}
+            className="w-full bg-rose-100 hover:bg-rose-200 text-rose-600 font-black text-sm py-2 rounded-xl mb-4 transition-colors"
+          >
+            制限を解除する
+          </button>
+        )}
 
         <div className="flex items-center justify-center gap-3 my-6">
           <button type="button" onClick={() => setMinutes(Math.max(0, minutes - 5))} className="w-12 h-12 bg-gray-200 hover:bg-gray-300 rounded-full font-black text-xl text-gray-600">-5</button>
@@ -1031,9 +1042,24 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
           >
             📢 お知らせ
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              playDecideSound?.();
+              setAdminTab('keywords');
+            }}
+            className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all whitespace-nowrap ${
+              adminTab === 'keywords'
+                ? 'bg-emerald-500 text-white shadow-md border-b-2 border-emerald-700'
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-emerald-50'
+            }`}
+          >
+            📋 難易度ボード
+          </button>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          {adminTab === 'keywords' && <AdminKeywordsSection />}
           {adminTab === 'requests' && (
             <div className="min-h-0 flex flex-col h-full">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2 shrink-0">

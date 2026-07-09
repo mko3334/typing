@@ -15,6 +15,8 @@ export const DEFAULT_SOUNDS = {
   go: `${COMMON}/GO!!.mp3`,
   correct: '/sounds/decide_cancel/decide.mp3',
   clear: `${COMMON}/ワード正解.mp3`,
+  countdown_10s: `${COMMON}/タイピングショー10カウントダウン.mp3`,
+  timeup: `${COMMON}/タイムアップ.mp3`,
 };
 
 export const DECIDE_SOUND = '/sounds/decide_cancel/decide.mp3';
@@ -73,10 +75,31 @@ export function initAudio() {
   }
 }
 
+const audioPool = {};
+
 function playUrl(url, volume = 0.5) {
   if (!url) return;
-  const audio = new Audio(url);
+  
+  if (!audioPool[url]) {
+    // 最大5つのAudioインスタンスをプールして使い回す
+    audioPool[url] = Array.from({ length: 5 }, () => {
+      const a = new Audio(url);
+      a.preload = 'auto';
+      return a;
+    });
+  }
+  
+  const pool = audioPool[url];
+  let audio = pool.find(a => a.paused || a.ended);
+  
+  if (!audio) {
+    // 全て再生中の場合は、一番古いものを強制的にリセットして使う
+    audio = pool.shift();
+    pool.push(audio);
+  }
+  
   audio.volume = volume;
+  audio.currentTime = 0;
   audio.play().catch(() => {});
 }
 

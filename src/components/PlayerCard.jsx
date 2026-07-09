@@ -15,6 +15,8 @@ export default function PlayerCard({
   bulkSelected = false,
   onBulkToggle,
   isLockedElsewhere = false,
+  showGears = false,
+  rankingScore,
 }) {
   const bgItem = resolveBackground(player.currentBackground);
   const iconItem = player.currentIcon
@@ -136,6 +138,40 @@ export default function PlayerCard({
               +{obtainedItems.length - previewLimit}
             </div>
           )}
+        </div>
+      )}
+
+      {showGears && (
+        <div className="absolute left-1/2 top-1/2 -translate-x-[40%] sm:-translate-x-1/2 -translate-y-1/2 z-20 flex gap-1 sm:gap-2 pointer-events-none">
+          {player.typingShowGears?.main ? (
+            player.typingShowGears.main.map((gearName, idx) => {
+              const item = gearName ? GACHA_ITEMS.find(i => i.name === gearName) : null;
+              return (
+                <div
+                  key={`main-${idx}`}
+                  className={`w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-xl bg-white/95 flex items-center justify-center border-4 shadow-xl relative overflow-hidden transition-transform hover:scale-110 pointer-events-auto ${item?.foil ? 'foil-icon-chip' : ''}`}
+                  style={item ? { borderColor: item.color } : { borderColor: '#cbd5e1', borderStyle: 'dashed' }}
+                  title={item?.name || '空き枠'}
+                >
+                  <span className="relative z-[3] text-3xl sm:text-5xl leading-none drop-shadow-sm">{item ? item.emoji : ''}</span>
+                </div>
+              );
+            })
+          ) : (
+            <div className="flex gap-1 sm:gap-2 opacity-60">
+              {[1, 2, 3].map((i) => (
+                <div key={`empty-${i}`} className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-xl bg-white/50 border-4 border-dashed border-gray-300 flex items-center justify-center pointer-events-auto">
+                  <span className="text-gray-400 text-sm sm:text-base font-black">空き</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {rankingScore !== undefined && (
+        <div className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 bg-white/95 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-black text-rose-500 shadow-md border-[3px] border-rose-100 text-lg sm:text-3xl drop-shadow-sm">
+          {rankingScore}
         </div>
       )}
 

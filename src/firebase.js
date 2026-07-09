@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc, updateDoc, query, where } from 'firebase/firestore';
 import {
   addLocalTypingReport,
   deleteLocalTypingReport,
@@ -393,6 +393,54 @@ export const sendGiftToCloudPlayer = async (playerId, giftData) => {
   }
 };
 
+// --- 公式ショー ランキング ---
+export const saveOfficialShowScore = async (player, score) => {
+  const createdAt = new Date().toISOString();
+  try {
+    const docRef = doc(collection(db, 'official_show_rankings'));
+    await setDoc(docRef, {
+      playerId: player?.id || 'guest',
+      playerName: player?.name || 'ゲスト',
+      score,
+      createdAt,
+      currentTitle: player?.currentTitle || 'rookie',
+      currentBackground: player?.currentBackground || 'default',
+      currentIcon: player?.currentIcon || null,
+      currentFrame: player?.currentFrame || null,
+      typingShowGears: player?.typingShowGears || null,
+    });
+    return true;
+  } catch (error) {
+    console.error('Error saving official show score:', error);
+    return false;
+  }
+};
+
+export const getOfficialShowRankings = async () => {
+  const npcs = [
+    { id: 'npc_1', playerName: 'タイピングマスター', score: 3000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'very_hard_master', currentIcon: 'おうかん', currentFrame: 'gold', currentBackground: 'space' },
+    { id: 'npc_2', playerName: 'ハイスピード君', score: 2500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'hard_master', currentIcon: 'すーぱーかー', currentFrame: 'silver', currentBackground: 'castle' },
+    { id: 'npc_3', playerName: 'キーボードの鬼', score: 1800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'マスターソード', currentFrame: 'bronze', currentBackground: 'dino' },
+    { id: 'npc_4', playerName: 'ルーキー', score: 800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'サッカーボール', currentFrame: 'basic_1', currentBackground: 'forest' },
+    { id: 'npc_5', playerName: 'カメさん', score: 300, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'default' }
+  ];
+
+  try {
+    const collRef = collection(db, 'official_show_rankings');
+    const snapshot = await getDocs(collRef);
+    const rankings = [];
+    snapshot.forEach(docSnap => {
+      rankings.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    
+    rankings.push(...npcs);
+    return rankings.sort((a, b) => b.score - a.score);
+  } catch (error) {
+    console.error('Error getting official show rankings:', error);
+    return npcs.sort((a, b) => b.score - a.score);
+  }
+};
+
 // --- タイピング問題報告 ---
 export const submitTypingReport = async (reportData) => {
   const createdAt = new Date().toISOString();
@@ -412,6 +460,26 @@ export const submitTypingReport = async (reportData) => {
     const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     await addLocalTypingReport({ id: localId, ...entry, savedLocally: true });
     return localId;
+  }
+};
+
+export const getOpenReportedKeywords = async () => {
+  try {
+    const collRef = collection(db, 'typing_reports');
+    // For simplicity, fetch all and filter by status 'open' or just fetch all open
+    const q = query(collRef, where('status', '==', 'open'));
+    const snapshot = await getDocs(q);
+    const reportedKanas = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.word || data.kana) {
+        reportedKanas.push(data.word || data.kana);
+      }
+    });
+    return reportedKanas;
+  } catch (error) {
+    console.error('Error getting reported keywords:', error);
+    return [];
   }
 };
 
@@ -479,12 +547,13 @@ export const deleteTypingReport = async (reportId) => {
 // --- ワード修正（管理者が保存した訂正） ---
 export const saveWordCorrection = async (correctionData) => {
   try {
-    const newDocRef = doc(collection(db, 'word_corrections'));
+    const id = correctionData.sourceKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const newDocRef = doc(db, 'word_corrections', id);
     await setDoc(newDocRef, {
       ...correctionData,
       updatedAt: new Date().toISOString(),
     });
-    return newDocRef.id;
+    return id;
   } catch (error) {
     console.error('Error saving word correction:', error);
     return null;

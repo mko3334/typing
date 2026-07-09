@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ANNOUNCEMENT_BANNERS } from '../constants/announcementBanners';
 import { HIRAGANA_CHALLENGE_ANNOUNCEMENT } from '../constants/hiraganaChallengeAnnouncement';
+import { TYPING_SHOW_ANNOUNCEMENT } from '../constants/typingShowAnnouncement';
 import { archiveAnnouncement, cancelAnnouncement, createAnnouncement, getAnnouncements } from '../firebase';
 import { formatAnnouncementTime } from '../utils/announcements';
 
@@ -16,6 +17,7 @@ const EMPTY_FORM = {
   title: '',
   message: '',
   bannerUrl: ANNOUNCEMENT_BANNERS[0]?.url || '',
+  bannerPosition: 50,
   sendMode: 'immediate',
   scheduledAt: '',
   points: '',
@@ -88,6 +90,7 @@ export default function AdminAnnouncementsSection({ players, playDecideSound }) 
       title: form.title.trim(),
       message: form.message.trim(),
       bannerUrl: form.bannerUrl || null,
+      bannerPosition: form.bannerPosition ?? 50,
       sendMode: form.sendMode,
       scheduledAt:
         form.sendMode === 'scheduled' ? new Date(form.scheduledAt).toISOString() : null,
@@ -221,23 +224,44 @@ export default function AdminAnnouncementsSection({ players, playDecideSound }) 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border-2 border-indigo-100 p-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-black text-indigo-800">📢 お知らせを 作成</h3>
-          <button
-            type="button"
-            onClick={() => {
-              playDecideSound?.();
-              setForm((prev) => ({
-                ...prev,
-                kind: HIRAGANA_CHALLENGE_ANNOUNCEMENT.kind,
-                title: HIRAGANA_CHALLENGE_ANNOUNCEMENT.title,
-                message: HIRAGANA_CHALLENGE_ANNOUNCEMENT.message,
-                bannerUrl: HIRAGANA_CHALLENGE_ANNOUNCEMENT.bannerUrl,
-              }));
-              setStatus({ type: 'success', text: 'ひらがなチャレンジ告知の 文案を 入れたよ' });
-            }}
-            className="text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-full bg-pink-100 text-pink-700 border border-pink-200 hover:bg-pink-200 transition-colors"
-          >
-            🌸 ひらがなチャレンジ告知を 入力
-          </button>
+          <div className="flex gap-2 items-center flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                playDecideSound?.();
+                setForm((prev) => ({
+                  ...prev,
+                  kind: HIRAGANA_CHALLENGE_ANNOUNCEMENT.kind,
+                  title: HIRAGANA_CHALLENGE_ANNOUNCEMENT.title,
+                  message: HIRAGANA_CHALLENGE_ANNOUNCEMENT.message,
+                  bannerUrl: HIRAGANA_CHALLENGE_ANNOUNCEMENT.bannerUrl,
+                  bannerPosition: 50,
+                }));
+                setStatus({ type: 'success', text: 'ひらがなチャレンジ告知の 文案を 入れたよ' });
+              }}
+              className="text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-full bg-pink-100 text-pink-700 border border-pink-200 hover:bg-pink-200 transition-colors"
+            >
+              🌸 ひらがなチャレンジ告知を 入力
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                playDecideSound?.();
+                setForm((prev) => ({
+                  ...prev,
+                  kind: TYPING_SHOW_ANNOUNCEMENT.kind,
+                  title: TYPING_SHOW_ANNOUNCEMENT.title,
+                  message: TYPING_SHOW_ANNOUNCEMENT.message,
+                  bannerUrl: TYPING_SHOW_ANNOUNCEMENT.bannerUrl,
+                  bannerPosition: 50,
+                }));
+                setStatus({ type: 'success', text: 'タイピングショー告知の 文案を 入れたよ' });
+              }}
+              className="text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 transition-colors flex items-center gap-1"
+            >
+              <span>🎭</span> タイピングショー告知を 入力
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -329,29 +353,80 @@ export default function AdminAnnouncementsSection({ players, playDecideSound }) 
           />
         </label>
 
-        <label className="block text-xs font-bold text-gray-600">
-          バナーイラスト（public フォルダ）
-          <select
-            value={form.bannerUrl}
-            onChange={(e) => updateField('bannerUrl', e.target.value)}
-            className="mt-1 w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm font-bold"
-          >
-            <option value="">なし</option>
+        <div className="flex flex-col gap-2 border-2 border-gray-200 rounded-xl p-3 bg-gray-50">
+          <span className="text-xs font-bold text-gray-600">バナーイラスト (任意)</span>
+          <div className="flex flex-wrap gap-2">
             {ANNOUNCEMENT_BANNERS.map((banner) => (
-              <option key={banner.id} value={banner.url}>
-                {banner.label}
-              </option>
+              <button
+                type="button"
+                key={banner.id}
+                onClick={() => updateField('bannerUrl', banner.url)}
+                className={`relative w-24 h-12 rounded border-2 overflow-hidden transition-all ${
+                  form.bannerUrl === banner.url
+                    ? 'border-indigo-500 shadow-md ring-2 ring-indigo-200'
+                    : 'border-transparent opacity-60 hover:opacity-100'
+                }`}
+              >
+                <img src={banner.url} alt={banner.label} className="w-full h-full object-cover" />
+              </button>
             ))}
-          </select>
-        </label>
+            <button
+              type="button"
+              onClick={() => updateField('bannerUrl', '/show_bg.png')}
+              className={`relative w-24 h-12 rounded border-2 overflow-hidden transition-all ${
+                form.bannerUrl === '/show_bg.png'
+                  ? 'border-indigo-500 shadow-md ring-2 ring-indigo-200'
+                  : 'border-transparent opacity-60 hover:opacity-100'
+              }`}
+            >
+              <img src="/show_bg.png" alt="タイピングショー" className="w-full h-full object-cover" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <input
+              type="text"
+              placeholder="カスタム画像URLを入力..."
+              value={form.bannerUrl}
+              onChange={(e) => updateField('bannerUrl', e.target.value)}
+              className="flex-1 border-2 border-gray-200 rounded-lg px-2 py-1 text-xs"
+            />
+            <button
+              type="button"
+              onClick={() => updateField('bannerUrl', '')}
+              className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded font-bold"
+            >
+              クリア
+            </button>
+          </div>
 
-        {form.bannerUrl && (
-          <img
-            src={form.bannerUrl}
-            alt="プレビュー"
-            className="w-full max-h-32 object-contain rounded-xl border-2 border-gray-200 bg-gradient-to-br from-sky-50 to-pink-50"
-          />
-        )}
+          {form.bannerUrl && (
+            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-gray-700">トリミング位置（上下）</span>
+                <span className="text-xs font-black text-indigo-600">{form.bannerPosition ?? 50}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={form.bannerPosition ?? 50}
+                onChange={(e) => updateField('bannerPosition', parseInt(e.target.value, 10))}
+                className="w-full mb-3"
+              />
+              <div className="w-full aspect-[2/1] bg-gray-100 rounded overflow-hidden border border-gray-200">
+                <img
+                  src={form.bannerUrl}
+                  alt="プレビュー"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: `50% ${form.bannerPosition ?? 50}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-gray-500 mt-2 text-center">
+                スライダーで、お知らせ画面で見せたい部分を調整してください。
+              </p>
+            </div>
+          )}
+        </div>
 
         {form.kind === 'gift' && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-amber-50 border-2 border-amber-100 rounded-2xl p-3">

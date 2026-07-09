@@ -34,5 +34,8 @@ service cloud.firestore {
     match /custom_stages/{document} {
       allow read, write: if true;
     }
+    match /official_show_rankings/{document} {
+      allow read, write: if true;
+    }
   }
 }

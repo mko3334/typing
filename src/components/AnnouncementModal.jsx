@@ -53,7 +53,7 @@ export default function AnnouncementModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-      <div className="relative w-full max-w-md sm:max-w-lg animate-pop-out">
+      <div className="relative w-full max-w-md sm:max-w-2xl animate-pop-out">
         <div className="absolute -inset-1 rounded-[1.5rem] bg-gradient-to-r from-sky-400 via-pink-400 to-amber-300 blur-sm opacity-80" />
         <div
           className={`relative bg-white border-4 rounded-[1.35rem] shadow-2xl overflow-hidden flex flex-col max-h-[min(88vh,640px)] ${
@@ -65,7 +65,8 @@ export default function AnnouncementModal({
               <img
                 src={bannerUrl}
                 alt=""
-                className="block w-full h-auto object-contain"
+                className={`block w-full ${announcement.bannerPosition !== undefined ? 'aspect-[2/1] object-cover' : 'h-auto object-contain'}`}
+                style={announcement.bannerPosition !== undefined ? { objectPosition: `50% ${announcement.bannerPosition}%` } : undefined}
               />
             </div>
           )}

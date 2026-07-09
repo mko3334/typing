@@ -53,11 +53,13 @@ export function pickGameWords(
   specialWordTriggered = false,
   count = WORDS_PER_ROUND,
   extraWords = [],
+  reportedKanas = [],
 ) {
   const meta = normalizePlayMeta(playCount, specialWordTriggered);
   playCount = meta.playCount;
   specialWordTriggered = meta.specialWordTriggered;
 
+  const exclude = new Set(reportedKanas.filter(Boolean));
   const basePool = WORDS[difficulty] || WORDS.normal;
   const adoptedForDifficulty = extraWords.filter((w) => w.difficulty === difficulty || !w.difficulty);
   const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji, reading }) => ({
@@ -65,7 +67,7 @@ export function pickGameWords(
     romaji: Array.isArray(romaji) ? romaji : [romaji],
     emoji: emoji || '✨',
     ...(reading ? { reading } : {}),
-  }))];
+  }))].filter(word => word.kana && !exclude.has(word.kana));
   const words = shuffle([...pool]).slice(0, Math.min(count, pool.length));
 
   if (forceSpecial) {
@@ -97,12 +99,33 @@ export function pickGameWords(
   return { words, newPlayCount, newTriggered };
 }
 
+export function pickOfficialShowWords(extraWords = [], reportedKanas = []) {
+  const exclude = new Set(reportedKanas.filter(Boolean));
+  const pool = [
+    ...(WORDS.easy || []),
+    ...(WORDS.normal || []),
+    ...(WORDS.hard || []),
+    ...(WORDS.very_hard || []),
+    ...(WORDS.insane || []),
+  ];
+  const adopted = extraWords.map(({ kana, romaji, emoji, reading }) => ({
+    kana,
+    romaji: Array.isArray(romaji) ? romaji : [romaji],
+    emoji: emoji || '✨',
+    ...(reading ? { reading } : {}),
+  }));
+  const fullPool = [...pool, ...adopted].filter(word => word.kana && !exclude.has(word.kana));
+  // 1分間で打てる数は多くても100文字程度なので200単語あれば十分
+  return shuffle(fullPool).slice(0, 300);
+}
+
 export function pickReplacementWord(
   difficulty,
   excludeKanas = [],
   extraWords = [],
+  reportedKanas = [],
 ) {
-  const exclude = new Set(excludeKanas.filter(Boolean));
+  const exclude = new Set([...excludeKanas.filter(Boolean), ...reportedKanas.filter(Boolean)]);
   const basePool = WORDS[difficulty] || WORDS.normal;
   const adoptedForDifficulty = extraWords.filter((w) => w.difficulty === difficulty || !w.difficulty);
   const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji }) => ({
@@ -115,8 +138,8 @@ export function pickReplacementWord(
   return shuffle(pool)[0];
 }
 
-export function pickSubEventReplacement(excludeKanas = []) {
-  const exclude = new Set(excludeKanas.filter(Boolean));
+export function pickSubEventReplacement(excludeKanas = [], reportedKanas = []) {
+  const exclude = new Set([...excludeKanas.filter(Boolean), ...reportedKanas.filter(Boolean)]);
   const pool = [...(WORDS.normal || []), ...(WORDS.hard || [])].filter(
     (word) => word.kana && !exclude.has(word.kana),
   );
