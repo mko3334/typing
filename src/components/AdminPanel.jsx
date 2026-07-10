@@ -1243,7 +1243,7 @@ export default function AdminPanel({ players, onReloadPlayers, onBack, playDecid
                                 )}
                               </td>
                               <td className="p-2 font-bold text-sky-600 whitespace-nowrap">
-                                {p.sessionCount > 0 ? formatDurationMs(p.totalPlayMs) : '-'}
+                                {p.sessionCount > 0 || p.totalPlayMs > 0 ? formatDurationMs(p.totalPlayMs) : '-'}
                               </td>
                               <td className="p-2 font-bold text-sky-600 whitespace-nowrap">
                                 {avgMs ? formatDurationMs(avgMs) : '-'}

@@ -303,8 +303,22 @@ export default function App() {
       saveCloudPlayer(prev.id, next).catch(() => {});
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        releaseSession();
+      } else if (document.visibilityState === 'visible') {
+        if (!sessionStartRef.current && currentPlayerRef.current?.id) {
+          sessionStartRef.current = Date.now();
+        }
+      }
+    };
+
     window.addEventListener('pagehide', releaseSession);
-    return () => window.removeEventListener('pagehide', releaseSession);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', releaseSession);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [appScreen, currentPlayer?.id]);
 
   const handleAcceptGift = useCallback(async () => {
