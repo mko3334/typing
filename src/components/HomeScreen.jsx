@@ -242,9 +242,10 @@ export default function HomeScreen({
               playDecideSound?.();
               setIsCustomAreaOpen(true);
             }}
-            className="absolute top-4 right-4 z-30 px-4 py-2 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm rounded-full shadow-lg border-2 border-white flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse"
+            className="absolute top-4 right-4 z-30 px-4 py-2 bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-500 hover:to-indigo-600 text-white font-black text-xs sm:text-sm rounded-full shadow-lg border-2 border-white flex items-center gap-2 hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse"
           >
-            <span>🎭</span> タイピングショーに出る！
+            <img src="/typing_show_btn.png" alt="タイピングショー" className="w-8 h-8 rounded object-cover shadow-sm" />
+            タイピングショーに出る！
           </button>
 
           <MallPin top="28%" left="12%" label="🎁 ショップ" variant="pink" onClick={onOpenShop} />

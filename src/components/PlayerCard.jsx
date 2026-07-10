@@ -144,7 +144,7 @@ export default function PlayerCard({
       )}
 
       {showGears && (
-        <div className="absolute right-[4.5rem] sm:right-[7rem] top-1/2 -translate-y-1/2 z-20 flex gap-1 sm:gap-1.5 pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-20 flex gap-1 sm:gap-1.5 pointer-events-none">
           {player.typingShowGears?.main ? (
             player.typingShowGears.main.map((gearName, idx) => {
               if (!gearName) return null; // 空き枠は非表示にしてスペースを節約
