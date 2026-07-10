@@ -952,8 +952,8 @@ export default function TypingScreen({
                             <div className={`absolute -left-2 sm:-left-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-white shadow-md border-2 border-white ${i === 0 ? 'bg-yellow-400 text-lg sm:text-xl scale-110' : i === 1 ? 'bg-gray-400 text-base sm:text-lg' : i === 2 ? 'bg-amber-600 text-base sm:text-lg' : 'bg-rose-300 text-sm sm:text-base'}`}>
                               {i + 1}
                             </div>
-                            <div className={`flex items-center w-full pl-6 sm:pl-8 gap-2 pr-24 sm:pr-32 ${i === 0 ? 'transform scale-[1.02] origin-left' : ''}`}>
-                              <div className="flex-1 min-w-0">
+                            <div className={`flex flex-col w-full pl-6 sm:pl-8 gap-1.5 pr-16 sm:pr-24 ${i === 0 ? 'transform scale-[1.02] origin-left' : ''}`}>
+                              <div className="w-full">
                                 <PlayerCard 
                                   player={{ ...r, name: r.playerName, points: r.score }} 
                                   readOnly 
@@ -961,7 +961,7 @@ export default function TypingScreen({
                                 />
                               </div>
                               {r.typingShowGears && (
-                                <div className="flex gap-1 shrink-0 bg-amber-50/90 p-1.5 rounded-lg shadow-inner border border-amber-200">
+                                <div className="flex flex-wrap gap-1 shrink-0 bg-amber-50/90 p-1.5 rounded-lg shadow-inner border border-amber-200 relative z-20">
                                   {r.typingShowGears.main?.map((gearName, idx) => {
                                     const item = gearName ? GACHA_ITEMS.find(i => i.name === gearName) : null;
                                     const level = item && r?.itemLevels?.[gearName] ? r.itemLevels[gearName] : 1;
