@@ -278,6 +278,7 @@ export default function TypingScreen({
   const [combo, setCombo] = useState(0);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [officialShowUploading, setOfficialShowUploading] = useState(false);
+  const [timePenalties, setTimePenalties] = useState([]);
 
   const isCountdown = countdownStep < COUNTDOWN_STEPS.length;
   const countdownLabel = isCountdown ? COUNTDOWN_STEPS[countdownStep] : null;
@@ -829,6 +830,11 @@ export default function TypingScreen({
               setCombo(0);
               setMissCount((prev) => prev + 1);
               setTimeLeft((prev) => Math.max(0, prev - 1));
+              const pid = Date.now() + Math.random();
+              setTimePenalties((prev) => [...prev, { id: pid }]);
+              setTimeout(() => {
+                setTimePenalties((prev) => prev.filter((p) => p.id !== pid));
+              }, 1000);
             }
           } else {
             setMissCount((prev) => prev + 1);
@@ -1176,11 +1182,20 @@ export default function TypingScreen({
                   </button>
                 </div>
                 <div className="flex justify-between items-center w-full mb-4 px-2 sm:px-4 pb-3 border-b border-gray-100">
-                <div className="flex flex-col items-center w-24">
+                <div className="flex flex-col items-center w-24 relative">
                   <span className="text-xs font-black text-gray-500">のこり時間</span>
                   <span className={`font-black transition-all ${timeLeft <= 10 ? 'text-red-500 text-5xl animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'text-sky-500 text-3xl'}`}>
                     {timeLeft}
                   </span>
+                  {timePenalties.map((p) => (
+                    <div
+                      key={p.id}
+                      className="absolute top-2 -right-2 text-rose-500 font-black text-3xl drop-shadow-[0_0_4px_white] z-50 pointer-events-none"
+                      style={{ animation: 'hiragana-combo-pop 0.8s ease-out forwards' }}
+                    >
+                      -1
+                    </div>
+                  ))}
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="text-xs font-black text-gray-500">スコア</span>
