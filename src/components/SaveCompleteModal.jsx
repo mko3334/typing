@@ -4,7 +4,7 @@ import PlayerCard from './PlayerCard';
 
 export function SaveLoadingOverlay() {
   return (
-    <div className="fixed inset-0 bg-sky-500/90 backdrop-blur-sm z-[80] flex flex-col items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-sky-500/90 backdrop-blur-sm z-[10000] flex flex-col items-center justify-center p-4 animate-fade-in">
       <div className="text-white text-5xl mb-4 animate-bounce">☁️</div>
       <h2 className="text-white text-xl md:text-2xl font-black mb-2">クラウドに セーブ中...</h2>
       <RefreshCcw className="w-8 h-8 text-white animate-spin" />
@@ -16,7 +16,7 @@ export default function SaveCompleteModal({ player, onConfirm }) {
   if (!player) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
       <div className="glass-card bg-white/95 w-full max-w-md p-5 sm:p-6 shadow-2xl rounded-3xl relative animate-pop-out">
         <div className="text-center mb-4">
           <div className="text-4xl mb-2">☁️</div>

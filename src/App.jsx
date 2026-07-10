@@ -645,7 +645,7 @@ export default function App() {
             </div>
             <button
               type="button"
-              onClick={() => handleSaveAndTitle({}, true)}
+              onClick={() => handleSaveAndTitle()}
               className="mt-2 bg-gradient-to-b from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-black text-xl px-8 py-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all border-b-4 border-rose-600"
             >
               セーブして おわる
