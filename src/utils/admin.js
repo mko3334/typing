@@ -1,4 +1,4 @@
-export const TITLE_ACCESS_PASSWORD = '0326';
+export const TITLE_ACCESS_PASSWORD = '0001';
 export const ADMIN_PASSWORD = '0326';
 
 const DIFFICULTY_LABELS = {
