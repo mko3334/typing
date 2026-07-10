@@ -364,12 +364,12 @@ body {
 
 .miracle-card {
   position: relative;
-  background-color: #ecfeff !important;
+  background-color: #cffafe !important;
   border: 6px solid transparent !important;
   box-shadow: 
     0 0 0 2px rgba(255, 255, 255, 0.9) inset,
-    0 0 10px rgba(6, 182, 212, 0.8) inset,
-    0 0 0 1px rgba(6, 182, 212, 0.4), 
+    0 0 10px rgba(6, 182, 212, 0.9) inset,
+    0 0 0 1px rgba(6, 182, 212, 0.5), 
     0 8px 30px rgba(6, 182, 212, 0.9) !important;
   overflow: hidden;
 }
@@ -378,7 +378,7 @@ body {
   content: '';
   position: absolute;
   inset: -6px;
-  background: linear-gradient(135deg, #e0f2fe, #06b6d4, #ffffff, #0284c7, #e0f2fe);
+  background: linear-gradient(135deg, #bae6fd, #06b6d4, #ffffff, #0284c7, #bae6fd);
   background-size: 200% 200%;
   animation: holo-sheen 1.5s linear infinite;
   z-index: -1;
@@ -392,18 +392,19 @@ body {
   background: linear-gradient(
     115deg,
     transparent 15%,
-    rgba(255, 255, 255, 0.8) 20%,
-    rgba(168, 237, 255, 0.6) 25%,
+    rgba(255, 255, 255, 0.9) 20%,
+    rgba(34, 211, 238, 0.7) 25%,
     rgba(255, 255, 255, 0.9) 45%,
-    rgba(6, 182, 212, 0.5) 50%,
-    rgba(255, 255, 255, 0.8) 55%,
+    rgba(6, 182, 212, 0.6) 50%,
+    rgba(255, 255, 255, 0.9) 55%,
     transparent 65%
   );
   background-size: 200% 200%;
   animation: holo-sheen 2s ease-in-out infinite;
   pointer-events: none;
   z-index: 1;
-  mix-blend-mode: overlay;
+  /* mix-blend-mode: overlay は明るい背景だと白飛びしやすいので、外すか color-dodge/hard-light などにする。今回はハードライトか通常アルファブレンドにする */
+  mix-blend-mode: hard-light;
 }
 
 @keyframes holo-sheen {
