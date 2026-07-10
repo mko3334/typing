@@ -170,6 +170,26 @@
     30% { opacity: 0; transform: scaleY(1.2) translateY(0) rotate(-10deg); }
     100% { opacity: 0; }
   }
+  --animate-thunder-flash-cyan: thunder-flash-cyan 3.0s ease-out forwards;
+  @keyframes thunder-flash-cyan {
+    0% { opacity: 0; background-color: transparent; }
+    5% { opacity: 1; background-color: #ffffff; }
+    10% { opacity: 0.9; background-color: rgba(6, 182, 212, 0.8); }
+    15% { opacity: 1; background-color: #ffffff; }
+    20% { opacity: 0.9; background-color: rgba(168, 85, 247, 0.8); }
+    25% { opacity: 1; background-color: #ffffff; }
+    35% { opacity: 0; background-color: transparent; }
+    100% { opacity: 0; background-color: transparent; }
+  }
+  --animate-thunder-strike-cyan: thunder-strike-cyan 3.0s ease-out forwards;
+  @keyframes thunder-strike-cyan {
+    0% { opacity: 0; transform: scale(0) rotate(-180deg); }
+    5% { opacity: 1; transform: scale(3) rotate(0deg); filter: brightness(2) drop-shadow(0 0 50px #06b6d4) hue-rotate(90deg); }
+    15% { opacity: 1; transform: scale(2.5) rotate(10deg); filter: brightness(2) drop-shadow(0 0 50px #a855f7) hue-rotate(180deg); }
+    25% { opacity: 1; transform: scale(3) rotate(-10deg); filter: brightness(3) drop-shadow(0 0 80px #ffffff); }
+    40% { opacity: 0; transform: scale(5) rotate(45deg); filter: blur(20px); }
+    100% { opacity: 0; }
+  }
 }
 
 body {
@@ -340,6 +360,50 @@ body {
   animation: holo-sheen 3s ease-in-out infinite;
   pointer-events: none;
   z-index: 1;
+}
+
+.miracle-card {
+  position: relative;
+  background-color: #ecfeff !important;
+  border: 6px solid transparent !important;
+  box-shadow: 
+    0 0 0 2px rgba(255, 255, 255, 0.9) inset,
+    0 0 10px rgba(6, 182, 212, 0.8) inset,
+    0 0 0 1px rgba(6, 182, 212, 0.4), 
+    0 8px 30px rgba(6, 182, 212, 0.9) !important;
+  overflow: hidden;
+}
+
+.miracle-card::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  background: linear-gradient(135deg, #e0f2fe, #06b6d4, #ffffff, #0284c7, #e0f2fe);
+  background-size: 200% 200%;
+  animation: holo-sheen 1.5s linear infinite;
+  z-index: -1;
+}
+
+.miracle-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    transparent 15%,
+    rgba(255, 255, 255, 0.8) 20%,
+    rgba(168, 237, 255, 0.6) 25%,
+    rgba(255, 255, 255, 0.9) 45%,
+    rgba(6, 182, 212, 0.5) 50%,
+    rgba(255, 255, 255, 0.8) 55%,
+    transparent 65%
+  );
+  background-size: 200% 200%;
+  animation: holo-sheen 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: overlay;
 }
 
 @keyframes holo-sheen {

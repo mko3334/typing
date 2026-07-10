@@ -10,23 +10,25 @@ const REWARD_PULL_COSTS = {
 
 /** ごほうびガacha：レアリティ別の出率（アイテム数に左右されない） */
 const REWARD_TIER_WEIGHTS = {
-  '✨レジェンド✨': 1,
-  '🌟超激レア🌟': 4,
-  '🔥激レア🔥': 4,
-  '✨激レア✨': 8,
-  '⭐レア⭐': 27,
-  レア: 27,
-  ノーマル: 60,
+  '💎ミラクル💎': 0.1,
+  '✨レジェンド✨': 3,
+  '🌟超激レア🌟': 5.45,
+  '🔥激レア🔥': 9,
+  '✨激レア✨': 10,
+  '⭐レア⭐': 25,
+  レア: 25,
+  ノーマル: 25,
 };
 
 /** 超激レア以上ガacha：超激レア vs レジェンド（レジェンドは低め） */
 const PREMIUM_GACHA_TIER_WEIGHTS = {
-  '🌟超激レア🌟': 82,
-  '🔥激レア🔥': 82,
-  '✨レジェンド✨': 18,
+  '💎ミラクル💎': 0.5,
+  '✨レジェンド✨': 10,
+  '🌟超激レア🌟': 47.4,
+  '🔥激レア🔥': 47.4,
 };
 
-const PREMIUM_GACHA_RARITIES = new Set(['🌟超激レア🌟', '🔥激レア🔥', '✨レジェンド✨']);
+const PREMIUM_GACHA_RARITIES = new Set(['🌟超激レア🌟', '🔥激レア🔥', '✨レジェンド✨', '💎ミラクル💎']);
 
 function pickByTierWeights(pool, tierWeights) {
   if (!pool.length) return null;
@@ -85,9 +87,10 @@ export function getRewardPullCost(count) {
   return REWARD_PULL_COSTS[count] ?? null;
 }
 
-const HOT_TIER_ORDER = { yellow: 1, red: 2, purple: 3 };
+const HOT_TIER_ORDER = { yellow: 1, red: 2, purple: 3, cyan: 4 };
 
 export function getHotTierForRarity(rarity) {
+  if (rarity === '💎ミラクル💎') return 'cyan';
   if (rarity === '✨レジェンド✨') return 'purple';
   if (rarity === '🌟超激レア🌟' || rarity === '🔥激レア🔥') return 'red';
   if (rarity === '✨激レア✨') return 'yellow';
@@ -106,6 +109,9 @@ export function getHighestHotTierFromItems(items = []) {
 
 export function getHotColorForRarity(rarity) {
   const tier = getHotTierForRarity(rarity);
+  if (tier === 'cyan') {
+    return { hex: '#06b6d4', rarity, name: 'cyan', tier };
+  }
   if (tier === 'purple') {
     return { hex: '#a855f7', rarity, name: 'purple', tier };
   }
@@ -122,6 +128,14 @@ export function getHotColorForRarity(rarity) {
 }
 
 export function getHotTierStyles(tier) {
+  if (tier === 'cyan') {
+    return {
+      text: '#0891b2',
+      border: '#06b6d4',
+      flash: 'animate-thunder-flash-cyan',
+      strike: 'animate-thunder-strike-cyan',
+    };
+  }
   if (tier === 'purple') {
     return {
       text: '#9333ea',
@@ -173,6 +187,11 @@ export function computeAchievements(player, collection, extraWords = []) {
   if (difficultyClears.very_hard) achievements.add('very_hard_clear');
   if (difficultyClears.alphabet_quiz) achievements.add('alphabet_master');
   if (player?.noMissClear) achievements.add('no_miss');
+
+  // タイピングショー称号
+  if ((player?.officialShowPlayedCount || 0) >= 1) achievements.add('show_debut');
+  if ((player?.officialShowPlayedCount || 0) >= 10) achievements.add('show_star');
+  if ((player?.officialShowHighScore || 0) >= 10000) achievements.add('show_legend');
 
   const hiragana = player?.hiraganaProgress || {};
   const clearedRows = hiragana.clearedRowIds || [];

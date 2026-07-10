@@ -1,0 +1,3598 @@
+{
+  "documents": [
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/0GXq32Ylhjzlo5i3SkxU",
+      "fields": {
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:44:16.498Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennseitoarigatou!"
+              },
+              {
+                "stringValue": "syougaku１nenseitoarigatou!"
+              },
+              {
+                "stringValue": "shougaku１nennseitoarigatou!"
+              },
+              {
+                "stringValue": "shougaku１nenseitoarigatou!"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "emoji": {
+          "stringValue": "✨😊"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせいとありがとう！"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nenseitoarigatou!"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T07:36:48.619Z"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        }
+      },
+      "createTime": "2026-07-03T07:36:48.862119Z",
+      "updateTime": "2026-07-09T05:44:16.737225Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/0LZEnrxF3tFfdI4KJVLO",
+      "fields": {
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "4"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T06:05:27.096Z"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nenseitotasukete!"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennseitotasukete!"
+              },
+              {
+                "stringValue": "syougaku１nenseitotasukete!"
+              },
+              {
+                "stringValue": "shougaku１nennseitotasukete!"
+              },
+              {
+                "stringValue": "shougaku１nenseitotasukete!"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせいとたすけて！"
+        },
+        "emoji": {
+          "stringValue": "✨✨"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:41:32.916Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "context": {
+          "stringValue": "main"
+        }
+      },
+      "createTime": "2026-07-08T06:05:27.555254Z",
+      "updateTime": "2026-07-09T05:41:33.154017Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/1OlPakORZDBPxB1UuJD5",
+      "fields": {
+        "reason": {
+          "stringValue": "not_suitable"
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T07:42:08.485Z"
+        },
+        "displayRomaji": {
+          "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "⚡️"
+        },
+        "kana": {
+          "stringValue": "らいとにんぐさんだーぼるけーのでりしゃすでらっくすぎがんてぃっく、、、"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugiganthikku"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:44:08.448Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "context": {
+          "stringValue": "main"
+        }
+      },
+      "createTime": "2026-07-03T07:42:08.725369Z",
+      "updateTime": "2026-07-09T05:44:08.692186Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/1hR7Az3hPO6AHakPOmeJ",
+      "fields": {
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "bennkyou１時間"
+              },
+              {
+                "stringValue": "benkyou１時間"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "べんきょう１じかん"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "🗒️"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:45:05.797Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-01T07:42:07.755Z"
+        },
+        "displayRomaji": {
+          "stringValue": "benkyou１時間"
+        }
+      },
+      "createTime": "2026-07-01T07:42:09.380729Z",
+      "updateTime": "2026-07-09T05:45:06.044527Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/298E4F0E5jPwkcbW6NJI",
+      "fields": {
+        "playerName": {
+          "stringValue": "ねいびー"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-30T08:40:22.925Z"
+        },
+        "correctedEmoji": {
+          "stringValue": "✨"
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-01T02:23:10.011Z"
+        },
+        "wordIndex": {
+          "integerValue": "2"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku1nennsei"
+              },
+              {
+                "stringValue": "syougaku1nensei"
+              },
+              {
+                "stringValue": "shougaku1nennsei"
+              },
+              {
+                "stringValue": "shougaku1nensei"
+              }
+            ]
+          }
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedKana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "playerId": {
+          "stringValue": "player_1781079302610"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        }
+      },
+      "createTime": "2026-06-30T08:40:23.493928Z",
+      "updateTime": "2026-07-01T02:23:10.188323Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/2D1JtxAMmBZuAR4wRTdZ",
+      "fields": {
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "tyuugakuseihasugoi!"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "kana": {
+          "stringValue": "中学生はすごい！"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:44:06.298Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "reason": {
+          "stringValue": "not_suitable"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T08:14:27.727Z"
+        },
+        "displayRomaji": {
+          "stringValue": "tyuugakuseihasugoi!"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        }
+      },
+      "createTime": "2026-07-03T08:14:28.413532Z",
+      "updateTime": "2026-07-09T05:44:06.550960Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/2IuHjKmqMBZzKwBXOhrG",
+      "fields": {
+        "playerId": {
+          "stringValue": "player_1781854110975"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-01T02:23:18.424Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "4"
+        },
+        "playerName": {
+          "stringValue": "伊藤晴"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-30T08:04:56.049Z"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        }
+      },
+      "createTime": "2026-06-30T08:04:56.620363Z",
+      "updateTime": "2026-07-01T02:23:18.583475Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/6CqtiDyyXvuGwakITlLq",
+      "fields": {
+        "eventTitle": {
+          "stringValue": "わるぐちを いう おとこのこ"
+        },
+        "kana": {
+          "stringValue": "ともだちをたいせつに"
+        },
+        "playerId": {
+          "stringValue": "player_1782202592550"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "tomodatiwotaisetuni"
+              },
+              {
+                "stringValue": "tomodatiwotaisetsuni"
+              },
+              {
+                "stringValue": "tomodachiwotaisetuni"
+              },
+              {
+                "stringValue": "tomodachiwotaisetsuni"
+              },
+              {
+                "stringValue": "tomodaciwotaisetuni"
+              },
+              {
+                "stringValue": "tomodaciwotaisetsuni"
+              }
+            ]
+          }
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "ともだちをたいせつに"
+        },
+        "correctedKana": {
+          "stringValue": "ともだちをたいせつに"
+        },
+        "context": {
+          "stringValue": "sub_event"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "tomodatiwotaisetuni"
+              },
+              {
+                "stringValue": "tomodatiwotaisetsuni"
+              },
+              {
+                "stringValue": "tomodachiwotaisetuni"
+              },
+              {
+                "stringValue": "tomodachiwotaisetsuni"
+              },
+              {
+                "stringValue": "tomodaciwotaisetuni"
+              },
+              {
+                "stringValue": "tomodaciwotaisetsuni"
+              }
+            ]
+          }
+        },
+        "rallyIndex": {
+          "integerValue": "2"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-06-24T03:07:08.353Z"
+        },
+        "kanaDisplay": {
+          "stringValue": "{ともだち|友達}を{たいせつ|大切}に"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": "原因不明"
+        },
+        "correctedEmoji": {
+          "stringValue": ""
+        },
+        "displayRomaji": {
+          "stringValue": "tomodatiwotaisetuni"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-23T08:28:36.057Z"
+        },
+        "playerName": {
+          "stringValue": "ゆみ"
+        },
+        "eventId": {
+          "stringValue": "bad_mouth"
+        }
+      },
+      "createTime": "2026-06-25T05:56:47.899519Z",
+      "updateTime": "2026-06-25T05:56:47.899519Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/71DkgZMNRFKQncmDnWhQ",
+      "fields": {
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:43:01.415Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T05:12:35.043Z"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-07-08T05:12:37.275897Z",
+      "updateTime": "2026-07-09T05:43:01.666686Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/9t9m62xcGkE14qYMiOsl",
+      "fields": {
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku1nennseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "syougaku１nennseitohashirutoabunaiyo"
+              },
+              {
+                "stringValue": "syougaku１nenseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "syougaku１nenseitohashirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nennseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nennseitohashirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nenseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nenseitohashirutoabunaiyo"
+              }
+            ]
+          }
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-01T06:50:23.921Z"
+        },
+        "correctedEmoji": {
+          "stringValue": "✨🏃\u200d♂️⚠️"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nenseitohasirutoabunaiyo"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-01T06:45:05.533Z"
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせいとはしるとあぶないよ"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "✨🏃\u200d♂️⚠️"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "syougaku１nennseitohashirutoabunaiyo"
+              },
+              {
+                "stringValue": "syougaku１nenseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "syougaku１nenseitohashirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nennseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nennseitohashirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nenseitohasirutoabunaiyo"
+              },
+              {
+                "stringValue": "shougaku１nenseitohashirutoabunaiyo"
+              }
+            ]
+          }
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "しょうがく1ねんせいとはしるとあぶないよ"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedKana": {
+          "stringValue": "しょうがく1ねんせいとはしるとあぶないよ"
+        },
+        "context": {
+          "stringValue": "main"
+        }
+      },
+      "createTime": "2026-07-01T06:47:16.604143Z",
+      "updateTime": "2026-07-01T06:50:24.081053Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/AIuWllfM24Y3nnytssJH",
+      "fields": {
+        "correctedKanaDisplay": {
+          "stringValue": "綺麗にしようね"
+        },
+        "context": {
+          "stringValue": "sub_event"
+        },
+        "correctedKana": {
+          "stringValue": "きれいにしようね"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "eventTitle": {
+          "stringValue": "ゴミを すてそうな おとこのこ"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "kana": {
+          "stringValue": "きれいにしようね"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "kireinisiyoune"
+              },
+              {
+                "stringValue": "kireinishiyoune"
+              }
+            ]
+          }
+        },
+        "correctedEmoji": {
+          "stringValue": ""
+        },
+        "displayRomaji": {
+          "stringValue": "kireinisiyoune"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-07T06:34:02.233Z"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "eventId": {
+          "stringValue": "litter"
+        },
+        "rallyIndex": {
+          "integerValue": "1"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "kireinisiyoune"
+              },
+              {
+                "stringValue": "kireinishiyoune"
+              }
+            ]
+          }
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:43:14.071Z"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "kanaDisplay": {
+          "stringValue": "{きれい|綺麗}にしようね"
+        }
+      },
+      "createTime": "2026-07-07T06:34:02.701031Z",
+      "updateTime": "2026-07-09T05:43:14.316855Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/CCiTicJ5zmCYjcTY1WBM",
+      "fields": {
+        "correctedEmoji": {
+          "stringValue": "🛌"
+        },
+        "playerName": {
+          "stringValue": "ブラック"
+        },
+        "displayRomaji": {
+          "stringValue": "makura"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-07T00:27:34.970Z"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "makura"
+              }
+            ]
+          }
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:43:26.420Z"
+        },
+        "wordIndex": {
+          "integerValue": "2"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "まくら"
+        },
+        "correctedKana": {
+          "stringValue": "まくら"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "kana": {
+          "stringValue": "まくら"
+        },
+        "emoji": {
+          "stringValue": "🛌"
+        },
+        "playerId": {
+          "stringValue": "player_1779857810282"
+        },
+        "difficulty": {
+          "mapValue": {
+            "fields": {
+              "isOfficialShow": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "makura"
+              }
+            ]
+          }
+        }
+      },
+      "createTime": "2026-07-07T00:27:35.115900Z",
+      "updateTime": "2026-07-09T05:43:26.656475Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/CDtgb1agpBfzcUwXfslh",
+      "fields": {
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-01T02:23:30.020Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "wordIndex": {
+          "integerValue": "4"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-30T07:44:21.695Z"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        }
+      },
+      "createTime": "2026-06-30T07:44:22.551991Z",
+      "updateTime": "2026-07-01T02:23:30.194529Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/DpHylLaPC2tCs9LXQbsO",
+      "fields": {
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "bennkyou1zikann"
+              },
+              {
+                "stringValue": "benkyou1zikan"
+              }
+            ]
+          }
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-06-24T13:59:00.949Z"
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "correctedEmoji": {
+          "stringValue": "🗒️"
+        },
+        "playerName": {
+          "stringValue": "ちせ"
+        },
+        "displayRomaji": {
+          "stringValue": "benkyou１時間"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-24T08:31:09.038Z"
+        },
+        "playerId": {
+          "stringValue": "player_1779869211921"
+        },
+        "emoji": {
+          "stringValue": "🗒️"
+        },
+        "kana": {
+          "stringValue": "べんきょう１じかん"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "bennkyou１時間"
+              },
+              {
+                "stringValue": "benkyou１時間"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "べんきょう1じかん"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "べんきょう１じかん"
+        },
+        "status": {
+          "stringValue": "resolved"
+        }
+      },
+      "createTime": "2026-06-25T05:56:48.132402Z",
+      "updateTime": "2026-06-25T05:56:48.132402Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/HAzbv7kxCfCHr2GfV8yo",
+      "fields": {
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi1nitiwo"
+              }
+            ]
+          }
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-06-20T04:52:49.184Z"
+        },
+        "correctedEmoji": {
+          "stringValue": "🌅"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-19T06:34:04.025Z"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "よい1日を"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "よい1日を"
+        }
+      },
+      "createTime": "2026-06-25T05:56:48.396723Z",
+      "updateTime": "2026-06-25T05:56:48.396723Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/IYR9Bmf58N6GJM6NfEsr",
+      "fields": {
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "mapValue": {
+            "fields": {
+              "isOfficialShow": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "playerId": {
+          "stringValue": "player_1779857810282"
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:43:51.165Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "wordIndex": {
+          "integerValue": "18"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "playerName": {
+          "stringValue": "ブラック"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T23:18:17.619Z"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        }
+      },
+      "createTime": "2026-07-03T23:18:17.918920Z",
+      "updateTime": "2026-07-09T05:43:51.406082Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/LHbvyuR8bW7MzJuv7Z3C",
+      "fields": {
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:40:39.833Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugiganthikku"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "emoji": {
+          "stringValue": "⚡️"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "kana": {
+          "stringValue": "らいとにんぐさんだーぼるけーのでりしゃすでらっくすぎがんてぃっく、、、"
+        },
+        "displayRomaji": {
+          "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-06T05:46:38.414Z"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        }
+      },
+      "createTime": "2026-07-06T05:48:01.624361Z",
+      "updateTime": "2026-07-09T05:40:40.072757Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/LKWg2IUpA8AWIoSpYJOd",
+      "fields": {
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T05:41:52.057Z"
+        },
+        "displayRomaji": {
+          "stringValue": "uwa-!toyoi一日wo"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "uwa-!toyoi一日wo"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "emoji": {
+          "stringValue": "✨🌅"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "kana": {
+          "stringValue": "うわー！とよい一日を"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:42:12.684Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        }
+      },
+      "createTime": "2026-07-08T05:41:52.217768Z",
+      "updateTime": "2026-07-09T05:42:12.931374Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/MaZj4J6yGPsSQyZDQL2M",
+      "fields": {
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1781079302610"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "よい１にちを"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "よい1にちを"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-01T02:22:44.791Z"
+        },
+        "wordIndex": {
+          "integerValue": "2"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi1nitiwo"
+              }
+            ]
+          }
+        },
+        "createdAt": {
+          "stringValue": "2026-06-30T08:39:56.571Z"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        },
+        "playerName": {
+          "stringValue": "ねいびー"
+        },
+        "correctedEmoji": {
+          "stringValue": "🌅"
+        }
+      },
+      "createTime": "2026-06-30T08:39:57.140754Z",
+      "updateTime": "2026-07-01T02:22:44.953785Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/MlCO9Vpndxz8NMUpxZ5g",
+      "fields": {
+        "status": {
+          "stringValue": "archived"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:43:47.083Z"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "mapValue": {
+            "fields": {
+              "isOfficialShow": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "playerId": {
+          "stringValue": "player_1779857810282"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "playerName": {
+          "stringValue": "ブラック"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T23:34:52.246Z"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "5"
+        }
+      },
+      "createTime": "2026-07-03T23:34:52.581843Z",
+      "updateTime": "2026-07-09T05:43:47.313708Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/RBYYgKVcsobqNMm7d9b5",
+      "fields": {
+        "correctedKanaDisplay": {
+          "stringValue": "じゅんばんであそぼう"
+        },
+        "correctedKana": {
+          "stringValue": "じゅんばんであそぼう"
+        },
+        "context": {
+          "stringValue": "sub_event"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "eventTitle": {
+          "stringValue": "ケンカしている きょうだい"
+        },
+        "kana": {
+          "stringValue": "じゅんばんであそぼう"
+        },
+        "playerId": {
+          "stringValue": "player_1782202592550"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "zyunnbanndeasobou"
+              },
+              {
+                "stringValue": "zyunnbandeasobou"
+              },
+              {
+                "stringValue": "zyunbanndeasobou"
+              },
+              {
+                "stringValue": "zyunbandeasobou"
+              },
+              {
+                "stringValue": "junnbanndeasobou"
+              },
+              {
+                "stringValue": "junnbandeasobou"
+              },
+              {
+                "stringValue": "junbanndeasobou"
+              },
+              {
+                "stringValue": "junbandeasobou"
+              },
+              {
+                "stringValue": "jyunnbanndeasobou"
+              },
+              {
+                "stringValue": "jyunnbandeasobou"
+              },
+              {
+                "stringValue": "jyunbanndeasobou"
+              },
+              {
+                "stringValue": "jyunbandeasobou"
+              }
+            ]
+          }
+        },
+        "correctedEmoji": {
+          "stringValue": ""
+        },
+        "playerName": {
+          "stringValue": "ゆみ"
+        },
+        "displayRomaji": {
+          "stringValue": "junbandeasobou"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-23T08:21:04.321Z"
+        },
+        "eventId": {
+          "stringValue": "quarrel"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "zyunnbanndeasobou"
+              },
+              {
+                "stringValue": "zyunnbandeasobou"
+              },
+              {
+                "stringValue": "zyunbanndeasobou"
+              },
+              {
+                "stringValue": "zyunbandeasobou"
+              },
+              {
+                "stringValue": "junnbanndeasobou"
+              },
+              {
+                "stringValue": "junnbandeasobou"
+              },
+              {
+                "stringValue": "junbanndeasobou"
+              },
+              {
+                "stringValue": "junbandeasobou"
+              },
+              {
+                "stringValue": "jyunnbanndeasobou"
+              },
+              {
+                "stringValue": "jyunnbandeasobou"
+              },
+              {
+                "stringValue": "jyunbanndeasobou"
+              },
+              {
+                "stringValue": "jyunbandeasobou"
+              }
+            ]
+          }
+        },
+        "rallyIndex": {
+          "integerValue": "0"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-06-24T03:06:54.647Z"
+        },
+        "kanaDisplay": {
+          "stringValue": "{じゅんばん|順番}で{あそ|遊}ぼう"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": "原因不明"
+        }
+      },
+      "createTime": "2026-06-25T05:56:48.631876Z",
+      "updateTime": "2026-06-25T05:56:48.631876Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/RNwn1m2spRpgIeRTczRh",
+      "fields": {
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:44:38.785Z"
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku1nennsei"
+              },
+              {
+                "stringValue": "syougaku1nensei"
+              },
+              {
+                "stringValue": "shougaku1nennsei"
+              },
+              {
+                "stringValue": "shougaku1nensei"
+              }
+            ]
+          }
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T07:35:27.752Z"
+        },
+        "correctedEmoji": {
+          "stringValue": "✨"
+        }
+      },
+      "createTime": "2026-07-03T07:35:28.017526Z",
+      "updateTime": "2026-07-09T05:44:39.018090Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/SHUnkaJxmxo4JBAM39KC",
+      "fields": {
+        "correctedEmoji": {
+          "stringValue": "🌅"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-19T06:47:17.995Z"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi1nitiwo"
+              }
+            ]
+          }
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-06-20T04:52:21.607Z"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "よい1日を"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "よい1日を"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        }
+      },
+      "createTime": "2026-06-25T05:56:48.839432Z",
+      "updateTime": "2026-06-25T05:56:48.839432Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/TASAKF34tYrQk8YY9B5k",
+      "fields": {
+        "createdAt": {
+          "stringValue": "2026-07-06T06:03:20.610Z"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku1nensei"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:42:57.258Z"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku1nennsei"
+              },
+              {
+                "stringValue": "syougaku1nensei"
+              },
+              {
+                "stringValue": "shougaku1nennsei"
+              },
+              {
+                "stringValue": "shougaku1nensei"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        }
+      },
+      "createTime": "2026-07-06T06:04:43.819735Z",
+      "updateTime": "2026-07-09T05:42:57.499840Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/UkTHDE0Q0kxsXwJkugBR",
+      "fields": {
+        "displayRomaji": {
+          "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-01T06:37:13.375Z"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:42:46.487Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugiganthikku"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "らいとにんぐさんだーぼるけーのでりしゃすでらっくすぎがんてぃっく、、、"
+        },
+        "emoji": {
+          "stringValue": "⚡️"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        }
+      },
+      "createTime": "2026-07-01T06:39:24.420156Z",
+      "updateTime": "2026-07-09T05:42:46.726351Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/VY5F4ehZiksFqS9okx1u",
+      "fields": {
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:42:43.798Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "⚡️"
+        },
+        "kana": {
+          "stringValue": "らいとにんぐさんだーぼるけーのでりしゃすでらっくすぎがんてぃっく、、、"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugiganthikku"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-01T06:51:08.254Z"
+        },
+        "displayRomaji": {
+          "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+        },
+        "wordIndex": {
+          "integerValue": "4"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        }
+      },
+      "createTime": "2026-07-01T06:53:19.335584Z",
+      "updateTime": "2026-07-09T05:42:44.046463Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/WLtVeCucmn0aGFcMHdJ0",
+      "fields": {
+        "correctedKana": {
+          "stringValue": "よい１にちを"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "よい1日を"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "playerId": {
+          "stringValue": "player_1780039354476"
+        },
+        "playerName": {
+          "stringValue": "ゆら"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-30T08:40:35.085Z"
+        },
+        "correctedEmoji": {
+          "stringValue": "🌅"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-01T02:22:09.996Z"
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi1nitiwo"
+              }
+            ]
+          }
+        }
+      },
+      "createTime": "2026-06-30T08:40:35.991699Z",
+      "updateTime": "2026-07-01T02:22:10.170520Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/WYqWRJez3IFFPhBrckrL",
+      "fields": {
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "⚡️"
+        },
+        "kana": {
+          "stringValue": "らいとにんぐさんだーぼるけーのでりしゃすでらっくすぎがんてぃっく、、、"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugiganthikku"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:40:37.134Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "displayRomaji": {
+          "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-06T06:00:38.122Z"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        }
+      },
+      "createTime": "2026-07-06T06:02:01.323759Z",
+      "updateTime": "2026-07-09T05:40:37.377398Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/YUbgrsTZO5NU8eFx9e7X",
+      "fields": {
+        "displayRomaji": {
+          "stringValue": "benkyou１時間tobaibai!"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T07:40:48.673Z"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "wordIndex": {
+          "integerValue": "2"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:44:12.064Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "bennkyou１時間tobaibai!"
+              },
+              {
+                "stringValue": "benkyou１時間tobaibai!"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "🗒️👋"
+        },
+        "kana": {
+          "stringValue": "べんきょう１じかんとバイバイ！"
+        }
+      },
+      "createTime": "2026-07-03T07:40:48.913411Z",
+      "updateTime": "2026-07-09T05:44:12.303671Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/ZZQ3YX6XxKy3eaaP8AbR",
+      "fields": {
+        "context": {
+          "stringValue": "main"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:43:43.850Z"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "neko"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "mapValue": {
+            "fields": {
+              "isOfficialShow": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "playerId": {
+          "stringValue": "player_1779857810282"
+        },
+        "emoji": {
+          "stringValue": "🐱"
+        },
+        "kana": {
+          "stringValue": "ねこ"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T23:49:09.930Z"
+        },
+        "displayRomaji": {
+          "stringValue": "neko"
+        },
+        "playerName": {
+          "stringValue": "ブラック"
+        },
+        "wordIndex": {
+          "integerValue": "6"
+        },
+        "reason": {
+          "stringValue": "other"
+        }
+      },
+      "createTime": "2026-07-03T23:49:10.286834Z",
+      "updateTime": "2026-07-09T05:43:44.076161Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/ZtrFKCS7XVOSLxiqghn8",
+      "fields": {
+        "createdAt": {
+          "stringValue": "2026-06-30T07:42:54.376Z"
+        },
+        "displayRomaji": {
+          "stringValue": "uresiinaa!tosyougaku１nensei"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "2"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-01T02:23:33.080Z"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "uresiinaa!tosyougaku１nennsei"
+              },
+              {
+                "stringValue": "uresiinaa!tosyougaku１nensei"
+              },
+              {
+                "stringValue": "uresiinaa!toshougaku１nennsei"
+              },
+              {
+                "stringValue": "uresiinaa!toshougaku１nensei"
+              },
+              {
+                "stringValue": "ureshiinaa!tosyougaku１nennsei"
+              },
+              {
+                "stringValue": "ureshiinaa!tosyougaku１nensei"
+              },
+              {
+                "stringValue": "ureshiinaa!toshougaku１nennsei"
+              },
+              {
+                "stringValue": "ureshiinaa!toshougaku１nensei"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "うれしいなぁ！としょうがく１ねんせい"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "🥰✨"
+        }
+      },
+      "createTime": "2026-06-30T07:42:55.236751Z",
+      "updateTime": "2026-07-01T02:23:33.245005Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/bgjHUaDj9kyFlAjyfEns",
+      "fields": {
+        "correctedKanaDisplay": {
+          "stringValue": "{はし|走}ると{あぶ|危}ないよ"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "context": {
+          "stringValue": "sub_event"
+        },
+        "correctedKana": {
+          "stringValue": "はしるとあぶないよ"
+        },
+        "playerId": {
+          "stringValue": "player_1779869211921"
+        },
+        "kana": {
+          "stringValue": "はしるとあぶないよ"
+        },
+        "eventTitle": {
+          "stringValue": "モールを はしりまわる おとこのこ"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "hasirutoabunaiyo"
+              },
+              {
+                "stringValue": "hashirutoabunaiyo"
+              }
+            ]
+          }
+        },
+        "correctedEmoji": {
+          "stringValue": ""
+        },
+        "eventId": {
+          "stringValue": "running"
+        },
+        "displayRomaji": {
+          "stringValue": "hasirutoabunaiyo"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-01T08:18:32.878Z"
+        },
+        "playerName": {
+          "stringValue": "ちせ"
+        },
+        "rallyIndex": {
+          "integerValue": "0"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "hasirutoabunaiyo"
+              },
+              {
+                "stringValue": "hashirutoabunaiyo"
+              }
+            ]
+          }
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "kanaDisplay": {
+          "stringValue": "{はし|走}ると{あぶ|危}ないよ"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:45:00.271Z"
+        }
+      },
+      "createTime": "2026-07-01T08:19:45.558281Z",
+      "updateTime": "2026-07-09T05:45:00.503047Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/dOWcxHvmzbSgbO7nYePC",
+      "fields": {
+        "playerName": {
+          "stringValue": "伊藤晴"
+        },
+        "displayRomaji": {
+          "stringValue": "konnnitiha!tobenkyou１時間"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-30T07:54:03.854Z"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-01T02:23:26.524Z"
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "playerId": {
+          "stringValue": "player_1781854110975"
+        },
+        "emoji": {
+          "stringValue": "👋🗒️"
+        },
+        "kana": {
+          "stringValue": "こんにちは！とべんきょう１じかん"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "konnnitiha!tobennkyou１時間"
+              },
+              {
+                "stringValue": "konnnitiha!tobenkyou１時間"
+              },
+              {
+                "stringValue": "konnichihar!tobennkyou１時間"
+              },
+              {
+                "stringValue": "konnichihar!tobenkyou１時間"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        }
+      },
+      "createTime": "2026-06-30T07:54:04.401059Z",
+      "updateTime": "2026-07-01T02:23:26.698263Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/eRATftREG04y4pQdjgok",
+      "fields": {
+        "createdAt": {
+          "stringValue": "2026-07-03T07:24:18.968Z"
+        },
+        "displayRomaji": {
+          "stringValue": "benkyou１時間"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "wordIndex": {
+          "integerValue": "2"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:44:47.032Z"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "bennkyou１時間"
+              },
+              {
+                "stringValue": "benkyou１時間"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "🗒️"
+        },
+        "kana": {
+          "stringValue": "べんきょう１じかん"
+        }
+      },
+      "createTime": "2026-07-03T07:24:19.225058Z",
+      "updateTime": "2026-07-09T05:44:47.265971Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/exStJcamPPKKbd6NssJM",
+      "fields": {
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:43:48.755Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "difficulty": {
+          "mapValue": {
+            "fields": {
+              "isOfficialShow": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "playerId": {
+          "stringValue": "player_1779857810282"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T23:18:21.318Z"
+        },
+        "playerName": {
+          "stringValue": "ブラック"
+        },
+        "wordIndex": {
+          "integerValue": "18"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        }
+      },
+      "createTime": "2026-07-03T23:18:21.617337Z",
+      "updateTime": "2026-07-09T05:43:48.988978Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/f48etb9qcTGEy8HIoDmu",
+      "fields": {
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-01T02:23:51.028Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-26T07:56:07.839Z"
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        }
+      },
+      "createTime": "2026-06-30T05:11:24.644041Z",
+      "updateTime": "2026-07-01T02:23:51.509890Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/i8ZtfHrBkzjIU0mKgCIt",
+      "fields": {
+        "correctedKanaDisplay": {
+          "stringValue": "べんきょう１じかん"
+        },
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedKana": {
+          "stringValue": "べんきょう１じかん"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "kana": {
+          "stringValue": "べんきょう１じかん"
+        },
+        "playerId": {
+          "stringValue": "player_1780905871457"
+        },
+        "emoji": {
+          "stringValue": "🗒️"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "bennkyou１時間"
+              },
+              {
+                "stringValue": "benkyou１時間"
+              }
+            ]
+          }
+        },
+        "correctedEmoji": {
+          "stringValue": "🗒️"
+        },
+        "playerName": {
+          "stringValue": "ひまり"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T05:38:12.095Z"
+        },
+        "displayRomaji": {
+          "stringValue": "benkyou１時間"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "bennkyou1zikan"
+              },
+              {
+                "stringValue": "benkyou1zikann"
+              }
+            ]
+          }
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:41:24.111Z"
+        }
+      },
+      "createTime": "2026-07-08T05:39:39.792697Z",
+      "updateTime": "2026-07-09T05:41:24.355123Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/j5Sg2iFa65pDo3ghJhlR",
+      "fields": {
+        "status": {
+          "stringValue": "resolved"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "difficulty": {
+          "stringValue": "alphabet_quiz"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "d"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "キーボードの大文字をさがしてね！"
+        },
+        "emoji": {
+          "stringValue": "🔠"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "displayRomaji": {
+          "stringValue": "d"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T06:27:13.898Z"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "reason": {
+          "stringValue": "other"
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:42:08.293Z"
+        }
+      },
+      "createTime": "2026-07-08T06:27:14.329950Z",
+      "updateTime": "2026-07-09T05:42:08.532442Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/k4ZGM4FS57JrM6ij013F",
+      "fields": {
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedKana": {
+          "stringValue": "なかよくはんぶんこ"
+        },
+        "context": {
+          "stringValue": "sub_event"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "なかよくはんぶんこ"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "nakayokuhannbunnko"
+              },
+              {
+                "stringValue": "nakayokuhannbunko"
+              },
+              {
+                "stringValue": "nakayokuhanbunnko"
+              },
+              {
+                "stringValue": "nakayokuhanbunko"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "なかよくはんぶんこ"
+        },
+        "playerId": {
+          "stringValue": "player_1780905871457"
+        },
+        "eventTitle": {
+          "stringValue": "ケンカしている きょうだい"
+        },
+        "eventId": {
+          "stringValue": "quarrel"
+        },
+        "displayRomaji": {
+          "stringValue": "nakayokuhanbunko"
+        },
+        "playerName": {
+          "stringValue": "ひまり"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-22T08:26:14.035Z"
+        },
+        "correctedEmoji": {
+          "stringValue": ""
+        },
+        "kanaDisplay": {
+          "stringValue": "{なか|仲}{よ|良}く{はんぶん|半分}こ"
+        },
+        "reason": {
+          "stringValue": "cannot_type"
+        },
+        "adminNote": {
+          "stringValue": "原因不明"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-06-24T03:06:36.141Z"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "nakayokuhannbunnko"
+              },
+              {
+                "stringValue": "nakayokuhannbunko"
+              },
+              {
+                "stringValue": "nakayokuhanbunnko"
+              },
+              {
+                "stringValue": "nakayokuhanbunko"
+              }
+            ]
+          }
+        },
+        "rallyIndex": {
+          "integerValue": "1"
+        }
+      },
+      "createTime": "2026-06-25T05:56:49.046523Z",
+      "updateTime": "2026-06-25T05:56:49.046523Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/lWK7sUisYbnmnGAasryr",
+      "fields": {
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:44:44.848Z"
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "reason": {
+          "stringValue": "not_suitable"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T07:34:59.744Z"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        }
+      },
+      "createTime": "2026-07-03T07:34:59.979924Z",
+      "updateTime": "2026-07-09T05:44:45.089481Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/ldCCDrgoMHHATqy1Zpcg",
+      "fields": {
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "annzenndane"
+              },
+              {
+                "stringValue": "annzendane"
+              },
+              {
+                "stringValue": "anzenndane"
+              },
+              {
+                "stringValue": "anzendane"
+              }
+            ]
+          }
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-01T02:24:00.353Z"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "correctedEmoji": {
+          "stringValue": "🛡️"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "displayRomaji": {
+          "stringValue": "anzendane"
+        },
+        "createdAt": {
+          "stringValue": "2026-06-26T07:47:17.914Z"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "🛡️"
+        },
+        "kana": {
+          "stringValue": "あんぜんだね"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "annzenndane"
+              },
+              {
+                "stringValue": "annzendane"
+              },
+              {
+                "stringValue": "anzenndane"
+              },
+              {
+                "stringValue": "anzendane"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "あんぜんだね"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "あんぜんだね"
+        },
+        "status": {
+          "stringValue": "resolved"
+        }
+      },
+      "createTime": "2026-06-30T05:11:25.028068Z",
+      "updateTime": "2026-07-01T02:24:00.519727Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/liYNoAXyGwYjHqDqORKt",
+      "fields": {
+        "createdAt": {
+          "stringValue": "2026-06-26T07:45:14.592Z"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-01T02:24:04.514Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        }
+      },
+      "createTime": "2026-06-30T05:11:25.243803Z",
+      "updateTime": "2026-07-01T02:24:04.674307Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/qK7mh6qM4BwkB9TtgQqe",
+      "fields": {
+        "status": {
+          "stringValue": "resolved"
+        },
+        "correctedKana": {
+          "stringValue": "やさしいことばにしよう"
+        },
+        "context": {
+          "stringValue": "sub_event"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "優しい言葉にしよう"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yasasiikotobanisiyou"
+              },
+              {
+                "stringValue": "yasasiikotobanishiyou"
+              },
+              {
+                "stringValue": "yasashiikotobanisiyou"
+              },
+              {
+                "stringValue": "yasashiikotobanishiyou"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "やさしいことばにしよう"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "eventTitle": {
+          "stringValue": "ベンチで ないている おんなのこ"
+        },
+        "eventId": {
+          "stringValue": "crying_girl"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "displayRomaji": {
+          "stringValue": "yasasiikotobanisiyou"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T06:07:47.662Z"
+        },
+        "correctedEmoji": {
+          "stringValue": ""
+        },
+        "kanaDisplay": {
+          "stringValue": "{やさ|優}しい{ことば|言葉}にしよう"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:41:51.700Z"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yasasiikotobanisiyou"
+              },
+              {
+                "stringValue": "yasasiikotobanishiyou"
+              },
+              {
+                "stringValue": "yasashiikotobanisiyou"
+              },
+              {
+                "stringValue": "yasashiikotobanishiyou"
+              }
+            ]
+          }
+        },
+        "rallyIndex": {
+          "integerValue": "1"
+        }
+      },
+      "createTime": "2026-07-08T06:07:48.082458Z",
+      "updateTime": "2026-07-09T05:41:51.938809Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/tpXZRiadFkkuhLlmnfqJ",
+      "fields": {
+        "createdAt": {
+          "stringValue": "2026-07-06T05:45:12.686Z"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku１nensei"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "wordIndex": {
+          "integerValue": "3"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:43:34.948Z"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku１nennsei"
+              },
+              {
+                "stringValue": "syougaku１nensei"
+              },
+              {
+                "stringValue": "shougaku１nennsei"
+              },
+              {
+                "stringValue": "shougaku１nensei"
+              }
+            ]
+          }
+        },
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        }
+      },
+      "createTime": "2026-07-06T05:46:35.871440Z",
+      "updateTime": "2026-07-09T05:43:35.193940Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/uwRbfttrxK3nKFQSB7CF",
+      "fields": {
+        "kana": {
+          "stringValue": "しょうがく１ねんせい"
+        },
+        "playerId": {
+          "stringValue": "player_1780036345497"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "syougaku1nennsei"
+              },
+              {
+                "stringValue": "syougaku1nensei"
+              },
+              {
+                "stringValue": "shougaku1nennsei"
+              },
+              {
+                "stringValue": "shougaku1nensei"
+              }
+            ]
+          }
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:43:33.014Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "wordIndex": {
+          "integerValue": "1"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "displayRomaji": {
+          "stringValue": "syougaku1nensei"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-06T06:00:43.678Z"
+        },
+        "playerName": {
+          "stringValue": "にわはると"
+        }
+      },
+      "createTime": "2026-07-06T06:02:06.884402Z",
+      "updateTime": "2026-07-09T05:43:33.255453Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/xXzY5T3Tr6jxKMcT2m93",
+      "fields": {
+        "status": {
+          "stringValue": "resolved"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "よい一日を"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "よい一日を"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi一日wo"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "playerId": {
+          "stringValue": "player_1780905871457"
+        },
+        "emoji": {
+          "stringValue": "🌅"
+        },
+        "kana": {
+          "stringValue": "よい一日を"
+        },
+        "displayRomaji": {
+          "stringValue": "yoi一日wo"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T05:36:25.416Z"
+        },
+        "playerName": {
+          "stringValue": "ひまり"
+        },
+        "correctedEmoji": {
+          "stringValue": "🌅"
+        },
+        "reason": {
+          "stringValue": "wrong_romaji"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "wordIndex": {
+          "integerValue": "0"
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:42:23.527Z"
+        },
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "yoi1nitiwo"
+              }
+            ]
+          }
+        }
+      },
+      "createTime": "2026-07-08T05:37:53.128468Z",
+      "updateTime": "2026-07-09T05:42:23.759145Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/ywSI7PX8mafbXSI6Xl6Y",
+      "fields": {
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-03T08:15:53.411Z"
+        },
+        "displayRomaji": {
+          "stringValue": "tyuugakuseihasugoi!"
+        },
+        "wordIndex": {
+          "integerValue": "2"
+        },
+        "reason": {
+          "stringValue": "not_suitable"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "archivedAt": {
+          "stringValue": "2026-07-09T05:44:02.848Z"
+        },
+        "status": {
+          "stringValue": "archived"
+        },
+        "kana": {
+          "stringValue": "中学生はすごい！"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "emoji": {
+          "stringValue": "✨"
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "tyuugakuseihasugoi!"
+              }
+            ]
+          }
+        }
+      },
+      "createTime": "2026-07-03T08:15:53.744977Z",
+      "updateTime": "2026-07-09T05:44:03.078680Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/typing_reports/zAzaZZq9QLKw8OntGDNz",
+      "fields": {
+        "correctedRomaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "kaminarida!"
+              }
+            ]
+          }
+        },
+        "resolvedAt": {
+          "stringValue": "2026-07-09T05:40:29.493Z"
+        },
+        "wordIndex": {
+          "integerValue": "4"
+        },
+        "reason": {
+          "stringValue": "not_suitable"
+        },
+        "adminNote": {
+          "stringValue": ""
+        },
+        "correctedEmoji": {
+          "stringValue": "⚡️"
+        },
+        "displayRomaji": {
+          "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+        },
+        "createdAt": {
+          "stringValue": "2026-07-08T05:40:51.743Z"
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "emoji": {
+          "stringValue": "⚡️"
+        },
+        "playerId": {
+          "stringValue": "player_1781684814664"
+        },
+        "kana": {
+          "stringValue": "らいとにんぐさんだーぼるけーのでりしゃすでらっくすぎがんてぃっく、、、"
+        },
+        "romaji": {
+          "arrayValue": {
+            "values": [
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoninngusanda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusannda-boruke-noderishasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderisyasuderakkusugiganthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugigannthikku"
+              },
+              {
+                "stringValue": "raitoningusanda-boruke-noderishasuderakkusugiganthikku"
+              }
+            ]
+          }
+        },
+        "difficulty": {
+          "stringValue": "very_hard"
+        },
+        "correctedKanaDisplay": {
+          "stringValue": "かみなりだ！"
+        },
+        "context": {
+          "stringValue": "main"
+        },
+        "correctedKana": {
+          "stringValue": "雷だ！"
+        },
+        "status": {
+          "stringValue": "resolved"
+        }
+      },
+      "createTime": "2026-07-08T05:40:51.644978Z",
+      "updateTime": "2026-07-09T05:40:29.741002Z"
+    }
+  ]
+}

@@ -628,18 +628,24 @@ export default function App() {
       )}
       
       {playTimerRemainingMs === 0 && appScreen !== 'title' && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
-          <div className="bg-white/95 px-8 py-6 rounded-3xl shadow-2xl border-4 border-rose-400 animate-pop-out flex flex-col items-center gap-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-auto">
+          <div className="bg-white px-8 py-8 rounded-3xl shadow-2xl border-4 border-rose-400 animate-pop-out flex flex-col items-center gap-6">
             <span className="text-6xl animate-bounce">⏰</span>
-            <div className="relative">
-              <div className="bg-rose-100 text-rose-600 font-black px-6 py-4 rounded-2xl text-3xl sm:text-4xl shadow-inner border-2 border-rose-200 whitespace-nowrap">
+            <div className="text-center">
+              <div className="text-rose-600 font-black text-3xl sm:text-4xl mb-2">
                 時間になったよ！
               </div>
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-rose-100 border-r-2 border-b-2 border-rose-200 rotate-45"></div>
+              <p className="text-gray-600 font-bold text-lg">
+                今日のプレイ時間は おしまいです。
+              </p>
             </div>
-            <p className="mt-4 text-rose-500 font-black text-lg bg-white/80 px-4 py-2 rounded-full border border-rose-200">
-              👈 ひだりのメニューから セーブして おわってね！
-            </p>
+            <button
+              type="button"
+              onClick={() => handleSaveAndTitle()}
+              className="mt-2 bg-gradient-to-b from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-black text-xl px-8 py-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all border-b-4 border-rose-600"
+            >
+              セーブして おわる
+            </button>
           </div>
         </div>
       )}

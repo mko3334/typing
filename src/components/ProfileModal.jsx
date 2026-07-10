@@ -152,7 +152,8 @@ export default function ProfileModal({
               {ownedItems.map((item) => {
                 const isSelected = currentIcon === item.name;
                 const isLegend = item.rarity === '✨レジェンド✨';
-                const customStyle = !isLegend ? { borderColor: item.color } : {};
+                const isMiracle = item.rarity === '💎ミラクル💎';
+                const customStyle = (!isLegend && !isMiracle) ? { borderColor: item.color } : {};
                 return (
                   <button
                     key={item.name}
@@ -162,7 +163,7 @@ export default function ProfileModal({
                       isSelected
                         ? 'outline outline-4 outline-yellow-400 bg-yellow-50 scale-105 z-10'
                         : 'hover:bg-yellow-50/30 active:scale-95'
-                    } ${isLegend ? 'legend-card border-none' : ''}`}
+                    } ${isMiracle ? 'miracle-card border-none' : isLegend ? 'legend-card border-none' : ''}`}
                     style={customStyle}
                     title={item.name}
                   >

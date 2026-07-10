@@ -15,7 +15,8 @@ export const RARITY_POWER_RATES = {
   'レア': { main: 15, sub: 5 },
   '✨激レア✨': { main: 20, sub: 7 },
   '🌟超激レア🌟': { main: 30, sub: 10 },
-  '✨レジェンド✨': { main: 50, sub: 15 }
+  '✨レジェンド✨': { main: 50, sub: 15 },
+  '💎ミラクル💎': { main: 80, sub: 25 }
 };
 
 export const getItemPowerPoints = (itemName, isMain, level = 0) => {
@@ -37,6 +38,16 @@ export const formatPowerPoint = (key, points) => {
   if (key === 'guard') return `+${Math.round(points * (GEAR_POWER_RATES.guard / 10))}%`;
   if (key === 'special') return `+${Math.round(points * (GEAR_POWER_RATES.special / 10) * 100)}%`;
   return `+${points.toFixed(1)}`;
+};
+
+export const getGearTooltip = (itemName, level = 1) => {
+  const item = GACHA_ITEMS.find(i => i.name === itemName);
+  if (!item) return itemName;
+  const powerKey = getPowerType(itemName);
+  const powerInfo = GEAR_POWER_LABELS[powerKey] || { label: '謎のパワー' };
+  const mainPoints = getItemPowerPoints(itemName, true, level);
+  const subPoints = getItemPowerPoints(itemName, false, level);
+  return `${itemName} (Lv.${level})\n【${powerInfo.label}】\nメイン: ${formatPowerPoint(powerKey, mainPoints)}\nサブ: ${formatPowerPoint(powerKey, subPoints)}`;
 };
 
 // アイテムの読みがな（タイピング用）
@@ -101,7 +112,14 @@ export const ITEM_READINGS = {
   '不死鳥の羽': 'ふしちょうのはね',
   'ダーククリスタル': 'だーくくりすたる',
   'コスモスペースシップ': 'こすもすぺーすしっぷ',
-  'まほうのグリモア': 'まほうのぐりもあ'
+  'まほうのグリモア': 'まほうのぐりもあ',
+  'クリスタルトライデント': 'くりすたるとらいでんと',
+  'クリスタルティアラ': 'くりすたるてぃあら',
+  'ドラゴンのたまご': 'どらごんのたまご',
+  'ぎんがの舟': 'ぎんがのふね',
+  'ゴールドトロフィー': 'ごーるどとろふぃー',
+  'ギャラクシープラネット': 'ぎゃらくしーぷらねっと',
+  'ミラクルオーブ': 'みらくるおーぶ'
 };
 
 // アイテム名 -> 効果キー のマッピング
@@ -178,6 +196,11 @@ export const ITEM_GEAR_POWERS = {
   'ダーククリスタル': 'special',
   'でんきゅう': 'special',
   'まほうのグリモア': 'special',
+  'クリスタルトライデント': 'score',
+  'クリスタルティアラ': 'combo',
+  'ドラゴンのたまご': 'special',
+  'ギャラクシープラネット': 'special',
+  'ミラクルオーブ': 'special'
 };
 
 // 安全のため、マップにないアイテムはデフォルトで score にする

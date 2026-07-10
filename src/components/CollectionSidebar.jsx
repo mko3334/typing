@@ -31,14 +31,17 @@ export default function CollectionSidebar({ player }) {
           obtainedItems.map((item) => {
             const count = collection[item.name] || 0;
             const isLegend = item.rarity === '✨レジェンド✨';
+            const isMiracle = item.rarity === '💎ミラクル💎';
             return (
               <div
                 key={item.name}
                 className={`relative p-2 rounded-xl flex flex-col items-center bg-white transition-all ${
-                  isLegend ? 'legend-card' : ''
+                  isMiracle ? 'miracle-card' : isLegend ? 'legend-card' : ''
                 }`}
                 style={
-                  isLegend
+                  isMiracle
+                    ? { boxShadow: '0 4px 20px #06b6d480' }
+                    : isLegend
                     ? { boxShadow: '0 4px 20px #a855f780' }
                     : {
                         border: `3px solid ${item.color}`,

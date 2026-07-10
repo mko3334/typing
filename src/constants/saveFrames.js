@@ -60,6 +60,18 @@ export const SAVE_FRAMES = [
     emoji: '🏆',
     pool: 'test',
   },
+  {
+    id: 'cyber',
+    name: 'サイバーフレーム',
+    emoji: '💻',
+    pool: 'test',
+  },
+  {
+    id: 'rainbow',
+    name: 'レインボーフレーム',
+    emoji: '🌈',
+    pool: 'test',
+  },
 ];
 
 export const FRAME_GACHA_LABELS = {

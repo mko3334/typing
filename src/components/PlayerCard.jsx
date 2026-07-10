@@ -2,6 +2,7 @@ import React from 'react';
 import { Tag } from 'lucide-react';
 import { TITLES, GACHA_ITEMS, getRarityWeight, resolveBackground } from '../constants';
 import { getSaveFrame } from '../constants/saveFrames';
+import { getGearTooltip } from '../utils/gearPower';
 import SaveFrameArt from './SaveFrameArt';
 import { optimizedAssetUrl } from '../utils/assetImages';
 
@@ -37,8 +38,9 @@ export default function PlayerCard({
       ? { boxShadow: '0 0 10px #a855f7, inset 0 0 6px #a855f7' }
       : { borderColor: iconItem.color, boxShadow: `0 0 6px ${iconItem.color}50` }
     : {};
-  const legendClass =
-    iconItem?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : 'border-indigo-200';
+  const iconBorderClass = iconItem?.rarity === '💎ミラクル💎' 
+    ? 'miracle-card border-none'
+    : iconItem?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : 'border-indigo-200';
 
   const obtainedItems = GACHA_ITEMS.filter(
     (item) => player.collection && player.collection[item.name] > 0
@@ -69,7 +71,7 @@ export default function PlayerCard({
 
       <div className="relative z-10 flex items-center gap-2.5 min-w-0">
         <div
-          className={`${compact ? 'w-9 h-9 text-lg border-2' : 'w-12 h-12 text-2xl border-[3px]'} bg-white rounded-full flex items-center justify-center shadow-md shrink-0 ${legendClass}`}
+          className={`${compact ? 'w-9 h-9 text-lg border-2' : 'w-12 h-12 text-2xl border-[3px]'} bg-white rounded-full flex items-center justify-center shadow-md shrink-0 ${iconBorderClass}`}
           style={borderStyle}
         >
           {iconItem ? iconItem.emoji : titleItem?.emoji || '👦'}
@@ -146,14 +148,20 @@ export default function PlayerCard({
           {player.typingShowGears?.main ? (
             player.typingShowGears.main.map((gearName, idx) => {
               const item = gearName ? GACHA_ITEMS.find(i => i.name === gearName) : null;
+              const level = gearName && player?.itemLevels?.[gearName] ? player.itemLevels[gearName] : 1;
               return (
                 <div
                   key={`main-${idx}`}
-                  className={`w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-xl bg-white/95 flex items-center justify-center border-4 shadow-xl relative overflow-hidden transition-transform hover:scale-110 pointer-events-auto ${item?.foil ? 'foil-icon-chip' : ''}`}
-                  style={item ? { borderColor: item.color } : { borderColor: '#cbd5e1', borderStyle: 'dashed' }}
-                  title={item?.name || '空き枠'}
+                  className={`w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-xl bg-white/95 flex items-center justify-center border-4 shadow-xl relative transition-transform hover:scale-110 pointer-events-auto ${item?.rarity === '💎ミラクル💎' ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : ''} ${(!item || (item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨')) && item?.foil ? 'foil-icon-chip' : ''}`}
+                  style={item ? (item.rarity === '💎ミラクル💎' || item.rarity === '✨レジェンド✨' ? {} : { borderColor: item.color }) : { borderColor: '#cbd5e1', borderStyle: 'dashed' }}
+                  title={item ? getGearTooltip(item.name, level) : '空き枠'}
                 >
                   <span className="relative z-[3] text-3xl sm:text-5xl leading-none drop-shadow-sm">{item ? item.emoji : ''}</span>
+                  {item && (
+                    <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[9px] sm:text-[10px] leading-none font-black px-1 py-0.5 rounded-tl-lg z-10 backdrop-blur-sm shadow-sm border-t border-l border-white/20">
+                      Lv.{level}
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -242,14 +250,25 @@ export default function PlayerCard({
   }
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => {
         if (bulkSelectMode) {
           onBulkToggle?.();
           return;
         }
         onClick?.();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (bulkSelectMode) {
+            onBulkToggle?.();
+            return;
+          }
+          onClick?.();
+        }
       }}
       className={`${cardClassName} transition-all ${
         isLockedElsewhere
@@ -258,6 +277,6 @@ export default function PlayerCard({
       } ${bulkSelected ? 'ring-2 ring-indigo-400 border-indigo-300' : ''}`}
     >
       {cardContent}
-    </button>
+    </div>
   );
 }

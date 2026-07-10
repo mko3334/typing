@@ -16,6 +16,7 @@ import {
   pullRewardItems,
   pullSe,
 } from '../utils/gacha';
+import { getGearTooltip } from '../utils/gearPower';
 import { applySaveFrameUnlock, pullSaveFrame } from '../utils/saveFrameGacha';
 import PlayerCard from './PlayerCard';
 import GameSidebar from './GameSidebar';
@@ -69,6 +70,17 @@ function GachaHotThunder({ tier }) {
   if (!tier) return null;
   const styles = getHotTierStyles(tier);
 
+  if (tier === 'cyan') {
+    return (
+      <>
+        <div className={`fixed inset-0 pointer-events-none z-50 ${styles.flash} mix-blend-screen`} />
+        <div className={`fixed inset-0 flex items-center justify-center pointer-events-none z-40 ${styles.strike}`}>
+          <div className="text-[150px] drop-shadow-[0_0_50px_#06b6d4] opacity-100">🌀</div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div className={`fixed inset-0 pointer-events-none z-50 ${styles.flash} mix-blend-screen`} />
@@ -96,14 +108,18 @@ function GachaHotBadge({ tier }) {
 function ResultItemCard({ item, compact = false }) {
   if (item.emoji) {
     const isLegend = item.rarity === '✨レジェンド✨';
+    const isMiracle = item.rarity === '💎ミラクル💎';
     return (
       <div
-        className={`rounded-xl flex flex-col items-center justify-center bg-white min-h-0 ${compact ? 'p-1.5' : 'p-4'} ${isLegend ? 'legend-card' : ''}`}
+        className={`rounded-xl flex flex-col items-center justify-center bg-white min-h-0 ${compact ? 'p-1.5' : 'p-4'} ${isMiracle ? 'miracle-card' : isLegend ? 'legend-card' : ''}`}
         style={
-          isLegend
+          isMiracle
+            ? { boxShadow: '0 2px 12px #06b6d480' }
+            : isLegend
             ? { boxShadow: '0 2px 12px #a855f780' }
             : { border: `2px solid ${item.color}`, boxShadow: `0 2px 8px ${item.color}40` }
         }
+        title={getGearTooltip(item.name)}
       >
         <div className={compact ? 'text-2xl sm:text-3xl mb-0.5 leading-none' : 'text-5xl mb-2'}>{item.emoji}</div>
         <div

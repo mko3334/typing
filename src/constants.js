@@ -6,9 +6,12 @@ export const BACKGROUNDS = [
   { id: 'forest', name: '魔法の森 🌲', url: '/forest_bg.png' },
   { id: 'candy', name: 'お菓子の国 🍬', url: '/candy_bg.png' },
   { id: 'underwater', name: 'うみのなか 🐠', url: '/underwater_bg.png' },
-  { id: 'ocean', name: 'うみのなか 🐠', url: '/underwater_bg.png' },
+  { id: 'summer_sea', name: 'なつのうみ 🏖️', url: '/summer_sea_bg.jpg' },
   { id: 'castle', name: 'てんくうのおしろ 🏰', url: '/castle_bg.png' },
   { id: 'dino', name: 'きょうりゅうパーク 🌋', url: '/dino_bg.png' },
+  { id: 'desert', name: 'さばくのオアシス 🐪', url: '/desert_bg.jpg' },
+  { id: 'snow', name: 'ゆきぐにのぼうけん ⛄', url: '/snow_bg.jpg' },
+  { id: 'show_stage', name: 'タイピングショーのぶたい 🎭', url: '/show_stage_bg.jpg', isSpecial: true },
 ];
 
 export const TITLES = [
@@ -35,6 +38,9 @@ export const TITLES = [
   { id: 'normal_master', name: '⭐ ノーマルマスター', desc: 'ノーマルの ことばを すべてあつめる', emoji: '⭐', color: 'text-lime-600', bg: 'bg-lime-100' },
   { id: 'hard_master', name: '🔥 ハードマスター', desc: 'ハードの ことばを すべてあつめる', emoji: '🔥', color: 'text-orange-600', bg: 'bg-orange-100' },
   { id: 'very_hard_master', name: '👿 ベリーハードマスター', desc: 'ベリーハードの ことばを すべてあつめる', emoji: '👿', color: 'text-purple-600', bg: 'bg-purple-100' },
+  { id: 'show_debut', name: '🎪 ショーデビュー', desc: 'タイピングショーに はじめて でる', emoji: '🎪', color: 'text-rose-600', bg: 'bg-rose-100' },
+  { id: 'show_star', name: '🌟 ショースター', desc: 'タイピングショーで 10かい プレイする', emoji: '🌟', color: 'text-amber-500', bg: 'bg-amber-100' },
+  { id: 'show_legend', name: '👑 ショーレジェンド', desc: 'タイピングショーで スコア10000を こえる', emoji: '👑', color: 'text-yellow-600', bg: 'bg-yellow-100' },
 ];
 
 export const RARITY_SORT_RANK = {
@@ -45,9 +51,11 @@ export const RARITY_SORT_RANK = {
   '🔥激レア🔥': 4,
   '🌟超激レア🌟': 5,
   '✨レジェンド✨': 6,
+  '💎ミラクル💎': 7,
 };
 
 export const RARITY_ZUKAN_SECTIONS = [
+  { rarity: '💎ミラクル💎', label: '💎 ミラクル 💎' },
   { rarity: '✨レジェンド✨', label: '✨ レジェンド ✨' },
   { rarity: '🌟超激レア🌟', label: '🌟 超激レア 🌟' },
   { rarity: '✨激レア✨', label: '✨ 激レア ✨' },
@@ -135,6 +143,11 @@ export const GACHA_ITEMS = [
   { name: 'まほうのグリモア', emoji: '📖', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
   { name: 'ゴールドトロフィー', emoji: '🏆', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
   { name: 'ほのおのとり', emoji: '🔥', rarity: '✨レジェンド✨', color: '#a855f7', foil: true },
+
+  // 💎ミラクル💎 (最上位レア)
+  { name: 'クリスタルトライデント', emoji: '🔱', rarity: '💎ミラクル💎', color: '#06b6d4', foil: true },
+  { name: 'ギャラクシープラネット', emoji: '🪐', rarity: '💎ミラクル💎', color: '#06b6d4', foil: true },
+  { name: 'ミラクルオーブ', emoji: '🧿', rarity: '💎ミラクル💎', color: '#06b6d4', foil: true },
 ];
 
 export const getRarityWeight = (rarity) => RARITY_SORT_RANK[rarity] ?? 1;

@@ -1,10 +1,12 @@
 import React from 'react';
 import { Book, X } from 'lucide-react';
 import { GACHA_ITEMS, RARITY_ZUKAN_SECTIONS, WORDS } from '../constants';
+import { getGearTooltip } from '../utils/gearPower';
 
 function ZukanCard({ item, count, isNew }) {
   const isObtained = count > 0;
   const isLegend = item.rarity === '✨レジェンド✨';
+  const isMiracle = item.rarity === '💎ミラクル💎';
 
   if (!isObtained) {
     return (
@@ -21,13 +23,16 @@ function ZukanCard({ item, count, isNew }) {
   return (
     <div
       className={`relative p-2 sm:p-3 rounded-xl flex flex-col items-center justify-center bg-white shadow-md hover:scale-[1.03] transition-transform min-h-[100px] ${
-        isLegend ? 'legend-card' : ''
+        isMiracle ? 'miracle-card' : isLegend ? 'legend-card' : ''
       }`}
       style={
-        isLegend
+        isMiracle
+          ? { boxShadow: '0 2px 12px #06b6d480' }
+          : isLegend
           ? { boxShadow: '0 2px 12px #a855f780' }
           : { border: `2px solid ${item.color}`, boxShadow: `0 2px 8px ${item.color}40` }
       }
+      title={getGearTooltip(item.name)}
     >
       <div className="text-3xl sm:text-4xl mb-1 relative leading-none">
         {item.emoji}

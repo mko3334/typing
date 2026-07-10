@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { getOfficialShowRankings } from '../firebase';
+import { listenOfficialShowRankings } from '../firebase';
 import { GACHA_ITEMS } from '../constants';
 import PlayerCard from './PlayerCard';
 import GearEquipModal from './GearEquipModal';
@@ -10,17 +10,17 @@ export default function CustomAreaModal({ isOpen, onClose, player, playDecideSou
   const [isGearModalOpen, setIsGearModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const loadOfficialRankings = async () => {
+  useEffect(() => {
+    if (!isOpen) return undefined;
     setLoading(true);
-    try {
-      let rankings = await getOfficialShowRankings();
-      
+    const unsubscribe = listenOfficialShowRankings((rankings) => {
+      let currentRankings = [...rankings];
       if (player?.officialShowHighScore > 0) {
         const myScore = player.officialShowHighScore;
-        const myIndex = rankings.findIndex(r => r.playerId === player.id && r.score >= myScore);
+        const myIndex = currentRankings.findIndex(r => r.playerId === player.id && r.score >= myScore);
         if (myIndex === -1) {
-          rankings = rankings.filter(r => r.playerId !== player.id);
-          rankings.push({
+          currentRankings = currentRankings.filter(r => r.playerId !== player.id);
+          currentRankings.push({
             id: `local_high_${Date.now()}`,
             playerId: player.id,
             playerName: player.name,
@@ -31,25 +31,14 @@ export default function CustomAreaModal({ isOpen, onClose, player, playDecideSou
             currentFrame: player.currentFrame || null,
             typingShowGears: player.typingShowGears || null,
           });
-          rankings = rankings.sort((a, b) => b.score - a.score);
+          currentRankings = currentRankings.sort((a, b) => b.score - a.score);
         }
       }
-      
-      setOfficialRankings(rankings.slice(0, 5));
-    } catch (e) {
-      console.error(e);
-    } finally {
+      setOfficialRankings(currentRankings.slice(0, 5));
       setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-    if (isOpen) {
-      loadOfficialRankings();
-    }
-    return () => { mounted = false; };
-  }, [isOpen]);
+    });
+    return () => unsubscribe();
+  }, [isOpen, player]);
 
   if (!isOpen) return null;
 

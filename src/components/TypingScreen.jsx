@@ -9,9 +9,10 @@ import {
 } from '../constants';
 import { HiraganaBounceValue } from './hiragana/HiraganaVisuals';
 import { pickGameWords, pickReplacementWord, pickOfficialShowWords } from '../utils/typingWords';
-import { submitTypingReport, saveOfficialShowScore, getOfficialShowRankings, getOpenReportedKeywords } from '../firebase';
+import { submitTypingReport, saveOfficialShowScore, listenOfficialShowRankings, getOpenReportedKeywords } from '../firebase';
 import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
 import { computeAchievements } from '../utils/gacha';
+import { getGearTooltip } from '../utils/gearPower';
 import { appendSubEventsAfterTypingClear } from '../utils/subEvents';
 import { generateAllRomaji } from '../constants';
 import GameSidebar from './GameSidebar';
@@ -448,35 +449,51 @@ export default function TypingScreen({
         setOfficialShowUploading(true);
         try {
           await saveOfficialShowScore(player, finalScore);
+          
+          if (player && onPlayerUpdateRef.current) {
+            const currentBgs = player.backgrounds || ['default'];
+            if (!currentBgs.includes('show_stage')) {
+              onPlayerUpdateRef.current({
+                backgrounds: [...currentBgs, 'show_stage']
+              });
+              setReportToast('🎁「タイピングショーのぶたい」の背景をゲットしたよ！プロフィールからきがえてみてね！');
+            }
+          }
         } catch (e) {
           console.error("Score save failed", e);
         }
         
-        let rankings = await getOfficialShowRankings();
-        const myIndex = rankings.findIndex(r => r.playerId === (player?.id || 'guest') && r.score === finalScore);
-        if (myIndex === -1) {
-          rankings.push({
-            id: `local_run_${Date.now()}`,
-            playerId: player?.id || 'guest',
-            playerName: player?.name || 'ゲスト',
-            score: finalScore,
-            createdAt: new Date().toISOString(),
-            currentTitle: player?.currentTitle || 'rookie',
-            currentBackground: player?.currentBackground || 'default',
-            currentIcon: player?.currentIcon || null,
-            currentFrame: player?.currentFrame || null,
-            typingShowGears: player?.typingShowGears || null,
-          });
-          rankings = rankings.sort((a, b) => b.score - a.score);
+        const unsubscribe = listenOfficialShowRankings(rankings => {
+          const currentRankings = [...rankings];
+          const myIndex = currentRankings.findIndex(r => r.playerId === (player?.id || 'guest') && r.score >= finalScore);
+          if (myIndex === -1) {
+            currentRankings.push({
+              id: `local_run_${Date.now()}`,
+              playerId: player?.id || 'guest',
+              playerName: player?.name || 'ゲスト',
+              score: finalScore,
+              currentTitle: player?.currentTitle || 'rookie',
+              currentBackground: player?.currentBackground || 'default',
+              currentIcon: player?.currentIcon || null,
+              currentFrame: player?.currentFrame || null,
+              typingShowGears: player?.typingShowGears || null,
+            });
+            currentRankings.sort((a, b) => b.score - a.score);
+          }
+          setLatestRankings(currentRankings.slice(0, 5));
+        });
+        if (player && onPlayerUpdateRef.current) {
+          const currentCount = player.officialShowPlayedCount || 0;
+          const updates = { officialShowPlayedCount: currentCount + 1 };
+          if (finalScore > (player.officialShowHighScore || 0)) {
+            updates.officialShowHighScore = finalScore;
+          }
+          onPlayerUpdateRef.current(updates);
         }
         
-        if (finalScore > (player?.officialShowHighScore || 0)) {
-          onPlayerUpdate?.({ officialShowHighScore: finalScore });
-        }
-        
-        setLatestRankings(rankings.slice(0, 5));
         setOfficialShowUploading(false);
         playSE?.('clear');
+        return () => unsubscribe();
       })();
     }
   }, [isOfficialShow, timeLeft, isTimeUp, player, officialScore, playSE]);
@@ -896,8 +913,8 @@ export default function TypingScreen({
           onAnnouncements={onOpenAnnouncements}
           announcementUnread={announcementUnread}
         />
-        <main className="flex-1 flex flex-col items-center justify-center p-4">
-          <div className="bg-white/95 border-4 border-yellow-300 rounded-3xl p-8 sm:p-10 text-center max-w-md shadow-2xl animate-fade-in relative">
+        <main className="flex-1 flex flex-col items-center justify-start sm:justify-center p-2 sm:p-4 overflow-y-auto w-full">
+          <div className="bg-white/95 border-4 border-yellow-300 rounded-3xl p-4 sm:p-8 text-center max-w-lg w-full shadow-2xl animate-fade-in relative my-auto shrink-0">
             {officialShowUploading && (
               <div className="absolute inset-0 bg-white/80 rounded-3xl flex flex-col items-center justify-center z-10">
                 <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -947,9 +964,19 @@ export default function TypingScreen({
                                 <div className="flex gap-1 shrink-0 bg-amber-50/90 p-1.5 rounded-lg shadow-inner border border-amber-200">
                                   {r.typingShowGears.main?.map((gearName, idx) => {
                                     const item = gearName ? GACHA_ITEMS.find(i => i.name === gearName) : null;
+                                    const level = item && r?.itemLevels?.[gearName] ? r.itemLevels[gearName] : 1;
                                     return (
-                                      <div key={`main-${idx}`} className={`${i === 0 ? 'w-10 h-10' : 'w-7 h-7'} shrink-0 rounded-md bg-white flex items-center justify-center border shadow-sm ${item?.foil ? 'foil-icon-chip' : ''}`} style={item ? { borderColor: item.color } : { borderColor: '#e5e7eb', borderStyle: 'dashed' }} title={item?.name || '空き'}>
+                                      <div key={`main-${idx}`} className={`${i === 0 ? 'w-10 h-10' : 'w-7 h-7'} shrink-0 rounded-md bg-white flex items-center justify-center border shadow-sm ${item?.rarity === '💎ミラクル💎' ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : ''} ${(!item || (item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨')) && item?.foil ? 'foil-icon-chip' : ''}`} style={item ? (item.rarity === '💎ミラクル💎' || item.rarity === '✨レジェンド✨' ? {} : { borderColor: item.color }) : { borderColor: '#e5e7eb', borderStyle: 'dashed' }} title={item ? getGearTooltip(item.name, level) : '空き'}>
                                         <span className={`${i === 0 ? 'text-[26px]' : 'text-[18px]'}`}>{item ? item.emoji : ''}</span>
+                                      </div>
+                                    );
+                                  })}
+                                  {r.typingShowGears.sub?.map((gearName, idx) => {
+                                    const item = gearName ? GACHA_ITEMS.find(i => i.name === gearName) : null;
+                                    const level = item && r?.itemLevels?.[gearName] ? r.itemLevels[gearName] : 1;
+                                    return (
+                                      <div key={`sub-${idx}`} className={`${i === 0 ? 'w-8 h-8 mt-1' : 'w-5 h-5 mt-1'} shrink-0 rounded-md bg-white flex items-center justify-center border shadow-sm ${item?.rarity === '💎ミラクル💎' ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : ''} ${(!item || (item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨')) && item?.foil ? 'foil-icon-chip' : ''}`} style={item ? (item.rarity === '💎ミラクル💎' || item.rarity === '✨レジェンド✨' ? {} : { borderColor: item.color }) : { borderColor: '#e5e7eb', borderStyle: 'dashed' }} title={item ? getGearTooltip(item.name, level) : '空き'}>
+                                        <span className={`${i === 0 ? 'text-[20px]' : 'text-[14px]'}`}>{item ? item.emoji : ''}</span>
                                       </div>
                                     );
                                   })}

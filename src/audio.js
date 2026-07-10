@@ -33,7 +33,6 @@ export const BGM_LIST = [
   { id: 'shiney_seaside', name: 'Shiney seaside 🏖️', url: '/sounds/BGM/Shiney_seaside.mp3' },
   { id: 'kitten_march', name: 'こねこのマーチ 🐈', url: '/sounds/BGM/こねこのマーチ.mp3' },
   { id: 'lively_amusement', name: 'にぎやかアミューズメント 🎡', url: '/sounds/BGM/にぎやかアミューズメント.mp3' },
-  { id: 'shakeen2', name: 'シャキーン2 ⚡', url: '/sounds/BGM/シャキーン2.mp3' },
   { id: 'bicycle_bluesky', name: '自転車と青空 🚲', url: '/sounds/BGM/自転車と青空.mp3' },
 ];
 

@@ -199,8 +199,9 @@ export default function GearEquipModal({ isOpen, player, onClose, onPlayerUpdate
                         onClick={() => handleSlotClick('main', index)}
                         className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 transition-all flex flex-col items-center justify-center 
                           ${isSelectingThis ? 'border-amber-500 ring-4 ring-amber-200 scale-105 bg-white z-10 animate-pulse' : 'border-gray-200 hover:border-amber-300'}
-                          ${item ? 'bg-white shadow-md' : 'bg-gray-50 border-dashed hover:bg-amber-50'}`}
-                        style={item && !isSelectingThis ? { borderColor: item.color } : {}}
+                          ${item ? 'bg-white shadow-md' : 'bg-gray-50 border-dashed hover:bg-amber-50'}
+                          ${item?.rarity === '💎ミラクル💎' && !isSelectingThis ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' && !isSelectingThis ? 'legend-card border-none' : ''}`}
+                        style={item && !isSelectingThis && item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨' ? { borderColor: item.color } : {}}
                       >
                         {item ? (
                           <>

@@ -1,0 +1,2765 @@
+{
+  "documents": [
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/1M8D8Y",
+      "fields": {
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "ホーム"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "accountId": {
+          "stringValue": "1M8D8Y"
+        }
+      },
+      "createTime": "2026-06-25T05:56:51.603393Z",
+      "updateTime": "2026-06-25T05:56:51.603393Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/30Q5RK",
+      "fields": {
+        "accountId": {
+          "stringValue": "30Q5RK"
+        },
+        "playerName": {
+          "stringValue": "ねいびー"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:51.809758Z",
+      "updateTime": "2026-06-25T05:56:51.809758Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/3MXLXS",
+      "fields": {
+        "accountId": {
+          "stringValue": "3MXLXS"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "りょうすけ"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:52.034454Z",
+      "updateTime": "2026-06-25T05:56:52.034454Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/4HOJTG",
+      "fields": {
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "テスト１"
+        },
+        "accountId": {
+          "stringValue": "4HOJTG"
+        }
+      },
+      "createTime": "2026-06-25T05:56:52.241551Z",
+      "updateTime": "2026-06-25T05:56:52.241551Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/4N3QOX",
+      "fields": {
+        "accountId": {
+          "stringValue": "4N3QOX"
+        },
+        "playerName": {
+          "stringValue": "ひまり"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:52.458522Z",
+      "updateTime": "2026-06-25T05:56:52.458522Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/4WCOAZ",
+      "fields": {
+        "playerName": {
+          "stringValue": "たかはしかいと"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "accountId": {
+          "stringValue": "4WCOAZ"
+        }
+      },
+      "createTime": "2026-06-25T05:56:52.684506Z",
+      "updateTime": "2026-06-25T05:56:52.684506Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/7I7PX8",
+      "fields": {
+        "accountId": {
+          "stringValue": "7I7PX8"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "しずく"
+        }
+      },
+      "createTime": "2026-06-25T05:56:52.892991Z",
+      "updateTime": "2026-06-25T05:56:52.892991Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/A4DBDM",
+      "fields": {
+        "accountId": {
+          "stringValue": "A4DBDM"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "りん"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:53.113226Z",
+      "updateTime": "2026-06-25T05:56:53.113226Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/CJSKSY",
+      "fields": {
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "伊藤晴"
+        },
+        "accountId": {
+          "stringValue": "CJSKSY"
+        }
+      },
+      "createTime": "2026-06-25T05:56:53.336156Z",
+      "updateTime": "2026-06-25T05:56:53.336156Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/EJQASA",
+      "fields": {
+        "accountId": {
+          "stringValue": "EJQASA"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "playerName": {
+          "stringValue": "さくら"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "createTime": "2026-06-25T05:56:53.553483Z",
+      "updateTime": "2026-06-25T05:56:53.553483Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/IEWVSM",
+      "fields": {
+        "accountId": {
+          "stringValue": "IEWVSM"
+        },
+        "playerName": {
+          "stringValue": "ホーム下"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:53.759409Z",
+      "updateTime": "2026-06-25T05:56:53.759409Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/IEYEUR",
+      "fields": {
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "けいた"
+        },
+        "accountId": {
+          "stringValue": "IEYEUR"
+        }
+      },
+      "createTime": "2026-06-25T05:56:53.983838Z",
+      "updateTime": "2026-06-25T05:56:53.983838Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/QVNKGW",
+      "fields": {
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "ぴんく"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "accountId": {
+          "stringValue": "QVNKGW"
+        }
+      },
+      "createTime": "2026-06-25T05:56:54.184614Z",
+      "updateTime": "2026-06-25T05:56:54.184614Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/R1S93X",
+      "fields": {
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "れんと"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "accountId": {
+          "stringValue": "R1S93X"
+        }
+      },
+      "createTime": "2026-06-25T05:56:54.404741Z",
+      "updateTime": "2026-06-25T05:56:54.404741Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/RDATPB",
+      "fields": {
+        "accountId": {
+          "stringValue": "RDATPB"
+        },
+        "playerName": {
+          "stringValue": "石野田"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:54.623602Z",
+      "updateTime": "2026-06-25T05:56:54.623602Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/RIL9MX",
+      "fields": {
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "ねいびー"
+        },
+        "accountId": {
+          "stringValue": "RIL9MX"
+        }
+      },
+      "createTime": "2026-06-25T05:56:54.842680Z",
+      "updateTime": "2026-06-25T05:56:54.842680Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/SG3YGR",
+      "fields": {
+        "playerName": {
+          "stringValue": "ちな"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "accountId": {
+          "stringValue": "SG3YGR"
+        }
+      },
+      "createTime": "2026-06-25T05:56:55.052154Z",
+      "updateTime": "2026-06-25T05:56:55.052154Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/TLBTP1",
+      "fields": {
+        "playerName": {
+          "stringValue": "まえだはると"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "accountId": {
+          "stringValue": "TLBTP1"
+        }
+      },
+      "createTime": "2026-06-25T05:56:55.271747Z",
+      "updateTime": "2026-06-25T05:56:55.271747Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/TTWT64",
+      "fields": {
+        "accountId": {
+          "stringValue": "TTWT64"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "あやと"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:55.495081Z",
+      "updateTime": "2026-06-25T05:56:55.495081Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/TU35R6",
+      "fields": {
+        "playerName": {
+          "stringValue": "テスト"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "letterCase": {
+                            "stringValue": "lower"
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "accountId": {
+          "stringValue": "TU35R6"
+        }
+      },
+      "createTime": "2026-06-25T05:56:55.715166Z",
+      "updateTime": "2026-06-25T05:56:55.715166Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/UWIV7Y",
+      "fields": {
+        "accountId": {
+          "stringValue": "UWIV7Y"
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "playerName": {
+          "stringValue": "レッド"
+        }
+      },
+      "createTime": "2026-06-25T05:56:55.924900Z",
+      "updateTime": "2026-06-25T05:56:55.924900Z"
+    },
+    {
+      "name": "projects/treegames-ac5db/databases/(default)/documents/users/W9KPNZ",
+      "fields": {
+        "accountId": {
+          "stringValue": "W9KPNZ"
+        },
+        "playerName": {
+          "stringValue": "まつうらこうだい"
+        },
+        "games": {
+          "mapValue": {
+            "fields": {
+              "kidsTyping": {
+                "mapValue": {
+                  "fields": {
+                    "achievements": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "rookie"
+                          }
+                        ]
+                      }
+                    },
+                    "currentSe": {
+                      "stringValue": "default"
+                    },
+                    "gameMode": {
+                      "stringValue": "points"
+                    },
+                    "legendTickets": {
+                      "integerValue": "0"
+                    },
+                    "solvedSubEventIds": {
+                      "arrayValue": {}
+                    },
+                    "newItems": {
+                      "arrayValue": {}
+                    },
+                    "seTickets": {
+                      "integerValue": "0"
+                    },
+                    "collection": {
+                      "mapValue": {}
+                    },
+                    "currentTitle": {
+                      "stringValue": "rookie"
+                    },
+                    "currentBgm": {
+                      "stringValue": "default"
+                    },
+                    "hasSeenTutorial": {
+                      "booleanValue": false
+                    },
+                    "currentBackground": {
+                      "stringValue": "default"
+                    },
+                    "unlockedSes": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "bgmTickets": {
+                      "integerValue": "0"
+                    },
+                    "specialTickets": {
+                      "integerValue": "0"
+                    },
+                    "unlockedBgms": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "backgrounds": {
+                      "arrayValue": {
+                        "values": [
+                          {
+                            "stringValue": "default"
+                          }
+                        ]
+                      }
+                    },
+                    "currentIcon": {
+                      "nullValue": null
+                    },
+                    "assistSettings": {
+                      "mapValue": {
+                        "fields": {
+                          "showFingerGuide": {
+                            "booleanValue": true
+                          },
+                          "showRomajiHint": {
+                            "booleanValue": true
+                          },
+                          "keyboardHighlight": {
+                            "booleanValue": true
+                          },
+                          "letterCase": {
+                            "stringValue": "lower"
+                          }
+                        }
+                      }
+                    },
+                    "difficulty": {
+                      "stringValue": "easy"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "globalPoints": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-06-25T05:56:56.126957Z",
+      "updateTime": "2026-06-25T05:56:56.126957Z"
+    }
+  ]
+}

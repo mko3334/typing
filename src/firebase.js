@@ -397,9 +397,20 @@ export const sendGiftToCloudPlayer = async (playerId, giftData) => {
 export const saveOfficialShowScore = async (player, score) => {
   const createdAt = new Date().toISOString();
   try {
-    const docRef = doc(collection(db, 'official_show_rankings'));
+    const playerId = player?.id || 'guest';
+    const docRef = doc(db, 'official_show_rankings', playerId);
+    
+    // 現在のスコアを取得して、新しいスコアの方が高ければ更新する
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const currentScore = docSnap.data().score || 0;
+      if (score <= currentScore) {
+        return true; // 既存のスコアの方が高いので更新しない
+      }
+    }
+    
     await setDoc(docRef, {
-      playerId: player?.id || 'guest',
+      playerId,
       playerName: player?.name || 'ゲスト',
       score,
       createdAt,
@@ -426,11 +437,25 @@ export const getOfficialShowRankings = async () => {
   ];
 
   try {
-    const collRef = collection(db, 'official_show_rankings');
+    const collRef = collection(db, 'global_players');
     const snapshot = await getDocs(collRef);
     const rankings = [];
     snapshot.forEach(docSnap => {
-      rankings.push({ id: docSnap.id, ...docSnap.data() });
+      const data = docSnap.data();
+      if (data.officialShowHighScore > 0 && !data.isArchived) {
+        rankings.push({
+          id: docSnap.id,
+          playerId: docSnap.id,
+          playerName: data.name || 'ゲスト',
+          score: data.officialShowHighScore,
+          createdAt: data.lastActiveTime || new Date().toISOString(),
+          currentTitle: data.currentTitle || 'rookie',
+          currentBackground: data.currentBackground || 'default',
+          currentIcon: data.currentIcon || null,
+          currentFrame: data.currentFrame || null,
+          typingShowGears: data.typingShowGears || null,
+        });
+      }
     });
     
     rankings.push(...npcs);
@@ -438,6 +463,49 @@ export const getOfficialShowRankings = async () => {
   } catch (error) {
     console.error('Error getting official show rankings:', error);
     return npcs.sort((a, b) => b.score - a.score);
+  }
+};
+
+export const listenOfficialShowRankings = (callback) => {
+  const npcs = [
+    { id: 'npc_1', playerName: 'タイピングマスター', score: 3000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'very_hard_master', currentIcon: 'おうかん', currentFrame: 'gold', currentBackground: 'space' },
+    { id: 'npc_2', playerName: 'ハイスピード君', score: 2500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'hard_master', currentIcon: 'すーぱーかー', currentFrame: 'silver', currentBackground: 'castle' },
+    { id: 'npc_3', playerName: 'キーボードの鬼', score: 1800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'マスターソード', currentFrame: 'bronze', currentBackground: 'dino' },
+    { id: 'npc_4', playerName: 'ルーキー', score: 800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'サッカーボール', currentFrame: 'basic_1', currentBackground: 'forest' },
+    { id: 'npc_5', playerName: 'カメさん', score: 300, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'default' }
+  ];
+
+  try {
+    const collRef = collection(db, 'global_players');
+    return onSnapshot(collRef, (snapshot) => {
+      const rankings = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.officialShowHighScore > 0 && !data.isArchived) {
+          rankings.push({
+            id: docSnap.id,
+            playerId: docSnap.id,
+            playerName: data.name || 'ゲスト',
+            score: data.officialShowHighScore,
+            createdAt: data.lastActiveTime || new Date().toISOString(),
+            currentTitle: data.currentTitle || 'rookie',
+            currentBackground: data.currentBackground || 'default',
+            currentIcon: data.currentIcon || null,
+            currentFrame: data.currentFrame || null,
+            typingShowGears: data.typingShowGears || null,
+          });
+        }
+      });
+      rankings.push(...npcs);
+      callback(rankings.sort((a, b) => b.score - a.score));
+    }, (error) => {
+      console.error('Error listening to official show rankings:', error);
+      callback(npcs.sort((a, b) => b.score - a.score));
+    });
+  } catch (error) {
+    console.error('Error setting up rankings listener:', error);
+    callback(npcs.sort((a, b) => b.score - a.score));
+    return () => {};
   }
 };
 

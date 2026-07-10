@@ -12,8 +12,15 @@ const SynthesisTypingGame = ({ item, count, onComplete, onCancel }) => {
   
   const targetCount = Math.min(count, 10);
   
-  const targetKana = ITEM_READINGS[item.name];
-  const validRomajiList = useMemo(() => generateAllRomaji(targetKana), [targetKana]);
+  const targetKana = ITEM_READINGS[item?.name] || 'えらー';
+  const validRomajiList = useMemo(() => {
+    try {
+      return generateAllRomaji(targetKana);
+    } catch (err) {
+      console.error("Failed to generate romaji for:", targetKana, err);
+      return ['era-'];
+    }
+  }, [targetKana]);
   
   // 次に打つべき文字のリストを取得する関数
   const getNextValidChars = (typed) => {

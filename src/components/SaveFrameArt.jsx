@@ -11,6 +11,8 @@ const FRAME_BORDER = {
   fire: { width: 5, color: '#ea580c', outer: '#fb923c' },
   star: { width: 5, color: '#7c3aed', outer: '#fde047' },
   trophy: { width: 6, color: '#c2410c', outer: '#fbbf24' },
+  cyber: { width: 5, color: '#06b6d4', outer: '#083344' },
+  rainbow: { width: 6, color: '#ec4899', outer: '#8b5cf6' },
 };
 
 function SakuraPetal({ r = 10, rot = 0, fill = '#fda4af', stroke = '#e11d48' }) {
@@ -176,6 +178,36 @@ function TrophyCluster({ flipX = false, flipY = false }) {
   );
 }
 
+function CyberCluster({ flipX = false, flipY = false }) {
+  return (
+    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible" aria-hidden>
+      <g transform={`translate(32,32) scale(${flipX ? -1 : 1}, ${flipY ? -1 : 1})`}>
+        <rect x="-10" y="-10" width="20" height="20" fill="none" stroke="#22d3ee" strokeWidth="2" strokeDasharray="4 2" />
+        <circle cx="0" cy="0" r="4" fill="#67e8f9" />
+        <line x1="-15" y1="0" x2="-2" y2="0" stroke="#06b6d4" strokeWidth="2" />
+        <line x1="2" y1="0" x2="15" y2="0" stroke="#06b6d4" strokeWidth="2" />
+        <line x1="0" y1="-15" x2="0" y2="-2" stroke="#06b6d4" strokeWidth="2" />
+        <line x1="0" y1="2" x2="0" y2="15" stroke="#06b6d4" strokeWidth="2" />
+      </g>
+    </svg>
+  );
+}
+
+function RainbowCluster({ flipX = false, flipY = false }) {
+  return (
+    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible" aria-hidden>
+      <g transform={`translate(32,32) scale(${flipX ? -1 : 1}, ${flipY ? -1 : 1})`}>
+        <path d="M-16,0 A16,16 0 0,1 16,0" fill="none" stroke="#ef4444" strokeWidth="3" />
+        <path d="M-13,0 A13,13 0 0,1 13,0" fill="none" stroke="#f59e0b" strokeWidth="3" />
+        <path d="M-10,0 A10,10 0 0,1 10,0" fill="none" stroke="#10b981" strokeWidth="3" />
+        <path d="M-7,0 A7,7 0 0,1 7,0" fill="none" stroke="#3b82f6" strokeWidth="3" />
+        <circle cx="-16" cy="2" r="4" fill="#fff" />
+        <circle cx="16" cy="2" r="4" fill="#fff" />
+      </g>
+    </svg>
+  );
+}
+
 const CORNER_ART = {
   sakura: SakuraCluster,
   mint: MintCluster,
@@ -187,6 +219,8 @@ const CORNER_ART = {
   fire: FireCluster,
   star: StarCluster,
   trophy: TrophyCluster,
+  cyber: CyberCluster,
+  rainbow: RainbowCluster,
 };
 
 function EdgeMotif({ frameId }) {
