@@ -828,6 +828,7 @@ export default function TypingScreen({
             } else {
               setCombo(0);
               setMissCount((prev) => prev + 1);
+              setTimeLeft((prev) => Math.max(0, prev - 1));
             }
           } else {
             setMissCount((prev) => prev + 1);
