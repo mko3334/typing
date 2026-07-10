@@ -368,7 +368,7 @@ export default function App() {
     persistPlayerLocally(next.id, next).catch(() => {});
   }, []);
 
-  const handleSaveAndTitle = useCallback(async (updates = {}) => {
+  const handleSaveAndTitle = useCallback(async (updates = {}, skipPreview = false) => {
     const prev = currentPlayerRef.current;
     if (!prev?.id) return;
 
@@ -388,7 +388,11 @@ export default function App() {
     try {
       await persistPlayerLocally(next.id, next);
       const success = await withTimeout(saveCloudPlayer(next.id, next), 12000, false);
-      setSavedPlayerPreview(enrichPlayer(next.id, next));
+      if (!skipPreview) {
+        setSavedPlayerPreview(enrichPlayer(next.id, next));
+      } else {
+        handleLogout();
+      }
       if (!success) {
         alert('この端末には セーブしました。クラウドへの 送信は 後でもう一度 試してね。');
       }
@@ -397,7 +401,7 @@ export default function App() {
     } finally {
       setIsSaving(false);
     }
-  }, [applySessionPlayTime]);
+  }, [applySessionPlayTime, handleLogout]);
 
   const handleSaveCompleteOk = () => {
     playDecideSound();
@@ -641,7 +645,7 @@ export default function App() {
             </div>
             <button
               type="button"
-              onClick={() => handleSaveAndTitle()}
+              onClick={() => handleSaveAndTitle({}, true)}
               className="mt-2 bg-gradient-to-b from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-black text-xl px-8 py-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all border-b-4 border-rose-600"
             >
               セーブして おわる
