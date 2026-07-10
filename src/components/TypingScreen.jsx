@@ -478,6 +478,8 @@ export default function TypingScreen({
               currentIcon: player?.currentIcon || null,
               currentFrame: player?.currentFrame || null,
               typingShowGears: player?.typingShowGears || null,
+              collection: player?.collection || null,
+              itemLevels: player?.itemLevels || null,
             });
             currentRankings.sort((a, b) => b.score - a.score);
           }

@@ -454,6 +454,8 @@ export const getOfficialShowRankings = async () => {
           currentIcon: data.currentIcon || null,
           currentFrame: data.currentFrame || null,
           typingShowGears: data.typingShowGears || null,
+          collection: data.collection || null,
+          itemLevels: data.itemLevels || null,
         });
       }
     });
@@ -493,6 +495,8 @@ export const listenOfficialShowRankings = (callback) => {
             currentIcon: data.currentIcon || null,
             currentFrame: data.currentFrame || null,
             typingShowGears: data.typingShowGears || null,
+            collection: data.collection || null,
+            itemLevels: data.itemLevels || null,
           });
         }
       });
