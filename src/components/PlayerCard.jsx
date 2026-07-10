@@ -144,36 +144,29 @@ export default function PlayerCard({
       )}
 
       {showGears && (
-        <div className="absolute left-1/2 top-1/2 -translate-x-[40%] sm:-translate-x-1/2 -translate-y-1/2 z-20 flex gap-1 sm:gap-2 pointer-events-none">
+        <div className="absolute right-[4.5rem] sm:right-[7rem] top-1/2 -translate-y-1/2 z-20 flex gap-1 sm:gap-1.5 pointer-events-none">
           {player.typingShowGears?.main ? (
             player.typingShowGears.main.map((gearName, idx) => {
-              const item = gearName ? GACHA_ITEMS.find(i => i.name === gearName) : null;
-              const level = gearName && player?.itemLevels?.[gearName] ? player.itemLevels[gearName] : 1;
+              if (!gearName) return null; // 空き枠は非表示にしてスペースを節約
+              const item = GACHA_ITEMS.find(i => i.name === gearName);
+              const level = player?.itemLevels?.[gearName] || 1;
               return (
                 <div
                   key={`main-${idx}`}
-                  className={`w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-xl bg-white/95 flex items-center justify-center border-4 shadow-xl relative transition-transform hover:scale-110 pointer-events-auto ${item?.rarity === '💎ミラクル💎' ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : ''} ${(!item || (item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨')) && item?.foil ? 'foil-icon-chip' : ''}`}
+                  className={`w-10 h-10 sm:w-14 sm:h-14 shrink-0 rounded-xl bg-white/95 flex items-center justify-center border-[3px] shadow-xl relative transition-transform hover:scale-110 pointer-events-auto ${item?.rarity === '💎ミラクル💎' ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : ''} ${(!item || (item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨')) && item?.foil ? 'foil-icon-chip' : ''}`}
                   style={item ? (item.rarity === '💎ミラクル💎' || item.rarity === '✨レジェンド✨' ? {} : { borderColor: item.color }) : { borderColor: '#cbd5e1', borderStyle: 'dashed' }}
                   title={item ? getGearTooltip(item.name, level) : '空き枠'}
                 >
-                  <span className="relative z-[3] text-3xl sm:text-5xl leading-none drop-shadow-sm">{item ? item.emoji : ''}</span>
+                  <span className="relative z-[3] text-2xl sm:text-4xl leading-none drop-shadow-sm">{item ? item.emoji : ''}</span>
                   {item && (
-                    <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[9px] sm:text-[10px] leading-none font-black px-1 py-0.5 rounded-tl-lg z-10 backdrop-blur-sm shadow-sm border-t border-l border-white/20">
+                    <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] sm:text-[9px] leading-none font-black px-1 py-0.5 rounded-tl-lg z-10 backdrop-blur-sm shadow-sm border-t border-l border-white/20">
                       Lv.{level}
                     </div>
                   )}
                 </div>
               );
             })
-          ) : (
-            <div className="flex gap-1 sm:gap-2 opacity-60">
-              {[1, 2, 3].map((i) => (
-                <div key={`empty-${i}`} className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-xl bg-white/50 border-4 border-dashed border-gray-300 flex items-center justify-center pointer-events-auto">
-                  <span className="text-gray-400 text-sm sm:text-base font-black">空き</span>
-                </div>
-              ))}
-            </div>
-          )}
+          ) : null}
         </div>
       )}
 
