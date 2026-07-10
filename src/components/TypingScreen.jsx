@@ -957,49 +957,21 @@ export default function TypingScreen({
                       <h5 className="text-sm font-black text-rose-800 mb-2 text-center">🏆 トップ5ランキング</h5>
                       <div className="flex flex-col gap-1 text-left">
                         {latestRankings.map((r, i) => (
-                          <div key={r.id} className={`relative flex flex-col mb-4 ${i === 0 ? 'transform scale-[1.02] origin-left' : ''} ${isRankIn && i === myRankIndex ? 'ring-4 ring-yellow-400 rounded-2xl animate-pulse' : ''}`}>
-                            {/* 上段：カードとバッジ */}
-                            <div className="relative w-full pl-6 sm:pl-8 pr-16 sm:pr-24 z-10">
-                              <div className={`absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-white shadow-md border-2 border-white ${i === 0 ? 'bg-yellow-400 text-lg sm:text-xl scale-110' : i === 1 ? 'bg-gray-400 text-base sm:text-lg' : i === 2 ? 'bg-amber-600 text-base sm:text-lg' : 'bg-rose-300 text-sm sm:text-base'}`}>
-                                {i + 1}
-                              </div>
-                              <div className="w-full">
+                          <div key={r.id} className={`relative flex items-center mb-2 ${isRankIn && i === myRankIndex ? 'ring-4 ring-yellow-400 rounded-2xl animate-pulse' : ''}`}>
+                            <div className={`absolute -left-2 sm:-left-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-white shadow-md border-2 border-white ${i === 0 ? 'bg-yellow-400 text-lg sm:text-xl scale-110' : i === 1 ? 'bg-gray-400 text-base sm:text-lg' : i === 2 ? 'bg-amber-600 text-base sm:text-lg' : 'bg-rose-300 text-sm sm:text-base'}`}>
+                              {i + 1}
+                            </div>
+                            <div className={`flex items-center w-full pl-6 sm:pl-8 gap-2 pr-2 sm:pr-4 ${i === 0 ? 'transform scale-[1.02] origin-left' : ''}`}>
+                              <div className="flex-1 min-w-0">
                                 <PlayerCard 
                                   player={{ ...r, name: r.playerName, points: r.score }} 
                                   readOnly 
                                   compact={i !== 0}
+                                  showGears={true}
+                                  rankingScore={r.score}
                                 />
                               </div>
-                              <div className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 px-2 sm:px-3 py-1 rounded-full font-black text-rose-500 shadow-sm border-2 border-rose-100 text-sm sm:text-lg">
-                                {r.score}
-                              </div>
                             </div>
-                            
-                            {/* 下段：スキルアイコン */}
-                            {r.typingShowGears && (
-                              <div className="flex flex-wrap gap-1 bg-amber-50/95 px-3 pb-2 pt-4 rounded-b-xl shadow-inner border-x border-b border-amber-200 ml-8 sm:ml-12 mr-18 sm:mr-28 -mt-2 relative z-0">
-                                {r.typingShowGears.main?.map((gearName, idx) => {
-                                  if (!gearName) return null; // 空き枠は非表示にしてスッキリさせる
-                                  const item = GACHA_ITEMS.find(i => i.name === gearName);
-                                  const level = r?.itemLevels?.[gearName] || 1;
-                                  return (
-                                    <div key={`main-${idx}`} className={`${i === 0 ? 'w-10 h-10' : 'w-7 h-7'} shrink-0 rounded-md bg-white flex items-center justify-center border shadow-sm ${item?.rarity === '💎ミラクル💎' ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : ''} ${(!item || (item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨')) && item?.foil ? 'foil-icon-chip' : ''}`} style={item ? (item.rarity === '💎ミラクル💎' || item.rarity === '✨レジェンド✨' ? {} : { borderColor: item.color }) : { borderColor: '#e5e7eb', borderStyle: 'dashed' }} title={item ? getGearTooltip(item.name, level) : '空き'}>
-                                      <span className={`${i === 0 ? 'text-[26px]' : 'text-[18px]'}`}>{item ? item.emoji : ''}</span>
-                                    </div>
-                                  );
-                                })}
-                                {r.typingShowGears.sub?.map((gearName, idx) => {
-                                  if (!gearName) return null; // 空き枠は非表示
-                                  const item = GACHA_ITEMS.find(i => i.name === gearName);
-                                  const level = r?.itemLevels?.[gearName] || 1;
-                                  return (
-                                    <div key={`sub-${idx}`} className={`${i === 0 ? 'w-8 h-8 mt-1' : 'w-5 h-5 mt-1'} shrink-0 rounded-md bg-white flex items-center justify-center border shadow-sm ${item?.rarity === '💎ミラクル💎' ? 'miracle-card border-none' : item?.rarity === '✨レジェンド✨' ? 'legend-card border-none' : ''} ${(!item || (item.rarity !== '💎ミラクル💎' && item.rarity !== '✨レジェンド✨')) && item?.foil ? 'foil-icon-chip' : ''}`} style={item ? (item.rarity === '💎ミラクル💎' || item.rarity === '✨レジェンド✨' ? {} : { borderColor: item.color }) : { borderColor: '#e5e7eb', borderStyle: 'dashed' }} title={item ? getGearTooltip(item.name, level) : '空き'}>
-                                      <span className={`${i === 0 ? 'text-[20px]' : 'text-[14px]'}`}>{item ? item.emoji : ''}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
