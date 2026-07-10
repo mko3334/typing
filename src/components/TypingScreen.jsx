@@ -939,47 +939,7 @@ export default function TypingScreen({
               </p>
             </div>
             
-            {(() => {
-              const myRankIndex = latestRankings.findIndex(r => r.playerId === (player?.id || 'guest') && r.score === officialScore);
-              const isRankIn = myRankIndex !== -1 && myRankIndex < 5;
-              
-              return (
-                <>
-                  {isRankIn && (
-                    <div className="w-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-300 rounded-2xl p-3 mb-6 shadow-xl animate-bounce border-4 border-white transform hover:scale-105 transition-transform">
-                      <p className="text-xl font-black text-amber-900 drop-shadow-sm">
-                        🎊 {myRankIndex + 1}位に ランクイン！ 🎊
-                      </p>
-                    </div>
-                  )}
-                  {latestRankings.length > 0 && (
-                    <div className="w-full bg-rose-50 rounded-xl p-4 mb-6 border border-rose-100">
-                      <h5 className="text-sm font-black text-rose-800 mb-2 text-center">🏆 トップ5ランキング</h5>
-                      <div className="flex flex-col gap-1 text-left">
-                        {latestRankings.map((r, i) => (
-                          <div key={r.id} className={`relative flex items-center mb-2 ${isRankIn && i === myRankIndex ? 'ring-4 ring-yellow-400 rounded-2xl animate-pulse' : ''}`}>
-                            <div className={`absolute -left-2 sm:-left-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-white shadow-md border-2 border-white ${i === 0 ? 'bg-yellow-400 text-lg sm:text-xl scale-110' : i === 1 ? 'bg-gray-400 text-base sm:text-lg' : i === 2 ? 'bg-amber-600 text-base sm:text-lg' : 'bg-rose-300 text-sm sm:text-base'}`}>
-                              {i + 1}
-                            </div>
-                            <div className={`flex items-center w-full pl-6 sm:pl-8 gap-2 pr-2 sm:pr-4 ${i === 0 ? 'transform scale-[1.02] origin-left' : ''}`}>
-                              <div className="flex-1 min-w-0">
-                                <PlayerCard 
-                                  player={{ ...r, name: r.playerName, points: r.score }} 
-                                  readOnly 
-                                  compact={i !== 0}
-                                  showGears={true}
-                                  rankingScore={r.score}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+
             
             <div className="flex flex-col gap-3">
               <button
