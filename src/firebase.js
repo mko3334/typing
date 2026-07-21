@@ -538,7 +538,6 @@ export const submitTypingReport = async (reportData) => {
 export const getOpenReportedKeywords = async () => {
   try {
     const collRef = collection(db, 'typing_reports');
-    // For simplicity, fetch all and filter by status 'open' or just fetch all open
     const q = query(collRef, where('status', '==', 'open'));
     const snapshot = await getDocs(q);
     const reportedKanas = [];
@@ -552,6 +551,26 @@ export const getOpenReportedKeywords = async () => {
   } catch (error) {
     console.error('Error getting reported keywords:', error);
     return [];
+  }
+};
+
+export const listenOpenReportedKeywords = (callback) => {
+  try {
+    const collRef = collection(db, 'typing_reports');
+    const q = query(collRef, where('status', '==', 'open'));
+    return onSnapshot(q, (snapshot) => {
+      const reportedKanas = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.word || data.kana) {
+          reportedKanas.push(data.word || data.kana);
+        }
+      });
+      callback(reportedKanas);
+    });
+  } catch (error) {
+    console.error('Error listening to reported keywords:', error);
+    return () => {};
   }
 };
 

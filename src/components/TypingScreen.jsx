@@ -9,7 +9,7 @@ import {
 } from '../constants';
 import { HiraganaBounceValue } from './hiragana/HiraganaVisuals';
 import { pickGameWords, pickReplacementWord, pickOfficialShowWords } from '../utils/typingWords';
-import { submitTypingReport, saveOfficialShowScore, listenOfficialShowRankings, getOpenReportedKeywords } from '../firebase';
+import { submitTypingReport, saveOfficialShowScore, listenOfficialShowRankings, getOpenReportedKeywords, listenOpenReportedKeywords } from '../firebase';
 import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
 import { computeAchievements } from '../utils/gacha';
 import { getGearTooltip } from '../utils/gearPower';
@@ -225,13 +225,15 @@ export default function TypingScreen({
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      getOpenReportedKeywords(),
-      refreshWordCorrections()
-    ]).then(([reports]) => {
+    const unsub = listenOpenReportedKeywords((reports) => {
       setReportedKanas(reports);
+    });
+    refreshWordCorrections().then(() => {
       setIsDataLoaded(true);
     });
+    return () => {
+      unsub();
+    };
   }, []);
 
   useEffect(() => {
@@ -268,6 +270,8 @@ export default function TypingScreen({
   const [reportToast, setReportToast] = useState('');
   const [latestRankings, setLatestRankings] = useState([]);
   const [reportedKanas, setReportedKanas] = useState([]);
+  const reportedKanasRef = useRef(reportedKanas);
+  useEffect(() => { reportedKanasRef.current = reportedKanas; }, [reportedKanas]);
   const keyPressWindowRef = useRef([]);
   const lastTypingWarningAtRef = useRef(0);
   const typingWarningTimerRef = useRef(null);
@@ -336,7 +340,7 @@ export default function TypingScreen({
 
     if (typeof difficulty === 'object' && difficulty.isOfficialShow) {
       const specialRate = 0.05 + gearPowersRef.current.specialRateUp;
-      const customWords = pickOfficialShowWords(adoptedWordsRef.current, reportedKanas).map(w => ({
+      const customWords = pickOfficialShowWords(adoptedWordsRef.current, reportedKanasRef.current).map(w => ({
         ...w,
         isSpecial: Math.random() < specialRate,
         romaji: w.romaji || generateAllRomaji(w.kana)
@@ -366,7 +370,7 @@ export default function TypingScreen({
       playMetaRef.current.specialWordTriggered,
       undefined,
       adoptedWordsRef.current,
-      reportedKanas,
+      reportedKanasRef.current,
     );
     playMetaRef.current = { playCount: newPlayCount, specialWordTriggered: newTriggered };
     setGameWords(words.map((word) => applyCorrectionToWord(word, difficulty)));
