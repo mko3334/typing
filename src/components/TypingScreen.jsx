@@ -15,6 +15,7 @@ import { computeAchievements } from '../utils/gacha';
 import { getGearTooltip } from '../utils/gearPower';
 import { appendSubEventsAfterTypingClear } from '../utils/subEvents';
 import { generateAllRomaji } from '../constants';
+import TypingCanvas from './TypingCanvas';
 import GameSidebar from './GameSidebar';
 import CollectionSidebar from './CollectionSidebar';
 import AssistSettingsModal from './AssistSettingsModal';
@@ -1188,46 +1189,13 @@ export default function TypingScreen({
               </div>
             )}
 
-            {isAlphabetQuiz ? (
-              <>
-                <div className="text-[100px] leading-none mb-3 font-black text-rose-500 drop-shadow-md">
-                  {(currentWord?.romaji[0] || '').toLowerCase()}
-                </div>
-                <div className="text-base sm:text-lg font-black text-gray-700 mb-4 bg-rose-50 py-2 px-4 rounded-xl border-2 border-rose-200">
-                  {currentWord?.kana}
-                </div>
-                <div className="text-3xl sm:text-4xl font-mono font-black tracking-widest bg-gray-100 py-4 rounded-xl border-2 border-gray-200 shadow-inner">
-                  <span className="text-sky-600">{formatTyped(typedChars)}</span>
-                  <span className={assistSettings.showRomajiHint ? 'text-gray-400' : 'text-transparent'}>
-                    {formatHint(displayRomaji.slice(typedChars.length))}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-6xl sm:text-7xl mb-2">{currentWord?.emoji}</div>
-                <div
-                  className={`text-3xl sm:text-4xl font-black tracking-widest mb-3 ${
-                    currentWord?.isSpecial
-                      ? 'text-fuchsia-600 drop-shadow-[0_0_5px_rgba(217,70,239,0.5)]'
-                      : 'text-gray-900'
-                  }`}
-                  style={{
-                    textShadow: currentWord?.isSpecial
-                      ? undefined
-                      : '0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff',
-                  }}
-                >
-                  {currentWord?.kana}
-                </div>
-                <div className="text-3xl sm:text-4xl font-mono font-black tracking-widest bg-gray-100 py-4 rounded-xl border-2 border-gray-200 shadow-inner">
-                  <span className="text-sky-600">{formatTyped(typedChars)}</span>
-                  <span className={assistSettings.showRomajiHint ? 'text-gray-400' : 'text-transparent'}>
-                    {formatHint(displayRomaji.slice(typedChars.length))}
-                  </span>
-                </div>
-              </>
-            )}
+            <TypingCanvas
+              currentWord={currentWord}
+              typedChars={typedChars}
+              displayRomaji={displayRomaji}
+              assistSettings={assistSettings}
+              isAlphabetQuiz={isAlphabetQuiz}
+            />
           </div>
 
           <FingerGuide nextChar={nextCharForAssist} assistSettings={assistSettings} />

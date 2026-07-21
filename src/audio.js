@@ -74,45 +74,71 @@ export function initAudio() {
   }
 }
 
-const audioPool = {};
+const audioBufferCache = new Map();
+const loadingPromises = new Map();
+
+async function loadAudioBuffer(url) {
+  if (audioBufferCache.has(url)) {
+    return audioBufferCache.get(url);
+  }
+  if (loadingPromises.has(url)) {
+    return loadingPromises.get(url);
+  }
+
+  const promise = (async () => {
+    try {
+      initAudio();
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      audioBufferCache.set(url, audioBuffer);
+      return audioBuffer;
+    } catch (e) {
+      console.error(`Failed to load audio: ${url}`, e);
+      return null;
+    } finally {
+      loadingPromises.delete(url);
+    }
+  })();
+
+  loadingPromises.set(url, promise);
+  return promise;
+}
+
+export function preloadAudio(url) {
+  if (!url) return;
+  loadAudioBuffer(url);
+}
 
 function playUrl(url, volume = 0.5) {
   if (!url) return;
-  
-  if (!audioPool[url]) {
-    // 最大5つのAudioインスタンスをプールして使い回す
-    audioPool[url] = Array.from({ length: 5 }, () => {
-      const a = new Audio(url);
-      a.preload = 'auto';
-      return a;
-    });
-  }
-  
-  const pool = audioPool[url];
-  let audio = pool.find(a => a.paused || a.ended);
-  
-  if (!audio) {
-    // 全て再生中の場合は、一番古いものを強制的にリセットして使う
-    audio = pool.shift();
-    pool.push(audio);
-  }
-  
-  audio.volume = volume;
-  audio.currentTime = 0;
-  audio.play().catch(() => {});
+  initAudio();
+
+  loadAudioBuffer(url).then(buffer => {
+    if (!buffer) return;
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = volume;
+
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    source.start(0);
+  });
 }
 
 /**
  * @param {SeType} type
- * @param {{ customAudio?: Record<string, string|null>, volume?: { bgm?: number, se?: number }, currentSe?: string, bgmRef?: { current: HTMLAudioElement|null } }} options
+ * @param {{ customAudio?: Record<string, string|null>, volume?: { bgm?: number, se?: number }, currentSe?: string, bgmRef?: { current: any } }} options
  */
 export function playSE(type, options = {}) {
   const { customAudio = {}, volume = DEFAULT_VOLUME, currentSe = 'default', bgmRef } = options;
   const seVol = volume.se ?? DEFAULT_VOLUME.se;
 
-  if (bgmRef?.current?.paused) {
-    bgmRef.current.play().catch(() => {});
-  }
+  // BGM is now handled via GainNode/SourceNode in bgmRef, if suspended, resume context
+  initAudio();
 
   if (type === 'type') {
     const se = findSe(currentSe);
@@ -138,7 +164,7 @@ export function playCancelSound(volume = DEFAULT_VOLUME.se) {
 
 /**
  * @param {string} bgmId
- * @param {{ customAudio?: Record<string, string|null>, volume?: { bgm?: number, se?: number }, bgmRef: { current: HTMLAudioElement|null } }} options
+ * @param {{ customAudio?: Record<string, string|null>, volume?: { bgm?: number, se?: number }, bgmRef: { current: any } }} options
  */
 export function playBgm(bgmId, options) {
   const { customAudio = {}, volume = DEFAULT_VOLUME, bgmRef } = options;
@@ -146,24 +172,55 @@ export function playBgm(bgmId, options) {
   const url = customAudio.bgm || track.url;
   const bgmVol = volume.bgm ?? DEFAULT_VOLUME.bgm;
 
-  if (!bgmRef.current) {
-    bgmRef.current = new Audio(url);
-    bgmRef.current.preload = 'auto';
-    bgmRef.current.loop = true;
-  } else {
-    const nextSrc = new URL(url, window.location.href).href;
-    if (bgmRef.current.src !== nextSrc) {
-      bgmRef.current.src = url;
-      bgmRef.current.load();
+  initAudio();
+
+  if (bgmRef.current && bgmRef.current.url === url) {
+    if (bgmRef.current.gainNode) {
+      bgmRef.current.gainNode.gain.setValueAtTime(bgmVol, audioCtx.currentTime);
     }
+    return;
   }
 
-  bgmRef.current.volume = bgmVol;
-  bgmRef.current.play().catch(() => {});
+  stopBgm(bgmRef);
+
+  const state = { url, source: null, gainNode: null, stopped: false };
+  bgmRef.current = state;
+
+  loadAudioBuffer(url).then(buffer => {
+    if (state.stopped || !buffer) return;
+
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = bgmVol;
+
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    source.start(0);
+
+    state.source = source;
+    state.gainNode = gainNode;
+  });
 }
 
 export function stopBgm(bgmRef) {
   if (bgmRef?.current) {
-    bgmRef.current.pause();
+    bgmRef.current.stopped = true;
+    if (bgmRef.current.source) {
+      try {
+        bgmRef.current.source.stop();
+        bgmRef.current.source.disconnect();
+      } catch (e) {}
+    }
+    if (bgmRef.current.gainNode) {
+      try {
+        bgmRef.current.gainNode.disconnect();
+      } catch (e) {}
+    }
+    bgmRef.current = null;
   }
 }
+
