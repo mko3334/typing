@@ -59,9 +59,18 @@ export function applyCorrectionToRally(rally, eventId) {
   };
 }
 
+export function isWordCorrected(kana) {
+  if (!kana) return false;
+  return Boolean(
+    findCorrection(buildMainWordKey(kana)) ||
+    findCorrection(kana)
+  );
+}
+
 export function parseRomajiInput(text) {
   return String(text || '')
     .split(/[/,、\n]+/)
     .map((part) => part.trim())
     .filter(Boolean);
 }
+

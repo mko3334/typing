@@ -407,10 +407,15 @@ export default function TypingScreen({
   }, [countdownStep, isCountdown, countdownLabel]);
 
   useEffect(() => {
+    restartRound();
+  }, [difficulty, restartRound]);
+
+  useEffect(() => {
     if (isDataLoaded) {
-      restartRound();
+      setGameWords((prev) => prev.map((word) => applyCorrectionToWord(word, difficulty)));
     }
-  }, [difficulty, restartRound, isDataLoaded]);
+  }, [isDataLoaded, difficulty]);
+
 
   useEffect(() => {
     if (!currentWord?.isSpecial || isCountdown || isAllClear || isTransitioning) return undefined;

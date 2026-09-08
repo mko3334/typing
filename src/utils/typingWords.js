@@ -1,4 +1,9 @@
 import { WORDS, WORDS_PER_ROUND } from '../constants';
+import { isWordCorrected } from './wordCorrections';
+
+function getUncorrectedReportedKanas(reportedKanas = []) {
+  return reportedKanas.filter((kana) => kana && !isWordCorrected(kana));
+}
 
 function shuffle(arr) {
   const copy = [...arr];
@@ -59,7 +64,7 @@ export function pickGameWords(
   playCount = meta.playCount;
   specialWordTriggered = meta.specialWordTriggered;
 
-  const exclude = new Set(reportedKanas.filter(Boolean));
+  const exclude = new Set(getUncorrectedReportedKanas(reportedKanas));
   const basePool = WORDS[difficulty] || WORDS.normal;
   const adoptedForDifficulty = extraWords.filter((w) => w.difficulty === difficulty || !w.difficulty);
   const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji, reading }) => ({
@@ -100,7 +105,7 @@ export function pickGameWords(
 }
 
 export function pickOfficialShowWords(extraWords = [], reportedKanas = []) {
-  const exclude = new Set(reportedKanas.filter(Boolean));
+  const exclude = new Set(getUncorrectedReportedKanas(reportedKanas));
   const pool = [
     ...(WORDS.easy || []),
     ...(WORDS.normal || []),
@@ -125,7 +130,7 @@ export function pickReplacementWord(
   extraWords = [],
   reportedKanas = [],
 ) {
-  const exclude = new Set([...excludeKanas.filter(Boolean), ...reportedKanas.filter(Boolean)]);
+  const exclude = new Set([...excludeKanas.filter(Boolean), ...getUncorrectedReportedKanas(reportedKanas)]);
   const basePool = WORDS[difficulty] || WORDS.normal;
   const adoptedForDifficulty = extraWords.filter((w) => w.difficulty === difficulty || !w.difficulty);
   const pool = [...basePool, ...adoptedForDifficulty.map(({ kana, romaji, emoji }) => ({
@@ -139,10 +144,11 @@ export function pickReplacementWord(
 }
 
 export function pickSubEventReplacement(excludeKanas = [], reportedKanas = []) {
-  const exclude = new Set([...excludeKanas.filter(Boolean), ...reportedKanas.filter(Boolean)]);
+  const exclude = new Set([...excludeKanas.filter(Boolean), ...getUncorrectedReportedKanas(reportedKanas)]);
   const pool = [...(WORDS.normal || []), ...(WORDS.hard || [])].filter(
     (word) => word.kana && !exclude.has(word.kana),
   );
   if (pool.length === 0) return null;
   return shuffle(pool)[0];
 }
+
