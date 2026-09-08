@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { listenOfficialShowRankings } from '../firebase';
 import { GACHA_ITEMS } from '../constants';
 import PlayerCard from './PlayerCard';
 import GearEquipModal from './GearEquipModal';
 import { getCurrentSeasonId, getSeasonStartDate, getSeasonEndDate } from '../utils/date';
+import { calculateGearPowers, getGearTooltip } from '../utils/gearPower';
 
 export default function CustomAreaModal({ isOpen, onClose, player, playDecideSound, playCancelSound, onPlayCustomStage, onPlayerUpdate }) {
   const currentGlobalSeason = getCurrentSeasonId();
@@ -13,19 +14,14 @@ export default function CustomAreaModal({ isOpen, onClose, player, playDecideSou
   const [isGearModalOpen, setIsGearModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const gearPowers = useMemo(
+    () => calculateGearPowers(player?.typingShowGears, player?.itemLevels),
+    [player?.typingShowGears, player?.itemLevels]
+  );
+
   useEffect(() => {
     if (!isOpen) return undefined;
     setLoading(true);
-
-    const formatSeasonDate = (date) => {
-      const days = ['日', '月', '火', '水', '木', '金', '土'];
-      const m = date.getMonth() + 1;
-      const d = date.getDate();
-      const day = days[date.getDay()];
-      const h = date.getHours().toString().padStart(2, '0');
-      const min = date.getMinutes().toString().padStart(2, '0');
-      return `${m}/${d}(${day}) ${h}:${min}`;
-    };
 
     const unsubscribe = listenOfficialShowRankings(viewingSeasonId, (rankings) => {
       setOfficialRankings(rankings.slice(0, 10));
@@ -70,6 +66,97 @@ export default function CustomAreaModal({ isOpen, onClose, player, playDecideSou
             </h4>
             <p className="text-gray-600 font-bold mb-4">全難易度からランダム出題！1分間でどれだけ打てるかな？</p>
 
+            {/* あなたのそうび（現在のアイテムスキル） */}
+            <div className="w-full bg-gradient-to-r from-sky-50 to-indigo-50 rounded-2xl p-3 sm:p-4 mb-4 border-2 border-sky-200 shadow-sm relative">
+              <div className="flex items-center justify-between mb-2">
+                <h5 className="text-xs sm:text-sm font-black text-indigo-900 flex items-center gap-1.5">
+                  <span>🎒</span> あなたの装備（発動中のアイテムスキル）
+                </h5>
+                <button
+                  onClick={() => {
+                    playDecideSound?.();
+                    setIsGearModalOpen(true);
+                  }}
+                  className="text-xs font-black text-sky-600 hover:text-sky-700 bg-white border border-sky-300 hover:bg-sky-50 px-2.5 py-1 rounded-lg shadow-sm transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  ⚙️ 装備変更
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {/* 装備アイコン一覧 */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-gray-500">メイン装備:</span>
+                  <div className="flex gap-1.5">
+                    {[0, 1, 2].map((idx) => {
+                      const gearName = player?.typingShowGears?.main?.[idx];
+                      const item = gearName ? GACHA_ITEMS.find((i) => i.name === gearName) : null;
+                      const level = player?.itemLevels?.[gearName] || 1;
+                      return (
+                        <div
+                          key={idx}
+                          className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white flex items-center justify-center border-2 shadow-sm relative overflow-hidden ${
+                            item?.rarity === '💎ミラクル💎'
+                              ? 'miracle-card border-none'
+                              : item?.rarity === '✨レジェンド✨'
+                              ? 'legend-card border-none'
+                              : ''
+                          }`}
+                          style={
+                            item
+                              ? item.rarity === '💎ミラクル💎' || item.rarity === '✨レジェンド✨'
+                                ? {}
+                                : { borderColor: item.color }
+                              : { borderColor: '#cbd5e1', borderStyle: 'dashed' }
+                          }
+                          title={item ? getGearTooltip(item.name, level) : '空き枠'}
+                        >
+                          <span className="text-lg sm:text-2xl leading-none">{item ? item.emoji : '➕'}</span>
+                          {item && (
+                            <div className="absolute bottom-0 right-0 bg-black/75 text-white text-[8px] font-black px-1 leading-none rounded-tl">
+                              Lv.{level}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 発動中のスキル効果バッジ */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {gearPowers.scoreBoost > 0 && (
+                    <span className="text-xs font-black px-2.5 py-1 rounded-full bg-white border border-yellow-200 text-yellow-700 shadow-sm flex items-center gap-1">
+                      🪙 スコア +{Math.round(gearPowers.scoreBoost * 100)}%
+                    </span>
+                  )}
+                  {gearPowers.timePlus > 0 && (
+                    <span className="text-xs font-black px-2.5 py-1 rounded-full bg-white border border-sky-200 text-sky-700 shadow-sm flex items-center gap-1">
+                      ⏳ タイム +{gearPowers.timePlus.toFixed(1).replace(/\.0$/, '')}秒
+                    </span>
+                  )}
+                  {gearPowers.comboBoost > 0 && (
+                    <span className="text-xs font-black px-2.5 py-1 rounded-full bg-white border border-green-200 text-green-700 shadow-sm flex items-center gap-1">
+                      🎯 コンボ +{gearPowers.comboBoost.toFixed(1).replace(/\.0$/, '')}
+                    </span>
+                  )}
+                  {gearPowers.missGuardProb > 0 && (
+                    <span className="text-xs font-black px-2.5 py-1 rounded-full bg-white border border-indigo-200 text-indigo-700 shadow-sm flex items-center gap-1">
+                      🛡️ ガード {Math.round(gearPowers.missGuardProb)}%
+                    </span>
+                  )}
+                  {gearPowers.specialRateUp > 0 && (
+                    <span className="text-xs font-black px-2.5 py-1 rounded-full bg-white border border-rose-200 text-rose-700 shadow-sm flex items-center gap-1">
+                      ✨ 激アツ +{Math.round(gearPowers.specialRateUp * 100)}%
+                    </span>
+                  )}
+                  {gearPowers.scoreBoost === 0 && gearPowers.timePlus === 0 && gearPowers.comboBoost === 0 && gearPowers.missGuardProb === 0 && gearPowers.specialRateUp === 0 && (
+                    <span className="text-xs font-bold text-gray-400">装備を変更してスキルを発動しよう！</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between w-full bg-rose-100 rounded-xl p-2 mb-4">
               <button
                 onClick={() => {
@@ -107,6 +194,7 @@ export default function CustomAreaModal({ isOpen, onClose, player, playDecideSou
                 次のシーズン ▶
               </button>
             </div>
+
             
             {officialRankings.length > 0 && (
               <div className="w-full bg-rose-50 rounded-xl p-4 mb-2 border border-rose-100">
