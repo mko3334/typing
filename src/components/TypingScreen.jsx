@@ -456,12 +456,22 @@ export default function TypingScreen({
       setIsTimeUp(true);
       playSE?.('timeup');
       
-      const finalScore = Math.floor(officialScore * (1 + gearPowersRef.current.scoreBoost));
+      const hasAssist = Boolean(
+        assistSettings?.keyboardHighlight ||
+        assistSettings?.showRomajiHint ||
+        assistSettings?.showFingerGuide
+      );
+      const assistMultiplier = hasAssist ? 0.8 : 1.0;
+      const baseScore = Math.floor(officialScore * assistMultiplier);
+      const finalScore = Math.floor(baseScore * (1 + gearPowersRef.current.scoreBoost));
+
       setShowFinalScoreObj({
-        base: officialScore,
-        boost: finalScore - officialScore,
+        base: baseScore,
+        boost: finalScore - baseScore,
         final: finalScore,
-        step: 0
+        step: 0,
+        hasAssist,
+        assistMultiplier,
       });
       
       (async () => {
@@ -517,7 +527,8 @@ export default function TypingScreen({
         playSE?.('clear');
       })();
     }
-  }, [isOfficialShow, timeLeft, isTimeUp, player, officialScore, playSE]);
+  }, [isOfficialShow, timeLeft, isTimeUp, player, officialScore, playSE, assistSettings]);
+
 
   // スコア加算アニメーション制御
   useEffect(() => {
@@ -969,7 +980,17 @@ export default function TypingScreen({
             <div className="text-6xl mb-4">⏱️</div>
             <h2 className="text-3xl font-black text-rose-600 mb-2">タイムアップ！</h2>
             <div className="bg-gray-50 rounded-2xl p-4 mb-6 border-2 border-gray-200">
-              <p className="text-gray-500 font-bold mb-2">あなたのスコア</p>
+              <p className="text-gray-500 font-bold mb-1">あなたのスコア</p>
+              {showFinalScoreObj?.hasAssist ? (
+                <span className="text-[11px] font-black text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300 inline-block mb-2">
+                  ⚡ アシストあり (0.8倍)
+                </span>
+              ) : (
+                <span className="text-[11px] font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 inline-block mb-2">
+                  ✨ アシストなし (ボーナス 1.0倍)
+                </span>
+              )}
+
               <div className="flex flex-col items-center justify-center h-20 sm:h-24 relative w-full">
                 {showFinalScoreObj?.step === 1 && (
                   <div className="absolute -top-4 sm:-top-6 text-xs sm:text-sm font-black text-fuchsia-600 bg-fuchsia-100 px-3 py-1 rounded-full animate-fade-in border border-fuchsia-300 shadow-sm z-10">
