@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { X, ArrowUpCircle, CheckCircle2 } from 'lucide-react';
 import { GACHA_ITEMS } from '../constants';
 import { getPowerType, GEAR_POWER_LABELS, getItemPowerPoints, formatPowerPoint, ITEM_READINGS } from '../utils/gearPower';
@@ -9,6 +9,11 @@ import { playSE } from '../audio';
 const SynthesisTypingGame = ({ item, count, onComplete, onCancel }) => {
   const [wordCount, setWordCount] = useState(0);
   const [typedChars, setTypedChars] = useState('');
+  
+  const typedCharsRef = useRef('');
+  useEffect(() => {
+    typedCharsRef.current = typedChars;
+  }, [typedChars]);
   
   const targetCount = Math.min(count, 10);
   
@@ -23,7 +28,7 @@ const SynthesisTypingGame = ({ item, count, onComplete, onCancel }) => {
   }, [targetKana]);
   
   // 次に打つべき文字のリストを取得する関数
-  const getNextValidChars = (typed) => {
+  const getNextValidChars = useCallback((typed) => {
     const nextChars = new Set();
     for (const romaji of validRomajiList) {
       if (romaji.startsWith(typed)) {
@@ -31,9 +36,8 @@ const SynthesisTypingGame = ({ item, count, onComplete, onCancel }) => {
       }
     }
     return Array.from(nextChars);
-  };
+  }, [validRomajiList]);
   
-  const nextValidChars = useMemo(() => getNextValidChars(typedChars), [typedChars, validRomajiList]);
   
   // 現在の入力で完結しているか（いずれかの正解パターンと完全一致するか）
   const isWordComplete = useMemo(() => validRomajiList.includes(typedChars), [typedChars, validRomajiList]);
@@ -46,6 +50,11 @@ const SynthesisTypingGame = ({ item, count, onComplete, onCancel }) => {
   
   const [isShaking, setIsShaking] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const isSynthesizingRef = useRef(false);
+  
+  useEffect(() => {
+    isSynthesizingRef.current = isSynthesizing;
+  }, [isSynthesizing]);
 
   useEffect(() => {
     if (isWordComplete && !isSynthesizing) {
@@ -65,12 +74,13 @@ const SynthesisTypingGame = ({ item, count, onComplete, onCancel }) => {
   }, [isWordComplete, isSynthesizing, wordCount, targetCount, onComplete]);
 
   const handleKeyDown = useCallback((e) => {
-    if (isSynthesizing) return;
+    if (isSynthesizingRef.current) return;
     if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) return;
     
     const key = e.key.toLowerCase();
     
-    if (nextValidChars.includes(key)) {
+    const nextValid = getNextValidChars(typedCharsRef.current);
+    if (nextValid.includes(key)) {
       setTypedChars(prev => prev + key);
       playSE?.('type');
     } else {
@@ -78,7 +88,7 @@ const SynthesisTypingGame = ({ item, count, onComplete, onCancel }) => {
       playSE?.('error');
       setTimeout(() => setIsShaking(false), 300);
     }
-  }, [nextValidChars, isSynthesizing]);
+  }, [getNextValidChars]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);

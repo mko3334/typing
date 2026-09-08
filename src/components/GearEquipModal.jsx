@@ -374,14 +374,14 @@ export default function GearEquipModal({ isOpen, player, onClose, onPlayerUpdate
                         </div>
                       )}
                       
-                      {/* 強化ボタン */}
+                      {/* 合成ボタン */}
                       {(player.collection[item.name] || 0) >= 2 && !isEquipped && (
                         <button 
                           onClick={(e) => { e.stopPropagation(); setSynthesisItem(item); }}
-                          className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full p-1 shadow-sm hover:scale-110 active:scale-95 transition-transform z-10 border border-white"
-                          title="アイテムを強化する"
+                          className="absolute -top-3 right-1/2 translate-x-1/2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full px-2 py-0.5 shadow-md hover:scale-110 active:scale-95 transition-transform z-10 border-2 border-white flex items-center gap-0.5 font-black text-[10px] whitespace-nowrap"
                         >
-                          <ArrowUpCircle className="w-4 h-4" />
+                          <span>✨</span>
+                          <span>合成</span>
                         </button>
                       )}
                     </div>

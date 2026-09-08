@@ -1,6 +1,8 @@
-import React, { useContext } from 'react';
-import { User, Book, Music, Sparkles, Bell } from 'lucide-react';
+import React, { useContext, useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { User, Book, Music, Sparkles, Bell, Volume2, VolumeX } from 'lucide-react';
 import { TimerContext } from '../contexts/TimerContext';
+import { VolumeContext } from '../contexts/VolumeContext';
 
 function playDecideSound() {
   try {
@@ -42,9 +44,49 @@ export default function GameSidebar({
   };
 
   const playTimerRemainingMs = useContext(TimerContext);
+  const { volume, updateVolume } = useContext(VolumeContext) || { volume: { bgm: 0.3, se: 0.5 }, updateVolume: () => {} };
+  const [showVolume, setShowVolume] = useState(false);
+  const [prevVolume, setPrevVolume] = useState({ bgm: 0.3, se: 0.5 });
+  const [popupStyle, setPopupStyle] = useState({});
+  const volumeTimeoutRef = useRef(null);
+  const volumeBtnRef = useRef(null);
+
+  const isMuted = volume.bgm === 0 && volume.se === 0;
+
+  const toggleMute = () => {
+    playDecideSound();
+    if (isMuted) {
+      updateVolume('bgm', prevVolume.bgm > 0 ? prevVolume.bgm : 0.3);
+      updateVolume('se', prevVolume.se > 0 ? prevVolume.se : 0.5);
+    } else {
+      setPrevVolume({ ...volume });
+      updateVolume('bgm', 0);
+      updateVolume('se', 0);
+    }
+  };
+
+  const handleMouseEnterVolume = () => {
+    if (volumeTimeoutRef.current) clearTimeout(volumeTimeoutRef.current);
+    if (volumeBtnRef.current) {
+      const rect = volumeBtnRef.current.getBoundingClientRect();
+      setPopupStyle({ top: rect.top, left: rect.right });
+    }
+    setShowVolume(true);
+  };
+
+  const handleMouseLeaveVolume = () => {
+    volumeTimeoutRef.current = setTimeout(() => setShowVolume(false), 200);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (volumeTimeoutRef.current) clearTimeout(volumeTimeoutRef.current);
+    };
+  }, []);
 
   return (
-    <aside className="w-20 sm:w-24 bg-white/95 backdrop-blur-md border-r-4 border-yellow-300 flex flex-col items-center py-4 px-1 gap-4 shrink-0 shadow-2xl z-30 overflow-y-auto">
+    <aside className="w-20 sm:w-24 bg-white/95 backdrop-blur-md border-r-4 border-yellow-300 flex flex-col items-center py-4 px-1 gap-4 shrink-0 shadow-2xl z-30 overflow-y-auto overflow-x-hidden">
       <div className="w-full flex flex-col items-center gap-2">
         <div className="bg-sky-500 text-white w-full py-1 text-center font-black text-[10px] sm:text-xs rounded-lg shadow-sm truncate px-1">
           {player?.name || 'ゲスト'}
@@ -135,16 +177,75 @@ export default function GameSidebar({
         <button
           type="button"
           onClick={() => click(onShop || onComingSoon)}
-          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-pink-400 to-orange-400 text-white border-2 border-pink-200 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[9px] sm:text-[10px] font-black gap-1 active:scale-95 transition-transform"
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-pink-400 to-orange-400 text-white border-2 border-pink-200 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[9px] sm:text-[10px] font-black gap-1 active:scale-95 transition-transform shrink-0"
         >
           <span className="text-xl animate-pulse">🎁</span>
           <span>ショップ</span>
         </button>
 
+        <div 
+          ref={volumeBtnRef}
+          className="relative flex flex-col items-center shrink-0 w-full"
+          onMouseEnter={handleMouseEnterVolume}
+          onMouseLeave={handleMouseLeaveVolume}
+        >
+          <button
+            type="button"
+            onClick={toggleMute}
+            className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[9px] sm:text-[10px] font-black gap-1 active:scale-95 transition-all relative z-10 ${isMuted ? 'border-gray-300 text-gray-400' : 'border-indigo-200 text-indigo-500'}`}
+          >
+            {isMuted ? <VolumeX className="w-5 h-5 shrink-0" /> : <Volume2 className="w-5 h-5 shrink-0" />}
+            <span>おと</span>
+          </button>
+          
+          {showVolume && typeof document !== 'undefined' && createPortal(
+            <div 
+              style={{ top: popupStyle.top, left: popupStyle.left }}
+              className="fixed z-[9999] pl-2 flex items-start"
+              onMouseEnter={handleMouseEnterVolume}
+              onMouseLeave={handleMouseLeaveVolume}
+            >
+              <div className="bg-white border-4 border-indigo-200 rounded-3xl p-5 shadow-2xl flex flex-col gap-6 min-w-[200px] animate-fade-in pointer-events-auto">
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center text-sm font-black text-indigo-600">
+                    <span className="flex items-center gap-1"><Music className="w-4 h-4" /> BGM</span>
+                    <span>{Math.round(volume.bgm * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume.bgm}
+                    onChange={(e) => updateVolume('bgm', parseFloat(e.target.value))}
+                    className="w-full h-3 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-center text-sm font-black text-teal-600">
+                    <span className="flex items-center gap-1"><Bell className="w-4 h-4" /> 効果音</span>
+                    <span>{Math.round(volume.se * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume.se}
+                    onChange={(e) => updateVolume('se', parseFloat(e.target.value))}
+                    className="w-full h-3 bg-teal-100 rounded-lg appearance-none cursor-pointer accent-teal-500"
+                  />
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
+        </div>
+
         <button
           type="button"
           onClick={() => click(onProfile || onComingSoon)}
-          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-green-200 text-green-500 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[9px] sm:text-[10px] font-black gap-1 active:scale-95 transition-transform"
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-green-200 text-green-500 shadow-md hover:scale-105 flex flex-col items-center justify-center text-[9px] sm:text-[10px] font-black gap-1 active:scale-95 transition-transform shrink-0"
         >
           <User className="w-5 h-5 shrink-0" />
           <span>みためへんこう</span>

@@ -4,8 +4,11 @@ import { listenOfficialShowRankings } from '../firebase';
 import { GACHA_ITEMS } from '../constants';
 import PlayerCard from './PlayerCard';
 import GearEquipModal from './GearEquipModal';
+import { getCurrentSeasonId, getSeasonStartDate, getSeasonEndDate } from '../utils/date';
 
 export default function CustomAreaModal({ isOpen, onClose, player, playDecideSound, playCancelSound, onPlayCustomStage, onPlayerUpdate }) {
+  const currentGlobalSeason = getCurrentSeasonId();
+  const [viewingSeasonId, setViewingSeasonId] = useState(currentGlobalSeason);
   const [officialRankings, setOfficialRankings] = useState([]);
   const [isGearModalOpen, setIsGearModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -13,32 +16,23 @@ export default function CustomAreaModal({ isOpen, onClose, player, playDecideSou
   useEffect(() => {
     if (!isOpen) return undefined;
     setLoading(true);
-    const unsubscribe = listenOfficialShowRankings((rankings) => {
-      let currentRankings = [...rankings];
-      if (player?.officialShowHighScore > 0) {
-        const myScore = player.officialShowHighScore;
-        const myIndex = currentRankings.findIndex(r => r.playerId === player.id && r.score >= myScore);
-        if (myIndex === -1) {
-          currentRankings = currentRankings.filter(r => r.playerId !== player.id);
-          currentRankings.push({
-            id: `local_high_${Date.now()}`,
-            playerId: player.id,
-            playerName: player.name,
-            score: myScore,
-            currentTitle: player.currentTitle || 'rookie',
-            currentBackground: player.currentBackground || 'default',
-            currentIcon: player.currentIcon || null,
-            currentFrame: player.currentFrame || null,
-            typingShowGears: player.typingShowGears || null,
-          });
-          currentRankings = currentRankings.sort((a, b) => b.score - a.score);
-        }
-      }
-      setOfficialRankings(currentRankings.slice(0, 5));
+
+    const formatSeasonDate = (date) => {
+      const days = ['日', '月', '火', '水', '木', '金', '土'];
+      const m = date.getMonth() + 1;
+      const d = date.getDate();
+      const day = days[date.getDay()];
+      const h = date.getHours().toString().padStart(2, '0');
+      const min = date.getMinutes().toString().padStart(2, '0');
+      return `${m}/${d}(${day}) ${h}:${min}`;
+    };
+
+    const unsubscribe = listenOfficialShowRankings(viewingSeasonId, (rankings) => {
+      setOfficialRankings(rankings.slice(0, 10));
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [isOpen, player]);
+  }, [isOpen, player, viewingSeasonId]);
 
   if (!isOpen) return null;
 
@@ -75,10 +69,48 @@ export default function CustomAreaModal({ isOpen, onClose, player, playDecideSou
               🔥 運営公式チャレンジ 🔥
             </h4>
             <p className="text-gray-600 font-bold mb-4">全難易度からランダム出題！1分間でどれだけ打てるかな？</p>
+
+            <div className="flex items-center justify-between w-full bg-rose-100 rounded-xl p-2 mb-4">
+              <button
+                onClick={() => {
+                  playDecideSound?.();
+                  setViewingSeasonId((prev) => Math.max(1, prev - 1));
+                }}
+                disabled={viewingSeasonId <= 1}
+                className="px-4 py-2 bg-white rounded-lg font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
+              >
+                ◀ 過去のシーズン
+              </button>
+              <div className="flex flex-col items-center font-black text-rose-800 text-lg">
+                <div>
+                  シーズン {viewingSeasonId}
+                  {viewingSeasonId === currentGlobalSeason && <span className="ml-2 text-sm bg-rose-500 text-white px-2 py-0.5 rounded-full">開催中</span>}
+                </div>
+                <div className="text-sm sm:text-base font-bold text-rose-600/90 mt-1.5 tracking-wide">
+                  {viewingSeasonId === 1 
+                    ? '（旧ランキング）' 
+                    : `（${(() => {
+                        const days = ['日', '月', '火', '水', '木', '金', '土'];
+                        const fmt = (date) => `${date.getMonth() + 1}/${date.getDate()}(${days[date.getDay()]}) ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                        return `${fmt(getSeasonStartDate(viewingSeasonId))} 〜 ${fmt(getSeasonEndDate(viewingSeasonId))}`;
+                      })()}）`}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  playDecideSound?.();
+                  setViewingSeasonId((prev) => Math.min(currentGlobalSeason, prev + 1));
+                }}
+                disabled={viewingSeasonId >= currentGlobalSeason}
+                className="px-4 py-2 bg-white rounded-lg font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
+              >
+                次のシーズン ▶
+              </button>
+            </div>
             
             {officialRankings.length > 0 && (
               <div className="w-full bg-rose-50 rounded-xl p-4 mb-2 border border-rose-100">
-                <h5 className="text-sm font-black text-rose-800 mb-2 text-center">🏆 トップ5ランキング</h5>
+                <h5 className="text-sm font-black text-rose-800 mb-2 text-center">🏆 トップ10ランキング</h5>
                 <div className="flex flex-col gap-1">
                   {officialRankings.map((r, i) => (
                     <div key={r.id} className="relative flex items-center mb-2">

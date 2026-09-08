@@ -31,6 +31,7 @@ import {
   partitionAnnouncementsForPlayer,
 } from './utils/announcements';
 import { TimerContext } from './contexts/TimerContext';
+import { VolumeContext } from './contexts/VolumeContext';
 
 export default function App() {
   const [appScreen, setAppScreen] = useState('title');
@@ -44,6 +45,10 @@ export default function App() {
   const [profileFocus, setProfileFocus] = useState(null);
   const [musicModalFocus, setMusicModalFocus] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveLoadingProgress, setSaveLoadingProgress] = useState(0);
+  const [timeLimitUnlockedDate, setTimeLimitUnlockedDate] = useState(null);
+  const [timeLimitPassword, setTimeLimitPassword] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
   const [savedPlayerPreview, setSavedPlayerPreview] = useState(null);
   const [activeGift, setActiveGift] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
@@ -71,8 +76,29 @@ export default function App() {
     }).catch(() => {});
   }, []);
 
-  const { playSE, playDecideSound, playCancelSound, resumeOnSelect, previewBgm, previewSe } =
+  const { playSE, playDecideSound, playCancelSound, resumeOnSelect, previewBgm, previewSe, volume, setVolume } =
     useGameAudio(currentPlayer, appScreen);
+
+  // Provide setVolume and volume explicitly through handleVolumeChange equivalent logic if needed,
+  // but useGameAudio already provides volume state. Let's create a combined setter that also updates localforage if needed.
+  // Actually, useGameAudio handles localforage saving when we call setVolume. Wait, useGameAudio's setVolume doesn't save to localforage!
+  // Let's check useGameAudio again. Let's just pass volume and a function that updates it.
+  const updateVolume = useCallback((type, val) => {
+    setVolume((prev) => {
+      const newVol = { ...prev, [type]: parseFloat(val) };
+      import('localforage').then((lf) => lf.default.setItem('volume', newVol));
+      
+      if (currentPlayer) {
+        setCurrentPlayer((p) => {
+          if (!p) return p;
+          const next = { ...p, volume: newVol };
+          saveCloudPlayer(next.id, next).catch(() => {});
+          return next;
+        });
+      }
+      return newVol;
+    });
+  }, [setVolume, currentPlayer]);
 
   const applySessionPlayTime = useCallback((player) => {
     if (!sessionStartRef.current) return player;
@@ -462,9 +488,13 @@ export default function App() {
     setAppScreen('hiragana');
   };
 
+  const todayStr = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+  const effectiveTimerMs = timeLimitUnlockedDate === todayStr ? null : playTimerRemainingMs;
+
   return (
-    <TimerContext.Provider value={playTimerRemainingMs}>
-      <div className="w-full min-h-screen font-sans text-gray-800 overflow-hidden relative selection:bg-sky-200">
+    <VolumeContext.Provider value={{ volume, updateVolume }}>
+      <TimerContext.Provider value={effectiveTimerMs}>
+        <div className="w-full min-h-screen font-sans text-gray-800 overflow-hidden relative selection:bg-sky-200">
       {appScreen === 'title' && (
         <div className="w-full h-[100dvh] min-h-0 overflow-hidden">
           {isTitleUnlocked ? (
@@ -645,30 +675,69 @@ export default function App() {
         />
       )}
       
-      {playTimerRemainingMs === 0 && appScreen !== 'title' && (
+      {playTimerRemainingMs === 0 && timeLimitUnlockedDate !== new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' }) && appScreen !== 'title' && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm pointer-events-auto">
-          <div className="bg-white px-8 py-8 rounded-3xl shadow-2xl border-4 border-rose-400 animate-pop-out flex flex-col items-center gap-6">
-            <span className="text-6xl animate-bounce">⏰</span>
+          <div className="bg-white px-6 py-6 sm:px-8 sm:py-8 rounded-3xl shadow-2xl border-4 border-rose-400 animate-pop-out flex flex-col items-center gap-4 sm:gap-6 w-[90%] max-w-sm">
+            <span className="text-5xl sm:text-6xl animate-bounce">⏰</span>
             <div className="text-center">
-              <div className="text-rose-600 font-black text-3xl sm:text-4xl mb-2">
+              <div className="text-rose-600 font-black text-2xl sm:text-4xl mb-2">
                 時間になったよ！
               </div>
-              <p className="text-gray-600 font-bold text-lg">
+              <p className="text-gray-600 font-bold text-sm sm:text-lg mb-4">
                 今日のプレイ時間は おしまいです。
               </p>
             </div>
+            
             <button
               type="button"
               onClick={() => handleSaveAndTitle()}
-              className="mt-2 bg-gradient-to-b from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-black text-xl px-8 py-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all border-b-4 border-rose-600"
+              className="w-full bg-gradient-to-b from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-black text-lg sm:text-xl px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all border-b-4 border-rose-600"
             >
               セーブして おわる
             </button>
+            
+            <div className="w-full mt-2 pt-4 border-t-2 border-dashed border-gray-200 flex flex-col items-center gap-2">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-400">大人の人へ：パスワードを入力して延長できます</p>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={timeLimitPassword}
+                  onChange={(e) => {
+                    setTimeLimitPassword(e.target.value.replace(/[^0-9]/g, ''));
+                    setPasswordError(false);
+                  }}
+                  className={`w-24 px-2 py-1.5 text-center font-black tracking-widest bg-gray-100 border-2 rounded-lg focus:outline-none transition-colors ${passwordError ? 'border-red-500 bg-red-50' : 'border-gray-300 focus:border-indigo-400'}`}
+                  placeholder="****"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    if (timeLimitPassword === `${mm}${dd}`) {
+                      playDecideSound();
+                      setTimeLimitUnlockedDate(today.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' }));
+                      setTimeLimitPassword('');
+                    } else {
+                      playCancelSound();
+                      setPasswordError(true);
+                      setTimeLimitPassword('');
+                    }
+                  }}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-1.5 rounded-lg text-sm transition-colors active:scale-95"
+                >
+                  解除
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       </div>
     </TimerContext.Provider>
+  </VolumeContext.Provider>
   );
 }

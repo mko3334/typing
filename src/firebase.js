@@ -8,6 +8,7 @@ import {
   mergeTypingReports,
   updateLocalTypingReport,
 } from './utils/typingReportStorage';
+import { getCurrentSeasonId } from './utils/date';
 
 const firebaseConfig = {
   projectId: "treegames-ac5db",
@@ -397,8 +398,9 @@ export const sendGiftToCloudPlayer = async (playerId, giftData) => {
 export const saveOfficialShowScore = async (player, score) => {
   const createdAt = new Date().toISOString();
   try {
+    const seasonId = getCurrentSeasonId();
     const playerId = player?.id || 'guest';
-    const docRef = doc(db, 'official_show_rankings', playerId);
+    const docRef = doc(db, 'official_show_rankings', `${seasonId}_${playerId}`);
     
     // 現在のスコアを取得して、新しいスコアの方が高ければ更新する
     const docSnap = await getDoc(docRef);
@@ -410,6 +412,7 @@ export const saveOfficialShowScore = async (player, score) => {
     }
     
     await setDoc(docRef, {
+      seasonId,
       playerId,
       playerName: player?.name || 'ゲスト',
       score,
@@ -427,59 +430,25 @@ export const saveOfficialShowScore = async (player, score) => {
   }
 };
 
-export const getOfficialShowRankings = async () => {
+export const getOfficialShowRankings = async (seasonId = getCurrentSeasonId()) => {
   const npcs = [
-    { id: 'npc_1', playerName: 'タイピングマスター', score: 3000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'very_hard_master', currentIcon: 'おうかん', currentFrame: 'gold', currentBackground: 'space' },
-    { id: 'npc_2', playerName: 'ハイスピード君', score: 2500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'hard_master', currentIcon: 'すーぱーかー', currentFrame: 'silver', currentBackground: 'castle' },
-    { id: 'npc_3', playerName: 'キーボードの鬼', score: 1800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'マスターソード', currentFrame: 'bronze', currentBackground: 'dino' },
-    { id: 'npc_4', playerName: 'ルーキー', score: 800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'サッカーボール', currentFrame: 'basic_1', currentBackground: 'forest' },
-    { id: 'npc_5', playerName: 'カメさん', score: 300, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'default' }
+    { id: 'npc_1', playerName: 'タイピングゴッド', score: 4000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'very_hard_master', currentIcon: 'おうかん', currentFrame: 'gold', currentBackground: 'space' },
+    { id: 'npc_2', playerName: '神速の指', score: 3500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'hard_master', currentIcon: 'すーぱーかー', currentFrame: 'silver', currentBackground: 'castle' },
+    { id: 'npc_3', playerName: 'タイピングマスター', score: 3000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'マスターソード', currentFrame: 'bronze', currentBackground: 'dino' },
+    { id: 'npc_4', playerName: 'ハイスピード君', score: 2500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'サッカーボール', currentFrame: 'basic_1', currentBackground: 'forest' },
+    { id: 'npc_5', playerName: 'タイピングの鬼', score: 1800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'たこやき', currentFrame: 'basic_2', currentBackground: 'dino' },
+    { id: 'npc_6', playerName: 'キーボード好き', score: 1200, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'ショートケーキ', currentFrame: 'basic_1', currentBackground: 'default' },
+    { id: 'npc_7', playerName: 'ルーキー', score: 800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'forest' },
+    { id: 'npc_8', playerName: 'のんびり屋', score: 500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'くさ', currentFrame: 'basic_1', currentBackground: 'default' },
+    { id: 'npc_9', playerName: 'カメさん', score: 300, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'default' },
+    { id: 'npc_10', playerName: 'カタツムリ', score: 100, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'くさ', currentFrame: 'basic_1', currentBackground: 'default' }
   ];
 
   try {
-    const collRef = collection(db, 'global_players');
-    const snapshot = await getDocs(collRef);
-    const rankings = [];
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      if (data.officialShowHighScore > 0 && !data.isArchived) {
-        rankings.push({
-          id: docSnap.id,
-          playerId: docSnap.id,
-          playerName: data.name || 'ゲスト',
-          score: data.officialShowHighScore,
-          createdAt: data.lastActiveTime || new Date().toISOString(),
-          currentTitle: data.currentTitle || 'rookie',
-          currentBackground: data.currentBackground || 'default',
-          currentIcon: data.currentIcon || null,
-          currentFrame: data.currentFrame || null,
-          typingShowGears: data.typingShowGears || null,
-          collection: data.collection || null,
-          itemLevels: data.itemLevels || null,
-        });
-      }
-    });
-    
-    rankings.push(...npcs);
-    return rankings.sort((a, b) => b.score - a.score);
-  } catch (error) {
-    console.error('Error getting official show rankings:', error);
-    return npcs.sort((a, b) => b.score - a.score);
-  }
-};
-
-export const listenOfficialShowRankings = (callback) => {
-  const npcs = [
-    { id: 'npc_1', playerName: 'タイピングマスター', score: 3000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'very_hard_master', currentIcon: 'おうかん', currentFrame: 'gold', currentBackground: 'space' },
-    { id: 'npc_2', playerName: 'ハイスピード君', score: 2500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'hard_master', currentIcon: 'すーぱーかー', currentFrame: 'silver', currentBackground: 'castle' },
-    { id: 'npc_3', playerName: 'キーボードの鬼', score: 1800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'マスターソード', currentFrame: 'bronze', currentBackground: 'dino' },
-    { id: 'npc_4', playerName: 'ルーキー', score: 800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'サッカーボール', currentFrame: 'basic_1', currentBackground: 'forest' },
-    { id: 'npc_5', playerName: 'カメさん', score: 300, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'default' }
-  ];
-
-  try {
-    const collRef = collection(db, 'global_players');
-    return onSnapshot(collRef, (snapshot) => {
+    if (seasonId === 1) {
+      // 旧ランキングは global_players から取得
+      const collRef = collection(db, 'global_players');
+      const snapshot = await getDocs(collRef);
       const rankings = [];
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
@@ -499,6 +468,106 @@ export const listenOfficialShowRankings = (callback) => {
             itemLevels: data.itemLevels || null,
           });
         }
+      });
+      rankings.push(...npcs);
+      return rankings.sort((a, b) => b.score - a.score);
+    }
+    const collRef = collection(db, 'official_show_rankings');
+    const q = query(collRef, where('seasonId', '==', seasonId));
+    const snapshot = await getDocs(q);
+    const rankings = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      rankings.push({
+        id: docSnap.id,
+        playerId: data.playerId,
+        playerName: data.playerName || 'ゲスト',
+        score: data.score,
+        createdAt: data.createdAt,
+        currentTitle: data.currentTitle || 'rookie',
+        currentBackground: data.currentBackground || 'default',
+        currentIcon: data.currentIcon || null,
+        currentFrame: data.currentFrame || null,
+        typingShowGears: data.typingShowGears || null,
+        collection: data.collection || null,
+        itemLevels: data.itemLevels || null,
+      });
+    });
+    
+    rankings.push(...npcs);
+    return rankings.sort((a, b) => b.score - a.score);
+  } catch (error) {
+    console.error('Error getting official show rankings:', error);
+    return npcs.sort((a, b) => b.score - a.score);
+  }
+};
+
+export const listenOfficialShowRankings = (seasonId, callback) => {
+  const npcs = [
+    { id: 'npc_1', playerName: 'タイピングゴッド', score: 4000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'very_hard_master', currentIcon: 'おうかん', currentFrame: 'gold', currentBackground: 'space' },
+    { id: 'npc_2', playerName: '神速の指', score: 3500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'hard_master', currentIcon: 'すーぱーかー', currentFrame: 'silver', currentBackground: 'castle' },
+    { id: 'npc_3', playerName: 'タイピングマスター', score: 3000, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'マスターソード', currentFrame: 'bronze', currentBackground: 'dino' },
+    { id: 'npc_4', playerName: 'ハイスピード君', score: 2500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'サッカーボール', currentFrame: 'basic_1', currentBackground: 'forest' },
+    { id: 'npc_5', playerName: 'タイピングの鬼', score: 1800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'no_miss', currentIcon: 'たこやき', currentFrame: 'basic_2', currentBackground: 'dino' },
+    { id: 'npc_6', playerName: 'キーボード好き', score: 1200, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'normal_clear', currentIcon: 'ショートケーキ', currentFrame: 'basic_1', currentBackground: 'default' },
+    { id: 'npc_7', playerName: 'ルーキー', score: 800, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'forest' },
+    { id: 'npc_8', playerName: 'のんびり屋', score: 500, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'くさ', currentFrame: 'basic_1', currentBackground: 'default' },
+    { id: 'npc_9', playerName: 'カメさん', score: 300, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'きのこ', currentFrame: 'basic_2', currentBackground: 'default' },
+    { id: 'npc_10', playerName: 'カタツムリ', score: 100, isNPC: true, createdAt: new Date().toISOString(), currentTitle: 'rookie', currentIcon: 'くさ', currentFrame: 'basic_1', currentBackground: 'default' }
+  ];
+
+  try {
+    if (seasonId === 1) {
+      // 旧ランキングは global_players から取得
+      const collRef = collection(db, 'global_players');
+      return onSnapshot(collRef, (snapshot) => {
+        const rankings = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.officialShowHighScore > 0 && !data.isArchived) {
+            rankings.push({
+              id: docSnap.id,
+              playerId: docSnap.id,
+              playerName: data.name || 'ゲスト',
+              score: data.officialShowHighScore,
+              createdAt: data.lastActiveTime || new Date().toISOString(),
+              currentTitle: data.currentTitle || 'rookie',
+              currentBackground: data.currentBackground || 'default',
+              currentIcon: data.currentIcon || null,
+              currentFrame: data.currentFrame || null,
+              typingShowGears: data.typingShowGears || null,
+              collection: data.collection || null,
+              itemLevels: data.itemLevels || null,
+            });
+          }
+        });
+        rankings.push(...npcs);
+        callback(rankings.sort((a, b) => b.score - a.score));
+      }, (error) => {
+        console.error('Error listening to official show rankings:', error);
+        callback(npcs.sort((a, b) => b.score - a.score));
+      });
+    }
+    const collRef = collection(db, 'official_show_rankings');
+    const q = query(collRef, where('seasonId', '==', seasonId));
+    return onSnapshot(q, (snapshot) => {
+      const rankings = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        rankings.push({
+          id: docSnap.id,
+          playerId: data.playerId,
+          playerName: data.playerName || 'ゲスト',
+          score: data.score,
+          createdAt: data.createdAt,
+          currentTitle: data.currentTitle || 'rookie',
+          currentBackground: data.currentBackground || 'default',
+          currentIcon: data.currentIcon || null,
+          currentFrame: data.currentFrame || null,
+          typingShowGears: data.typingShowGears || null,
+          collection: data.collection || null,
+          itemLevels: data.itemLevels || null,
+        });
       });
       rankings.push(...npcs);
       callback(rankings.sort((a, b) => b.score - a.score));

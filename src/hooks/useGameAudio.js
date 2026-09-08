@@ -24,10 +24,18 @@ export default function useGameAudio(player, appScreen) {
     (async () => {
       const savedAudio = await localforage.getItem('customAudio');
       if (savedAudio) setCustomAudio(savedAudio);
-      const savedVolume = await localforage.getItem('volume');
-      if (savedVolume) setVolume(savedVolume);
     })();
   }, []);
+
+  useEffect(() => {
+    if (player && player.volume) {
+      setVolume(player.volume);
+    } else if (!player) {
+      localforage.getItem('volume').then(savedVolume => {
+        if (savedVolume) setVolume(savedVolume);
+      });
+    }
+  }, [player?.id, player?.volume]);
 
   useEffect(() => {
     if (!bgmRef.current) {

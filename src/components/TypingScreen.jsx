@@ -10,6 +10,7 @@ import {
 import { HiraganaBounceValue } from './hiragana/HiraganaVisuals';
 import { pickGameWords, pickReplacementWord, pickOfficialShowWords } from '../utils/typingWords';
 import { submitTypingReport, saveOfficialShowScore, listenOfficialShowRankings, getOpenReportedKeywords, listenOpenReportedKeywords } from '../firebase';
+import { getCurrentSeasonId } from '../utils/date';
 import { applyCorrectionToWord, refreshWordCorrections } from '../utils/wordCorrections';
 import { computeAchievements } from '../utils/gacha';
 import { getGearTooltip } from '../utils/gearPower';
@@ -248,6 +249,7 @@ export default function TypingScreen({
   const [isShaking, setIsShaking] = useState(false);
   const [isAllClear, setIsAllClear] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
+  const [showFinalScoreObj, setShowFinalScoreObj] = useState(null);
   const [isAssistOpen, setIsAssistOpen] = useState(false);
   const [localPoints, setLocalPoints] = useState(player?.points || 0);
   const [localTickets, setLocalTickets] = useState({
@@ -450,6 +452,12 @@ export default function TypingScreen({
       playSE?.('timeup');
       
       const finalScore = Math.floor(officialScore * (1 + gearPowersRef.current.scoreBoost));
+      setShowFinalScoreObj({
+        base: officialScore,
+        boost: finalScore - officialScore,
+        final: finalScore,
+        step: 0
+      });
       
       (async () => {
         setOfficialShowUploading(true);
@@ -469,7 +477,8 @@ export default function TypingScreen({
           console.error("Score save failed", e);
         }
         
-        const unsubscribe = listenOfficialShowRankings(rankings => {
+        const currentSeason = getCurrentSeasonId();
+        const unsubscribe = listenOfficialShowRankings(currentSeason, rankings => {
           const currentRankings = [...rankings];
           const myIndex = currentRankings.findIndex(r => r.playerId === (player?.id || 'guest') && r.score >= finalScore);
           if (myIndex === -1) {
@@ -501,10 +510,27 @@ export default function TypingScreen({
         
         setOfficialShowUploading(false);
         playSE?.('clear');
-        return () => unsubscribe();
       })();
     }
   }, [isOfficialShow, timeLeft, isTimeUp, player, officialScore, playSE]);
+
+  // スコア加算アニメーション制御
+  useEffect(() => {
+    if (showFinalScoreObj && showFinalScoreObj.step < 2) {
+      if (showFinalScoreObj.step === 0) {
+        if (showFinalScoreObj.boost > 0) {
+          const t = setTimeout(() => setShowFinalScoreObj(prev => ({...prev, step: 1})), 800);
+          return () => clearTimeout(t);
+        } else {
+          setShowFinalScoreObj(prev => ({...prev, step: 2}));
+        }
+      } else if (showFinalScoreObj.step === 1) {
+        playSE?.('levelUp');
+        const t = setTimeout(() => setShowFinalScoreObj(prev => ({...prev, step: 2})), 1200);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [showFinalScoreObj, playSE]);
 
   const showTypingWarning = useCallback(() => {
     const now = Date.now();
@@ -938,10 +964,24 @@ export default function TypingScreen({
             <div className="text-6xl mb-4">⏱️</div>
             <h2 className="text-3xl font-black text-rose-600 mb-2">タイムアップ！</h2>
             <div className="bg-gray-50 rounded-2xl p-4 mb-6 border-2 border-gray-200">
-              <p className="text-gray-500 font-bold mb-1">あなたのスコア</p>
-              <p className="text-6xl font-black text-rose-500 drop-shadow-sm">
-                {officialScore}
-              </p>
+              <p className="text-gray-500 font-bold mb-2">あなたのスコア</p>
+              <div className="flex flex-col items-center justify-center h-20 sm:h-24 relative w-full">
+                {showFinalScoreObj?.step === 1 && (
+                  <div className="absolute -top-4 sm:-top-6 text-xs sm:text-sm font-black text-fuchsia-600 bg-fuchsia-100 px-3 py-1 rounded-full animate-fade-in border border-fuchsia-300 shadow-sm z-10">
+                    ✨ アイテム効果！ ✨
+                  </div>
+                )}
+                
+                <p className={`text-6xl font-black drop-shadow-sm transition-all duration-500 z-0 ${showFinalScoreObj?.step === 2 && showFinalScoreObj?.boost > 0 ? 'text-fuchsia-500 scale-110 drop-shadow-[0_0_10px_rgba(217,70,239,0.5)]' : 'text-rose-500'}`}>
+                  {showFinalScoreObj?.step === 2 ? showFinalScoreObj.final : (showFinalScoreObj?.base || officialScore)}
+                </p>
+                
+                {showFinalScoreObj?.step >= 1 && showFinalScoreObj?.boost > 0 && (
+                  <div className={`absolute top-0 right-4 sm:right-10 text-fuchsia-500 font-black text-2xl sm:text-3xl transition-all duration-500 z-10 ${showFinalScoreObj.step === 1 ? 'animate-bounce opacity-100' : 'opacity-0 -translate-y-8'}`}>
+                    +{showFinalScoreObj.boost}
+                  </div>
+                )}
+              </div>
             </div>
             
 
